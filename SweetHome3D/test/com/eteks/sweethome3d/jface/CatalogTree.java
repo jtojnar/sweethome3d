@@ -21,16 +21,11 @@ package com.eteks.sweethome3d.jface;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.graphics.Image;
@@ -40,64 +35,19 @@ import org.eclipse.swt.widgets.Display;
 import com.eteks.sweethome3d.model.Catalog;
 import com.eteks.sweethome3d.model.CatalogPieceOfFurniture;
 import com.eteks.sweethome3d.model.Category;
-import com.eteks.sweethome3d.model.SelectionEvent;
-import com.eteks.sweethome3d.model.SelectionListener;
-import com.eteks.sweethome3d.viewcontroller.CatalogController;
-import com.eteks.sweethome3d.viewcontroller.CatalogView;
 
 /**
  * Furniture catalog tree JFace implementation.
  * @author Emmanuel Puybaret
  */
-public class CatalogTree implements CatalogView {
-  private TreeViewer treeViewer;
-  private ISelectionChangedListener tableSelectionListener; 
+public class CatalogTree {
+  private TreeViewer treeViewer; 
   
   public CatalogTree(Composite parent, Catalog catalog) {
-    this(parent, catalog, null);
-  }
-  
-  public CatalogTree(Composite parent, Catalog catalog, CatalogController controller) {
     this.treeViewer = new TreeViewer(parent);
     this.treeViewer.setContentProvider(new CatalogTreeContentProvider(catalog));
     this.treeViewer.setLabelProvider(new CatalogLabelProvider());
     this.treeViewer.setInput(catalog);
-    if (controller != null) {
-      addSelectionListeners(catalog, controller);
-    }
-  }
-  
-  /**
-   * Adds selection listeners to this tree.
-   */
-  private void addSelectionListeners(final Catalog catalog, 
-                                     final CatalogController controller) {   
-    final SelectionListener homeSelectionListener  = 
-      new SelectionListener() {
-        public void selectionChanged(SelectionEvent ev) {
-          treeViewer.removeSelectionChangedListener(tableSelectionListener);
-          treeViewer.setSelection(new StructuredSelection(ev.getSelectedItems()), true);
-          treeViewer.addSelectionChangedListener(tableSelectionListener);
-        }
-      };
-    this.tableSelectionListener = 
-      new ISelectionChangedListener () {
-        public void selectionChanged(SelectionChangedEvent ev) {
-          catalog.removeSelectionListener(homeSelectionListener);
-          List<CatalogPieceOfFurniture> selectedFurniture = 
-              new ArrayList<CatalogPieceOfFurniture>();
-          for (Object item : ((StructuredSelection)ev.getSelection()).toList()) {
-            if (item instanceof CatalogPieceOfFurniture) {
-              selectedFurniture.add((CatalogPieceOfFurniture)item);
-            }          
-          }        
-          // Set the new selection in home
-          controller.setSelectedFurniture(selectedFurniture);
-          catalog.addSelectionListener(homeSelectionListener);
-        }
-      };
-    this.treeViewer.addSelectionChangedListener(this.tableSelectionListener);
-    catalog.addSelectionListener(homeSelectionListener );
   }
 
   /**

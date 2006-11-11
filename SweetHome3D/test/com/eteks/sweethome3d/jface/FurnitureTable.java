@@ -22,18 +22,13 @@ package com.eteks.sweethome3d.jface;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.NumberFormat;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 
-import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
@@ -42,29 +37,18 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.TableColumn;
 
-import com.eteks.sweethome3d.model.FurnitureEvent;
-import com.eteks.sweethome3d.model.FurnitureListener;
 import com.eteks.sweethome3d.model.Home;
 import com.eteks.sweethome3d.model.HomePieceOfFurniture;
-import com.eteks.sweethome3d.model.SelectionEvent;
-import com.eteks.sweethome3d.model.SelectionListener;
 import com.eteks.sweethome3d.model.UserPreferences;
-import com.eteks.sweethome3d.viewcontroller.FurnitureController;
-import com.eteks.sweethome3d.viewcontroller.FurnitureView;
 
 /**
  * A table displaying furniture.
  * @author Emmanuel Puybaret
  */
-public class FurnitureTable implements FurnitureView {
+public class FurnitureTable {
   private TableViewer tableViewer;
-  private ISelectionChangedListener tableSelectionListener;
   
   public FurnitureTable(Composite parent, Home home, UserPreferences preferences) {
-    this(parent, home, preferences, null);
-  }
-  public FurnitureTable(Composite parent, Home home, UserPreferences preferences, 
-                        FurnitureController controller) {
     this.tableViewer = new TableViewer(parent); 
     String [] columnNames = getColumnNames();
     // Create SWT table columns
@@ -78,45 +62,9 @@ public class FurnitureTable implements FurnitureView {
     this.tableViewer.getTable().setHeaderVisible(true);
     
     this.tableViewer.setColumnProperties(columnNames);
-    this.tableViewer.setContentProvider(new FurnitureTableContentProvider(home));
+    this.tableViewer.setContentProvider(new FurnitureTableContentProvider());
     this.tableViewer.setLabelProvider(new FurnitureLabelProvider(preferences));
     this.tableViewer.setInput(home);
-    if (controller != null) {
-      addSelectionListeners(home, controller);
-    }
-  }
-  
-  /**
-   * Adds selection listeners to this table.
-   * @param controller 
-   */
-  private void addSelectionListeners(final Home home, 
-                                     final FurnitureController controller) {   
-    final SelectionListener homeSelectionListener  = 
-      new SelectionListener() {
-        public void selectionChanged(SelectionEvent ev) {
-          tableViewer.removeSelectionChangedListener(tableSelectionListener);
-          List<Object> selectedFurniture = new ArrayList<Object>();
-          for (Object item : ev.getSelectedItems()) {
-            if (item instanceof HomePieceOfFurniture) {
-              selectedFurniture.add(item);
-            }          
-          }        
-          tableViewer.setSelection(new StructuredSelection(selectedFurniture), true);
-          tableViewer.addSelectionChangedListener(tableSelectionListener);
-        }
-      };
-    this.tableSelectionListener = 
-      new ISelectionChangedListener () {
-        public void selectionChanged(SelectionChangedEvent ev) {
-          home.removeSelectionListener(homeSelectionListener);
-          // Set the new selection in home
-          controller.setSelectedFurniture(((StructuredSelection)ev.getSelection()).toList());
-          home.addSelectionListener(homeSelectionListener);
-        }
-      };
-    this.tableViewer.addSelectionChangedListener(this.tableSelectionListener);
-    home.addSelectionListener(homeSelectionListener);
   }
 
   /**
@@ -142,7 +90,7 @@ public class FurnitureTable implements FurnitureView {
    */
   private class FurnitureLabelProvider extends LabelProvider implements ITableLabelProvider {
     // Label images cache (we're obliged to keep track of all the images
-    // to dispose them when table will be disposed)
+    // to dispose them when tree will be disposed)
     private Map<HomePieceOfFurniture, Image> imagesCache = 
       new HashMap<HomePieceOfFurniture, Image>();
     private UserPreferences preferences;
@@ -202,7 +150,7 @@ public class FurnitureTable implements FurnitureView {
     }
 
     public void dispose() {
-      // Dispose all the images created for the table
+      // Dispose all the images created for the tree
       for (Image image : imagesCache.values()) {
         image.dispose();
       }
@@ -213,26 +161,6 @@ public class FurnitureTable implements FurnitureView {
    * Table content provider adaptor to Home class.  
    */
   public class FurnitureTableContentProvider implements IStructuredContentProvider {
-    public FurnitureTableContentProvider(Home home) {
-      addHomeListener(home);
-    }
-
-    private void addHomeListener(Home home)
-    {
-      home.addFurnitureListener(new FurnitureListener() {
-        public void pieceOfFurnitureChanged(FurnitureEvent ev) {
-          switch (ev.getType()) {
-            case ADD :
-              tableViewer.insert(ev.getPieceOfFurniture(), ev.getIndex());
-              break;
-            case DELETE :
-              tableViewer.remove(ev.getPieceOfFurniture());
-              break;
-          }
-        }
-      });
-    }
-
     public Object [] getElements(Object inputElement) {
       return ((Home)inputElement).getFurniture().toArray();
     }
