@@ -42,8 +42,6 @@ import java.awt.geom.GeneralPath;
 import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -95,7 +93,7 @@ public class PlanComponent extends JComponent {
     // Set JComponent default properties
     setOpaque(true);
     // Add listeners
-    addModelListeners(home, preferences);
+    addModelListeners(home);
     if (controller != null) {
       addMouseListeners(controller);
       addFocusListener(controller);
@@ -111,7 +109,7 @@ public class PlanComponent extends JComponent {
    * Adds wall and selection listeners on this component to receive wall 
    * changes notifications from home. 
    */
-  private void addModelListeners(Home home, UserPreferences preferences) {
+  private void addModelListeners(Home home) {
     home.addWallListener(new WallListener () {
       public void wallChanged(WallEvent ev) {
         planBoundsCache = null;
@@ -133,12 +131,6 @@ public class PlanComponent extends JComponent {
         repaint();
       }
     });
-    preferences.addPropertyChangeListener("unit", 
-      new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent evt) {
-          repaint();
-        }
-      });
   }
 
   /**
@@ -614,7 +606,7 @@ public class PlanComponent extends JComponent {
   /**
    * Returns <code>x</code> converted in model coordinates space.
    */
-  public float convertXPixelToModel(int x) {
+  private float convertXPixelToModel(int x) {
     Insets insets = getInsets();
     Rectangle2D planBounds = getPlanBounds();    
     return (x - insets.left) / this.scale - MARGIN + (float)planBounds.getMinX();
@@ -623,7 +615,7 @@ public class PlanComponent extends JComponent {
   /**
    * Returns <code>y</code> converted in model coordinates space.
    */
-  public float convertYPixelToModel(int y) {
+  private float convertYPixelToModel(int y) {
     Insets insets = getInsets();
     Rectangle2D planBounds = getPlanBounds();    
     return (y - insets.top) / this.scale - MARGIN + (float)planBounds.getMinY();

@@ -30,8 +30,6 @@ import java.awt.geom.Rectangle2D;
  * @author Emmanuel Puybaret
  */
 public class HomePieceOfFurniture implements PieceOfFurniture {
-  private static final long serialVersionUID = 1L;
-  
   private String  name;
   private Content icon;
   private Content model;
@@ -59,19 +57,9 @@ public class HomePieceOfFurniture implements PieceOfFurniture {
     this.height = piece.getHeight();
     this.movable = piece.isMovable();
     this.doorOrWindow = piece.isDoorOrWindow();
-    if (piece instanceof HomePieceOfFurniture) {
-      HomePieceOfFurniture homePiece = 
-          (HomePieceOfFurniture)piece;
-      this.color = homePiece.getColor();
-      this.visible = homePiece.isVisible();
-      this.angle = homePiece.getAngle();
-      this.x = homePiece.getX();
-      this.y = homePiece.getY();
-    } else {
-      this.visible = true;
-      this.x = this.width / 2;
-      this.y = this.depth / 2;
-    }
+    this.visible = true;
+    this.x = this.width / 2;
+    this.y = this.depth / 2;
   }
 
   /**
