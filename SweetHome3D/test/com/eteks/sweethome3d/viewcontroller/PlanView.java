@@ -60,9 +60,4 @@ public interface PlanView extends View {
    * Sets the scale used to display the plan.
    */
   public void setScale(float scale);
-
-  /**
-   * Sets the cursor of this component as rotation cursor. 
-   */
-  public void setRotationCursor();
 }
