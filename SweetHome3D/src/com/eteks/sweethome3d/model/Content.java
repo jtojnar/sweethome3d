@@ -21,13 +21,12 @@ package com.eteks.sweethome3d.model;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
 
 /**
  * Content for files, images...
  * @author Emmanuel Puybaret
  */
-public interface Content extends Serializable {
+public interface Content {
   /**
    * Returns an input stream to a content.
    * @throws IOException If the input stream can't be opened.
