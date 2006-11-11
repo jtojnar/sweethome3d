@@ -19,9 +19,6 @@
  */
 package com.eteks.sweethome3d.model;
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -31,19 +28,14 @@ import java.util.List;
  * The home managed by the application with its furniture and walls.
  * @author Emmanuel Puybaret
  */
-public class Home implements Serializable {
-  private static final long serialVersionUID = 1L;
-  
-  private List<HomePieceOfFurniture>        furniture;
-  private transient List<Object>            selectedItems;
-  private transient List<FurnitureListener> furnitureListeners;
-  private transient List<SelectionListener> selectionListeners;
-  private Collection<Wall>                  walls;
-  private transient List<WallListener>      wallListeners;
-  private float                             wallHeight;
-  private String                            name;
-  private transient boolean                 modified;
-  private transient PropertyChangeSupport   propertyChangeSupport;
+public class Home {
+  private List<HomePieceOfFurniture> furniture;
+  private List<Object>               selectedItems;
+  private List<FurnitureListener>    furnitureListeners;
+  private List<SelectionListener>    selectionListeners;
+  private Collection<Wall>           walls;
+  private List<WallListener>         wallListeners;
+  private float                      wallHeight;
 
   /**
    * Creates a home with no furniture, no walls, 
@@ -70,18 +62,18 @@ public class Home implements Serializable {
 
   private Home(List<HomePieceOfFurniture> furniture, float wallHeight) {
     this.furniture = new ArrayList<HomePieceOfFurniture>(furniture);
+    this.furnitureListeners = new ArrayList<FurnitureListener>();
+    this.selectedItems = new ArrayList<Object>();
+    this.selectionListeners = new ArrayList<SelectionListener>();
     this.walls = new ArrayList<Wall>();
+    this.wallListeners = new ArrayList<WallListener>();
     this.wallHeight = wallHeight;
-    // Init transient lists on the fly
   }
 
   /**
    * Adds the furniture <code>listener</code> in parameter to this home.
    */
   public void addFurnitureListener(FurnitureListener listener) {
-    if (this.furnitureListeners == null) {
-      this.furnitureListeners = new ArrayList<FurnitureListener>();
-    }
     this.furnitureListeners.add(listener);
   }
 
@@ -89,9 +81,7 @@ public class Home implements Serializable {
    * Removes the furniture <code>listener</code> in parameter from this home.
    */
   public void removeFurnitureListener(FurnitureListener listener) {
-    if (this.furnitureListeners != null) {
-      this.furnitureListeners.remove(listener);
-    }
+    this.furnitureListeners.remove(listener);
   }
 
   /**
@@ -169,8 +159,7 @@ public class Home implements Serializable {
 
   private void firePieceOfFurnitureChanged(HomePieceOfFurniture piece, int index, 
                                            FurnitureEvent.Type eventType) {
-    if (this.furnitureListeners != null
-        && !this.furnitureListeners.isEmpty()) {
+    if (!this.furnitureListeners.isEmpty()) {
       FurnitureEvent furnitureEvent = 
           new FurnitureEvent(this, piece, index, eventType);
       // Work on a copy of furnitureListeners to ensure a listener 
@@ -187,9 +176,6 @@ public class Home implements Serializable {
    * Adds the selection <code>listener</code> in parameter to this home.
    */
   public void addSelectionListener(SelectionListener listener) {
-    if (this.selectionListeners == null) {
-      this.selectionListeners = new ArrayList<SelectionListener>();
-    }
     this.selectionListeners.add(listener);
   }
 
@@ -197,18 +183,13 @@ public class Home implements Serializable {
    * Removes the selection <code>listener</code> in parameter from this home.
    */
   public void removeSelectionListener(SelectionListener listener) {
-    if (this.selectionListeners != null) {
-      this.selectionListeners.remove(listener);
-    }
+    this.selectionListeners.remove(listener);
   }
 
   /**
    * Returns an unmodifiable list of the selected items in home.
    */
   public List<Object> getSelectedItems() {
-    if (this.selectedItems == null) {
-      this.selectedItems = new ArrayList<Object>();
-    }
     return Collections.unmodifiableList(this.selectedItems);
   }
   
@@ -218,8 +199,7 @@ public class Home implements Serializable {
   public void setSelectedItems(List<? extends Object> selectedItems) {
     // Make a copy of the list to avoid conflicts in the list returned by getSelectedItems
     this.selectedItems = new ArrayList<Object>(selectedItems);
-    if (this.selectionListeners != null 
-        && !this.selectionListeners.isEmpty()) {
+    if (!this.selectionListeners.isEmpty()) {
       SelectionEvent selectionEvent = new SelectionEvent(this, getSelectedItems());
       // Work on a copy of selectionListeners to ensure a listener 
       // can modify safely listeners list
@@ -235,45 +215,38 @@ public class Home implements Serializable {
    * Deselects <code>item</code> if it's selected.
    */
   private void deselectItem(Object item) {
-    if (this.selectedItems != null) {
-      int pieceSelectionIndex = this.selectedItems.indexOf(item);
-      if (pieceSelectionIndex != -1) {
-        List<Object> selectedItems = new ArrayList<Object>(getSelectedItems());
-        selectedItems.remove(pieceSelectionIndex);
-        setSelectedItems(selectedItems);
-      }
+    int pieceSelectionIndex = this.selectedItems.indexOf(item);
+    if (pieceSelectionIndex != -1) {
+      List<Object> selectedItems = new ArrayList<Object>(getSelectedItems());
+      selectedItems.remove(pieceSelectionIndex);
+      setSelectedItems(selectedItems);
     }
   }
 
   /**
-   * Adds the wall <code>listener</code> in parameter to this home.
+   * Adds the wall <code>listener</code> in parameter to this plan.
    */
   public void addWallListener(WallListener listener) {
-    if (this.wallListeners == null) {
-      this.wallListeners = new ArrayList<WallListener>();
-    }
     this.wallListeners.add(listener);
   }
   
   /**
-   * Removes the wall <code>listener</code> in parameter from this home.
+   * Removes the wall <code>listener</code> in parameter from this plan.
    */
   public void removeWallListener(WallListener listener) {
-    if (this.wallListeners != null) {
-      this.wallListeners.remove(listener);
-    }
+    this.wallListeners.remove(listener); 
   } 
 
   /**
-   * Returns an unmodifiable collection of the walls of this home.
+   * Returns an unmodifiable collection of the walls of this plan.
    */
   public Collection<Wall> getWalls() {
     return Collections.unmodifiableCollection(this.walls);
   }
 
   /**
-   * Adds a given <code>wall</code> to the set of walls of this home.
-   * Once the <code>wall</code> is added, wall listeners added to this home will receive a
+   * Adds a given <code>wall</code> to the set of walls of this plan.
+   * Once the <code>wall</code> is added, wall listeners added to this plan will receive a
    * {@link WallListener#wallChanged(WallEvent) wallChanged}
    * notification, with an {@link WallEvent#getType() event type} 
    * equal to {@link WallEvent.Type#ADD ADD}. 
@@ -286,8 +259,8 @@ public class Home implements Serializable {
   }
 
   /**
-   * Removes a given <code>wall</code> from the set of walls of this home.
-   * Once the <code>wall</code> is removed, wall listeners added to this home will receive a
+   * Removes a given <code>wall</code> from the set of walls of this plan.
+   * Once the <code>wall</code> is removed, wall listeners added to this plan will receive a
    * {@link WallListener#wallChanged(WallEvent) wallChanged}
    * notification, with an {@link WallEvent#getType() event type} 
    * equal to {@link WallEvent.Type#DELETE DELETE}.
@@ -316,7 +289,7 @@ public class Home implements Serializable {
 
   /**
    * Moves <code>wall</code> start point to (<code>x</code>, <code>y</code>).
-   * Once the <code>wall</code> is updated, wall listeners added to this home will receive a
+   * Once the <code>wall</code> is updated, wall listeners added to this plan will receive a
    * {@link WallListener#wallChanged(WallEvent) wallChanged}
    * notification, with an {@link WallEvent#getType() event type} 
    * equal to {@link WallEvent.Type#UPDATE UPDATE}. 
@@ -332,7 +305,7 @@ public class Home implements Serializable {
 
   /**
    * Moves <code>wall</code> end point to (<code>x</code>, <code>y</code>) pixels.
-   * Once the <code>wall</code> is updated, wall listeners added to this home will receive a
+   * Once the <code>wall</code> is updated, wall listeners added to this plan will receive a
    * {@link WallListener#wallChanged(WallEvent) wallChanged}
    * notification, with an {@link WallEvent#getType() event type} 
    * equal to {@link WallEvent.Type#UPDATE UPDATE}. 
@@ -348,7 +321,7 @@ public class Home implements Serializable {
 
   /**
    * Sets the wall at start of <code>wall</code> as <code>wallAtEnd</code>. 
-   * Once the <code>wall</code> is updated, wall listeners added to this home will receive a
+   * Once the <code>wall</code> is updated, wall listeners added to this plan will receive a
    * {@link WallListener#wallChanged(WallEvent) wallChanged} notification, with
    * an {@link WallEvent#getType() event type} equal to
    * {@link WallEvent.Type#UPDATE UPDATE}. 
@@ -369,7 +342,7 @@ public class Home implements Serializable {
 
   /**
    * Sets the wall at end of <code>wall</code> as <code>wallAtEnd</code>. 
-   * Once the <code>wall</code> is updated, wall listeners added to this home will receive a
+   * Once the <code>wall</code> is updated, wall listeners added to this plan will receive a
    * {@link WallListener#wallChanged(WallEvent) wallChanged} notification, with
    * an {@link WallEvent#getType() event type} equal to
    * {@link WallEvent.Type#UPDATE UPDATE}. 
@@ -405,12 +378,11 @@ public class Home implements Serializable {
   }
 
   /**
-   * Notifies all wall listeners added to this home an event of 
-   * a given type.
+   * Notifies all wall listeners added to this plan an event of 
+   * a given <code>type</code>.
    */
   private void fireWallEvent(Wall wall, WallEvent.Type eventType) {
-    if (this.wallListeners != null 
-        && !this.wallListeners.isEmpty()) {
+    if (!this.wallListeners.isEmpty()) {
       WallEvent wallEvent = new WallEvent(this, wall, eventType);
       // Work on a copy of wallListeners to ensure a listener 
       // can modify safely listeners list
@@ -423,95 +395,9 @@ public class Home implements Serializable {
   }
 
   /**
-   * Adds the home <code>listener</code> in parameter to this home.
-   */
-  public void addPropertyChangeListener(String property, PropertyChangeListener listener) {
-    if (this.propertyChangeSupport == null) {
-      this.propertyChangeSupport = new PropertyChangeSupport(this);
-    }
-    this.propertyChangeSupport.addPropertyChangeListener(property, listener);
-  }
-
-  /**
-   * Removes the home <code>listener</code> in parameter from this home.
-   */
-  public void removeProrertyChangeistener(String property, PropertyChangeListener listener) {
-    if (this.propertyChangeSupport != null) {
-      this.propertyChangeSupport.removePropertyChangeListener(property, listener);
-    }
-  }
-
-  /**
-   * Returns the wall height of this home.
+   * Returns the wall height of ths home.
    */
   public float getWallHeight() {
     return this.wallHeight;
   }
-
-  /**
-   * Returns the name of this home.
-   */
-  public String getName() {
-    return this.name;
-  }
-
-  /**
-   * Sets the name of this home and fires a <code>PropertyChangeEvent</code>.
-   */
-  public void setName(String name) {
-    if (name != this.name
-        || (name != null && !name.equals(this.name))) {
-      String oldName = this.name;
-      this.name = name;
-      if (this.propertyChangeSupport != null) {
-        this.propertyChangeSupport.firePropertyChange("name", oldName, name);
-      }
-    }
-  }
-
-  /**
-   * Returns whether the state of this home is modified or not.
-   */
-  public boolean isModified() {
-    return this.modified;
-  }
-
-  /**
-   * Sets the modified state of this home and fires a <code>PropertyChangeEvent</code>.
-   */
-  public void setModified(boolean modified) {
-    if (modified != this.modified) {
-      this.modified = modified;
-      if (this.propertyChangeSupport != null) {
-        this.propertyChangeSupport.firePropertyChange("modified", !modified, modified);
-      }
-    }
-  }
-  
-  /**
-   * Returns a sub list of <code>items</code> that contains only home furniture.
-   */
-  public static List<HomePieceOfFurniture> getFurnitureSubList(List<? extends Object> items) {
-    return getSubList(items, HomePieceOfFurniture.class);
-  }
-
-
-  /**
-   * Returns a sub list of <code>items</code> that contains only walls.
-   */
-  public static List<Wall> getWallsSubList(List<? extends Object> items) {
-    return getSubList(items, Wall.class);
-  }
-
-  private static <T> List<T> getSubList(List<? extends Object> items, 
-                                        Class<T> subListClass) {
-    List<T> subList = new ArrayList<T>();
-    for (Object item : items) {
-      if (subListClass.isInstance(item)) {
-        subList.add((T)item);
-      }
-    }
-    return subList;
-  }
 }
-

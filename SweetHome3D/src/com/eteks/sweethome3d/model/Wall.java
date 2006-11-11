@@ -24,15 +24,12 @@ import java.awt.geom.GeneralPath;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.io.Serializable;
 
 /**
  * A wall of a plan.
  * @author Emmanuel Puybaret
  */
-public class Wall implements Serializable  {
-  private static final long serialVersionUID = 1L;
-  
+public class Wall {
   private float xStart;
   private float yStart;
   private float xEnd;
@@ -53,16 +50,7 @@ public class Wall implements Serializable  {
     this.yEnd = yEnd;
     this.thickness = thickness;
   }
-  
-  /**
-   * Creates a wall from a given <code>wall</code>.
-   * The walls at start and at end are not copied.  
-   */
-  public Wall(Wall wall) {
-    this(wall.getXStart(), wall.getYStart(), 
-         wall.getXEnd(), wall.getYEnd(), wall.getThickness());
-  }
-  
+
   /**
    * Returns the start point abscissa of this wall.
    */

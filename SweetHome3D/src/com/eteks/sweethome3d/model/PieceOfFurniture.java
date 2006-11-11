@@ -19,13 +19,11 @@
  */
 package com.eteks.sweethome3d.model;
 
-import java.io.Serializable;
-
 /**
  * A piece of furniture.
  * @author Emmanuel Puybaret
  */
-public interface PieceOfFurniture extends Serializable {
+public interface PieceOfFurniture {
 
   /**
    * Returns the name of this piece of furniture.
