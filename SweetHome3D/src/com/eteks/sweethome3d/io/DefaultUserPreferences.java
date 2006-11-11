@@ -21,7 +21,6 @@ package com.eteks.sweethome3d.io;
 
 import java.util.ResourceBundle;
 
-import com.eteks.sweethome3d.model.RecorderException;
 import com.eteks.sweethome3d.model.UserPreferences;
 
 /**
@@ -42,14 +41,5 @@ public class DefaultUserPreferences extends UserPreferences {
     setUnit(defaultUnit);
     setNewWallThickness(Float.parseFloat(resource.getString("newWallThickness")));
     setNewHomeWallHeight(Float.parseFloat(resource.getString("newHomeWallHeight")));
-  }
-
-  /**
-   * Throws an exception because default user preferences can't be written 
-   * with this class.
-   */
-  @Override
-  public void write() throws RecorderException {
-    throw new RecorderException("Default user preferences can't be written");
   }
 }
