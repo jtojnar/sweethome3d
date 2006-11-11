@@ -26,9 +26,7 @@ import java.text.Collator;
  * A catalog piece of furniture.
  * @author Emmanuel Puybaret
  */
-public class CatalogPieceOfFurniture implements Comparable<CatalogPieceOfFurniture>, PieceOfFurniture {
-  private static final long serialVersionUID = 1L;
-
+public class CatalogPieceOfFurniture implements Comparable<CatalogPieceOfFurniture> {
   private String  name;
   private Content icon;
   private Content model;
