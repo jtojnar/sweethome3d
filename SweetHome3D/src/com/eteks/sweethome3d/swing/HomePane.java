@@ -22,29 +22,16 @@ package com.eteks.sweethome3d.swing;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FileDialog;
-import java.awt.KeyboardFocusManager;
 import java.awt.event.ActionEvent;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.FilenameFilter;
-import java.net.URL;
 import java.util.ResourceBundle;
 
-import javax.jnlp.BasicService;
-import javax.jnlp.ServiceManager;
-import javax.jnlp.UnavailableServiceException;
 import javax.swing.AbstractButton;
 import javax.swing.Action;
 import javax.swing.ActionMap;
-import javax.swing.BorderFactory;
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
-import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -55,13 +42,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
-import javax.swing.JViewport;
 import javax.swing.ToolTipManager;
-import javax.swing.TransferHandler;
-import javax.swing.UIManager;
-import javax.swing.border.Border;
-import javax.swing.event.HyperlinkEvent;
-import javax.swing.event.HyperlinkListener;
 import javax.swing.filechooser.FileFilter;
 
 import com.eteks.sweethome3d.model.Home;
@@ -73,10 +54,10 @@ import com.eteks.sweethome3d.model.UserPreferences;
  */
 public class HomePane extends JRootPane {
   public enum ActionType {
-    NEW_HOME, CLOSE, OPEN, SAVE, SAVE_AS, PREFERENCES, EXIT, 
-    UNDO, REDO, CUT, COPY, PASTE, DELETE, 
+    NEW_HOME, CLOSE, OPEN, SAVE, SAVE_AS, EXIT, 
+    UNDO, REDO, 
     ADD_HOME_FURNITURE, DELETE_HOME_FURNITURE,
-    WALL_CREATION, DELETE_SELECTION, ABOUT}
+    WALL_CREATION, DELETE_SELECTION}
   public enum SaveAnswer {SAVE, CANCEL, DO_NOT_SAVE}
 
   private static final String SWEET_HOME_3D_EXTENSION = ".sh3d";
@@ -99,16 +80,9 @@ public class HomePane extends JRootPane {
   private ResourceBundle                  resource;
   // Button model shared by Wall creation menu item and the matching tool bar button
   private JToggleButton.ToggleButtonModel wallCreationToggleModel;
-  private JComponent                      focusedComponent;
-  private JComponent                      catalogView;
-  private JComponent                      furnitureView;
-  private JComponent                      planView;
-  private TransferHandler                 catalogTransferHandler;
-  private TransferHandler                 furnitureTransferHandler;
-  private TransferHandler                 planTransferHandler;
 
 /**
-   * Creates this view associated with its controller.
+   * Create this view associated with its controller.
    */
   public HomePane(Home home, UserPreferences preferences, HomeController controller) {
     this.resource = ResourceBundle.getBundle(HomePane.class.getName());
@@ -119,7 +93,6 @@ public class HomePane extends JRootPane {
     JPopupMenu.setDefaultLightWeightPopupEnabled(false);
     ToolTipManager.sharedInstance().setLightWeightPopupEnabled(false);
     createActions(controller);
-    createTransferHandlers(home, preferences, controller);
     setJMenuBar(getHomeMenuBar());
     getContentPane().add(getToolBar(), BorderLayout.NORTH);
     getContentPane().add(getMainPane(home, controller));
@@ -134,14 +107,9 @@ public class HomePane extends JRootPane {
     createAction(ActionType.CLOSE, controller, "close");
     createAction(ActionType.SAVE, controller, "save");
     createAction(ActionType.SAVE_AS, controller, "saveAs");
-    createAction(ActionType.PREFERENCES, controller, "editPreferences");
     createAction(ActionType.EXIT, controller, "exit");
     createAction(ActionType.UNDO, controller, "undo");
     createAction(ActionType.REDO, controller, "redo");
-    createClipboardAction(ActionType.CUT, TransferHandler.getCutAction());
-    createClipboardAction(ActionType.COPY, TransferHandler.getCopyAction());
-    createClipboardAction(ActionType.PASTE, TransferHandler.getPasteAction());
-    createAction(ActionType.DELETE, controller, "delete");
     createAction(ActionType.ADD_HOME_FURNITURE,
         controller, "addHomeFurniture");
     createAction(ActionType.DELETE_HOME_FURNITURE,
@@ -159,13 +127,8 @@ public class HomePane extends JRootPane {
         });
     createAction(ActionType.DELETE_SELECTION, 
         controller.getPlanController(), "deleteSelection");
-    createAction(ActionType.ABOUT, controller, "about");
   }
 
-  /**
-   * Creates a <code>ControllerAction</code> object that calls a given
-   * <code>method</code> on <code>controller</code>.
-   */
   private void createAction(ActionType action, Object controller,
                      String method) {
     try {
@@ -176,35 +139,6 @@ public class HomePane extends JRootPane {
     }
   }
   
-  /**
-   * Creates a <code>ReourceAction</code> object that calls 
-   * <code>actionPerfomed</code> method on a given 
-   * existing <code>clipboardAction</code> with a source equal to focused component.
-   */
-  private void createClipboardAction(ActionType actionType, 
-                                     final Action clipboardAction) {
-    getActionMap().put(actionType,
-        new ResourceAction (this.resource, actionType.toString()) {
-          public void actionPerformed(ActionEvent ev) {
-            ev = new ActionEvent(focusedComponent, ActionEvent.ACTION_PERFORMED, null);
-            clipboardAction.actionPerformed(ev);
-          }
-        });
-  }
-  
-  /**
-   * Creates components transfer handlers.
-   */
-  private void createTransferHandlers(Home home, UserPreferences preferences, 
-                                      HomeController controller) {
-    this.catalogTransferHandler = 
-        new CatalogTransferHandler(preferences.getCatalog());
-    this.furnitureTransferHandler = 
-        new FurnitureTransferHandler(home, controller);
-    this.planTransferHandler = 
-        new PlanTransferHandler(home, controller);
-  }
-
   /**
    * Returns the menu bar displayed in this pane.
    */
@@ -223,8 +157,6 @@ public class HomePane extends JRootPane {
     // Don't add EXIT menu under Mac OS X, it's displayed in application menu  
     if (!System.getProperty("os.name").startsWith("Mac OS X")) {
       fileMenu.addSeparator();
-      fileMenu.add(actions.get(ActionType.PREFERENCES));
-      fileMenu.addSeparator();
       fileMenu.add(actions.get(ActionType.EXIT));
     }
 
@@ -233,17 +165,12 @@ public class HomePane extends JRootPane {
     editMenu.setEnabled(true);
     editMenu.add(actions.get(ActionType.UNDO));
     editMenu.add(actions.get(ActionType.REDO));
-    editMenu.addSeparator();
-    editMenu.add(actions.get(ActionType.CUT));
-    editMenu.add(actions.get(ActionType.COPY));
-    editMenu.add(actions.get(ActionType.PASTE));
-    editMenu.addSeparator();
-    editMenu.add(actions.get(ActionType.DELETE));
 
     // Create Furniture menu
     JMenu furnitureMenu = new JMenu(new ResourceAction(this.resource, "FURNITURE_MENU"));
     furnitureMenu.setEnabled(true);
     furnitureMenu.add(actions.get(ActionType.ADD_HOME_FURNITURE));
+    furnitureMenu.add(actions.get(ActionType.DELETE_HOME_FURNITURE));
     
     // Create Plan menu
     JMenu planMenu = new JMenu(new ResourceAction(this.resource, "PLAN_MENU"));
@@ -253,15 +180,7 @@ public class HomePane extends JRootPane {
     // Use the same model as Wall creation tool bar button
     wallCreationCheckBoxMenuItem.setModel(this.wallCreationToggleModel);
     planMenu.add(wallCreationCheckBoxMenuItem);
-
-    // Create Help menu
-    JMenu helpMenu = null;
-    if (!System.getProperty("os.name").startsWith("Mac OS X")) {
-      helpMenu = new JMenu(
-          new ResourceAction(this.resource, "HELP_MENU"));
-      helpMenu.setEnabled(true);
-      helpMenu.add(actions.get(ActionType.ABOUT));
-    }
+    planMenu.add(actions.get(ActionType.DELETE_SELECTION));
 
     // Add menus to menu bar
     JMenuBar menuBar = new JMenuBar();
@@ -269,10 +188,6 @@ public class HomePane extends JRootPane {
     menuBar.add(editMenu);
     menuBar.add(furnitureMenu);
     menuBar.add(planMenu);
-    if (helpMenu != null) {
-      menuBar.add(helpMenu);
-    }
-
     return menuBar;
   }
   
@@ -288,6 +203,9 @@ public class HomePane extends JRootPane {
     toolBar.addSeparator();
 
     toolBar.add(actions.get(ActionType.ADD_HOME_FURNITURE));
+    toolBar.add(actions.get(ActionType.DELETE_HOME_FURNITURE));
+    toolBar.addSeparator();
+
     JToggleButton wallCreationToggleButton = 
       new JToggleButton(actions.get(ActionType.WALL_CREATION));
     // Use the same model as Wall creation menu item
@@ -295,24 +213,11 @@ public class HomePane extends JRootPane {
     // Don't display text with icon
     wallCreationToggleButton.setText("");
     toolBar.add(wallCreationToggleButton);
+    toolBar.add(actions.get(ActionType.DELETE_SELECTION));
     toolBar.addSeparator();
 
     toolBar.add(actions.get(ActionType.UNDO));
     toolBar.add(actions.get(ActionType.REDO));
-    toolBar.addSeparator();
-    
-    toolBar.add(actions.get(ActionType.CUT));
-    toolBar.add(actions.get(ActionType.COPY));
-    toolBar.add(actions.get(ActionType.PASTE));
-    toolBar.addSeparator();
-    
-    toolBar.add(actions.get(ActionType.DELETE));
-    
-    // Remove focuable property on buttons
-    for (int i = 0, n = toolBar.getComponentCount(); i < n; i++) {
-      toolBar.getComponentAtIndex(i).setFocusable(false);
-    }
-    
     return toolBar;
   }
   
@@ -349,26 +254,10 @@ public class HomePane extends JRootPane {
   }
 
   /**
-   * Enables or disables transfer between components.  
-   */
-  public void setTransferEnabled(boolean enabled) {
-    if (enabled) {
-      this.catalogView.setTransferHandler(this.catalogTransferHandler);
-      this.furnitureView.setTransferHandler(this.furnitureTransferHandler);
-      this.planView.setTransferHandler(this.planTransferHandler);
-      ((JViewport)this.furnitureView.getParent()).setTransferHandler(this.furnitureTransferHandler);
-    } else {
-      this.catalogView.setTransferHandler(null);
-      this.furnitureView.setTransferHandler(null);
-      this.planView.setTransferHandler(null);
-      ((JViewport)this.furnitureView.getParent()).setTransferHandler(null);
-    }
-  }
-
-  /**
    * Returns the main pane with catalog tree, furniture table and plan pane. 
    */
-  private JComponent getMainPane(Home home, HomeController controller) {
+  private JComponent getMainPane(Home home, 
+                                 HomeController controller) {
     JSplitPane mainPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, 
         getCatalogFurniturePane(controller), 
         getPlanView3DPane(home, controller));
@@ -382,42 +271,11 @@ public class HomePane extends JRootPane {
    * Returns the catalog tree and furniture table pane. 
    */
   private JComponent getCatalogFurniturePane(HomeController controller) {
-    this.catalogView = controller.getCatalogController().getView();
-    JScrollPane catalogScrollPane = new HomeScrollPane(this.catalogView);
-    // Add focus listener to catalog tree
-    this.catalogView.addFocusListener(new FocusableViewListener(
-        controller, catalogScrollPane));
-
-    this.furnitureView = controller.getFurnitureController().getView();
-    JScrollPane furnitureScrollPane = new HomeScrollPane(this.furnitureView);
-    // Set default traversal keys of furniture view
-    KeyboardFocusManager focusManager =
-        KeyboardFocusManager.getCurrentKeyboardFocusManager();
-    this.furnitureView.setFocusTraversalKeys(
-        KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS,
-        focusManager.getDefaultFocusTraversalKeys(
-            KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS));
-    this.furnitureView.setFocusTraversalKeys(
-        KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS,
-        focusManager.getDefaultFocusTraversalKeys(
-            KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS));
-
-    // Add focus listener to furniture table 
-    this.furnitureView.addFocusListener(new FocusableViewListener(
-        controller, furnitureScrollPane));
-    // Add a mouse listener that gives focus to furniture view when
-    // user clicks in its viewport
-    ((JViewport)this.furnitureView.getParent()).addMouseListener(
-        new MouseAdapter() {
-          @Override
-          public void mouseClicked(MouseEvent ev) {
-            furnitureView.requestFocusInWindow();
-          }
-        });    
-    
+    JComponent catalogView = controller.getCatalogController().getView();
+    JComponent furnitureView = controller.getFurnitureController().getView();
     // Create a split pane that displays both components
     JSplitPane catalogFurniturePane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, 
-        catalogScrollPane, furnitureScrollPane);
+        new HomeScrollPane(catalogView), new HomeScrollPane(furnitureView));
     catalogFurniturePane.setContinuousLayout(true);
     catalogFurniturePane.setOneTouchExpandable(true);
     catalogFurniturePane.setResizeWeight(0.5);
@@ -428,18 +286,13 @@ public class HomePane extends JRootPane {
    * Returns the plan view and 3D view pane. 
    */
   private JComponent getPlanView3DPane(Home home, HomeController controller) {
-    this.planView = controller.getPlanController().getView();
-    JScrollPane planScrollPane = new HomeScrollPane(this.planView);
-    this.planView.addFocusListener(new FocusableViewListener(
-        controller, planScrollPane));
-
+    JComponent planView = controller.getPlanController().getView();
     JComponent view3D = new HomeComponent3D(home);
-    view3D.setPreferredSize(this.planView.getPreferredSize());
+    view3D.setPreferredSize(planView.getPreferredSize());
     view3D.setMinimumSize(new Dimension(0, 0));
-    
     // Create a split pane that displays both components
     JSplitPane planView3DPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, 
-        planScrollPane, view3D);
+        new HomeScrollPane(planView), view3D);
     planView3DPane.setContinuousLayout(true);
     planView3DPane.setOneTouchExpandable(true);
     planView3DPane.setResizeWeight(0.5);
@@ -620,97 +473,16 @@ public class HomePane extends JRootPane {
         JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION;
   }
   
-  /**
-   * Displays an about dialog.
-   */
-  public void showAboutDialog() {
-    // Use an uneditable editor pane to let user select text in dialog
-    JEditorPane messagePane = new JEditorPane("text/html", 
-        this.resource.getString("about.message"));
-    messagePane.setOpaque(false);
-    messagePane.setEditable(false);
-    messagePane.addHyperlinkListener(new HyperlinkListener() {
-      public void hyperlinkUpdate(HyperlinkEvent ev) {
-        if (ev.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-          viewURL(ev.getURL());
-        }
-      }
-    });
-    
-    String title = this.resource.getString("about.title");
-    Icon   icon  = new ImageIcon(HomePane.class.getResource(
-        this.resource.getString("about.icon")));
-    JOptionPane.showMessageDialog(this, messagePane, title,  
-        JOptionPane.INFORMATION_MESSAGE, icon);
-  }
-
-  /**
-   * Launches browser with <code>url</code>.
-   */
-  private void viewURL(URL url) {
-    try { 
-      // Lookup the javax.jnlp.BasicService object 
-      BasicService service = 
-          (BasicService)ServiceManager.lookup("javax.jnlp.BasicService"); 
-      service.showDocument(url); 
-    } catch (UnavailableServiceException ex) {
-      // Too bad : service is unavailable 
-    } 
-  }
-
-  /**
-   * Returns <code>true</code> if clipboard contains data that
-   * components are able to handle.
-   */
-  public boolean isClipboardEmpty() {
-    return !getToolkit().getSystemClipboard().
-        isDataFlavorAvailable(HomeTransferableList.HOME_FLAVOR);
-  }
-
-  /**
-   * A scroll pane that always displays scroll bar on Mac OS X.
-   */
   private static class HomeScrollPane extends JScrollPane {
+    /**
+     * Creates a scroll pane that always displays scroll bar on Mac OS X.
+     */
     public HomeScrollPane(JComponent view) {
       super(view);
       if (System.getProperty("os.name").startsWith("Mac OS X")) {
         setHorizontalScrollBarPolicy(HORIZONTAL_SCROLLBAR_ALWAYS);
         setVerticalScrollBarPolicy(VERTICAL_SCROLLBAR_ALWAYS);
       }
-    }
-  }
-
-  private static final Border UNFOCUSED_BORDER = 
-    BorderFactory.createEmptyBorder(2, 2, 2, 2);
-  private static final Border FOCUSED_BORDER = 
-    BorderFactory.createLineBorder(UIManager.getColor("textHighlight"), 2); 
-
-  /**
-   * A focus listener that calls <code>focusChanged</code> in 
-   * home controller.
-   */
-  private class FocusableViewListener implements FocusListener {
-    private HomeController controller;
-    private JComponent     feedbackComponent;
-  
-    public FocusableViewListener(HomeController controller, 
-                                 JComponent     feedbackComponent) {
-      this.controller = controller;
-      this.feedbackComponent = feedbackComponent;
-      feedbackComponent.setBorder(UNFOCUSED_BORDER);
-    }
-        
-    public void focusGained(FocusEvent ev) {
-      // Display a colored border
-      this.feedbackComponent.setBorder(FOCUSED_BORDER);
-      // Update the component used by clipboard actions
-      focusedComponent = (JComponent)ev.getComponent();
-      // Notify controller that active view changed
-      this.controller.focusedViewChanged(focusedComponent);
-    }
-    
-    public void focusLost(FocusEvent ev) {
-      this.feedbackComponent.setBorder(UNFOCUSED_BORDER);
     }
   }
 }

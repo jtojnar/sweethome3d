@@ -487,31 +487,4 @@ public class Home implements Serializable {
       }
     }
   }
-  
-  /**
-   * Returns a sub list of <code>items</code> that contains only home furniture.
-   */
-  public static List<HomePieceOfFurniture> getFurnitureSubList(List<? extends Object> items) {
-    return getSubList(items, HomePieceOfFurniture.class);
-  }
-
-
-  /**
-   * Returns a sub list of <code>items</code> that contains only walls.
-   */
-  public static List<Wall> getWallsSubList(List<? extends Object> items) {
-    return getSubList(items, Wall.class);
-  }
-
-  private static <T> List<T> getSubList(List<? extends Object> items, 
-                                        Class<T> subListClass) {
-    List<T> subList = new ArrayList<T>();
-    for (Object item : items) {
-      if (subListClass.isInstance(item)) {
-        subList.add((T)item);
-      }
-    }
-    return subList;
-  }
 }
-
