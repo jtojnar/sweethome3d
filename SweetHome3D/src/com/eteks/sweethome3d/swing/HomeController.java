@@ -242,8 +242,6 @@ public class HomeController  {
         !wallCreationMode && selectionContainsFurniture);
     view.setEnabled(HomePane.ActionType.DELETE_SELECTION,
         !wallCreationMode && !selectedItems.isEmpty());
-    view.setEnabled(HomePane.ActionType.MODIFY_HOME_FURNITURE,
-        !wallCreationMode && selectionContainsFurniture);
     view.setEnabled(HomePane.ActionType.ADD_HOME_FURNITURE,
         !wallCreationMode && !catalogSelectedItems.isEmpty());
   }

@@ -60,7 +60,6 @@ public class PlanController {
   private ControllerState     wallCreationState;
   private ControllerState     newWallState;
   private ControllerState     pieceOfFurnitureRotationState;
-  private ControllerState     pieceOfFurnitureResizeState;
   // Mouse cursor position at last mouse press
   private float               xLastMousePress;
   private float               yLastMousePress;
@@ -87,7 +86,6 @@ public class PlanController {
     this.wallCreationState = new WallCreationState();
     this.newWallState = new NewWallState();
     this.pieceOfFurnitureRotationState = new PieceOfFurnitureRotationState();
-    this.pieceOfFurnitureResizeState = new PieceOfFurnitureResizeState();
     // Set defaut state to selectionState
     setState(this.selectionState);
   }
@@ -218,13 +216,6 @@ public class PlanController {
    */
   protected ControllerState getPieceOfFurnitureRotationState() {
     return this.pieceOfFurnitureRotationState;
-  }
-
-  /**
-   * Returns the piece resize state.
-   */
-  protected ControllerState getPieceOfFurnitureResizeState() {
-    return this.pieceOfFurnitureResizeState;
   }
 
   /**
@@ -374,25 +365,7 @@ public class PlanController {
       HomePieceOfFurniture piece = ((HomePieceOfFurniture)selectedItems.get(0));
       float margin = 2 / ((PlanComponent)getView()).getScale();
       if (piece.containsPoint(x, y, margin)
-          && piece.isTopLeftVertexAt(x, y, margin)) {
-        return (HomePieceOfFurniture)selectedItems.get(0);
-      }
-    } 
-    return null;
-  }
-  
-  /**
-   * Returns the piece of furniture in selected items with a vertex 
-   * at (<code>x</code>, <code>y</code>) that can be used to resize the piece.
-   */
-  private HomePieceOfFurniture getResizedPieceOfFurnitureAt(float x, float y) {
-    List<Object> selectedItems = this.home.getSelectedItems();
-    if (selectedItems.size() == 1
-        && selectedItems.get(0) instanceof HomePieceOfFurniture) {
-      HomePieceOfFurniture piece = ((HomePieceOfFurniture)selectedItems.get(0));
-      float margin = 2 / ((PlanComponent)getView()).getScale();
-      if (piece.containsPoint(x, y, margin)
-          && piece.isBottomRightVertexAt(x, y, margin)) {
+          && piece.isVertexAt(x, y, margin)) {
         return (HomePieceOfFurniture)selectedItems.get(0);
       }
     } 
@@ -738,45 +711,11 @@ public class PlanController {
         public void redo() throws CannotRedoException {
           super.redo();
           home.setPieceOfFurnitureAngle(piece, newAngle);
-          selectAndShowItems(Arrays.asList(new HomePieceOfFurniture [] {piece}));
         }      
   
         @Override
         public String getPresentationName() {
           return resource.getString("undoPieceOfFurnitureRotationName");
-        }      
-      };
-      this.undoSupport.postEdit(undoableEdit);
-    }
-  }
-
-  /**
-   * Post to undo support a width and depth change on <code>piece</code>. 
-   */
-  private void postPieceOfFurnitureResize(final HomePieceOfFurniture piece, 
-                                          final float oldWidth, final float oldDepth) {
-    final float newWidth = piece.getWidth();
-    final float newDepth = piece.getDepth();
-    if (newWidth != oldWidth
-        || newDepth != oldDepth) {
-      UndoableEdit undoableEdit = new AbstractUndoableEdit() {      
-        @Override
-        public void undo() throws CannotUndoException {
-          super.undo();
-          home.setPieceOfFurnitureDimension(piece, oldWidth, oldDepth, piece.getHeight());
-          selectAndShowItems(Arrays.asList(new HomePieceOfFurniture [] {piece}));
-        }
-        
-        @Override
-        public void redo() throws CannotRedoException {
-          super.redo();
-          home.setPieceOfFurnitureDimension(piece, newWidth, newDepth, piece.getHeight());
-          selectAndShowItems(Arrays.asList(new HomePieceOfFurniture [] {piece}));
-        }      
-  
-        @Override
-        public String getPresentationName() {
-          return resource.getString("undoPieceOfFurnitureResizeName");
         }      
       };
       this.undoSupport.postEdit(undoableEdit);
@@ -1022,9 +961,7 @@ public class PlanController {
 
     @Override
     public void moveMouse(float x, float y) {
-      if (getResizedPieceOfFurnitureAt(x, y) != null) {
-        ((PlanComponent)getView()).setResizeCursor();
-      } else if (getRotatedPieceOfFurnitureAt(x, y) != null) {
+      if (getRotatedPieceOfFurnitureAt(x, y) != null) {
         ((PlanComponent)getView()).setRotationCursor();
       } else {
         ((PlanComponent)getView()).setCursor(getMode());
@@ -1036,9 +973,7 @@ public class PlanController {
                            boolean shiftDown) {
       // If shift isn't pressed, and an item is under cursor position
       if (!shiftDown && getItemAt(x, y) != null) {
-        if (getResizedPieceOfFurnitureAt(x, y) != null) {
-          setState(getPieceOfFurnitureResizeState());
-        } else if (getRotatedPieceOfFurnitureAt(x, y) != null) {
+        if (getRotatedPieceOfFurnitureAt(x, y) != null) {
           setState(getPieceOfFurnitureRotationState());
         } else {
           // Change state to SelectionMoveState
@@ -1285,15 +1220,6 @@ public class PlanController {
     }
     
     @Override
-    public void setMode(Mode mode) {
-      if (mode != Mode.WALL_CREATION) {
-        // Escape current creation and change state to SelectionState
-        escape();
-        setState(getSelectionState());
-      }
-    }
-
-    @Override
     public void enter() {
       this.oldSelection = home.getSelectedItems();
       deselectAll();
@@ -1482,7 +1408,7 @@ public class PlanController {
 
     @Override
     public void releaseMouse(float x, float y) {
-      postPieceOfFurnitureRotation(this.selectedPiece, this.oldAngle);
+      postPieceOfFurnitureRotation(this.selectedPiece, oldAngle);
       setState(getSelectionState());
     }
 
@@ -1498,71 +1424,6 @@ public class PlanController {
     @Override
     public void escape() {
       home.setPieceOfFurnitureAngle(this.selectedPiece, oldAngle);
-      setState(getSelectionState());
-    }
-  }
-
-  /**
-   * Furniture resize state. This states manages the resizing of a piece of furniture.
-   */
-  private class PieceOfFurnitureResizeState extends ControllerState {
-    private float                deltaXToResizeVertex;
-    private float                deltaYToResizeVertex;
-    private HomePieceOfFurniture selectedPiece;
-    private float                oldWidth;
-    private float                oldDepth;
-
-    @Override
-    public Mode getMode() {
-      return Mode.SELECTION;
-    }
-    
-    @Override
-    public void enter() {
-      this.selectedPiece = getResizedPieceOfFurnitureAt(getXLastMousePress(), getYLastMousePress());
-      float [] resizePoint = this.selectedPiece.getPoints() [2];
-      this.deltaXToResizeVertex = getXLastMousePress() - resizePoint [0];
-      this.deltaYToResizeVertex = getYLastMousePress() - resizePoint [1];
-      this.oldWidth = this.selectedPiece.getWidth();
-      this.oldDepth = this.selectedPiece.getDepth();
-    }
-
-    @Override
-    public void moveMouse(float x, float y) {
-      // Compute the new dimension of the piece
-      float angle = this.selectedPiece.getAngle();
-      double cos = Math.cos(angle); 
-      double sin = Math.sin(angle); 
-      double xToCenter = x - this.deltaXToResizeVertex - this.selectedPiece.getX();
-      double yToCenter = y - this.deltaYToResizeVertex - this.selectedPiece.getY();
-      float newWidth = (float)(2. * (xToCenter * cos + yToCenter * sin));
-      float newDepth = (float)(2. * (-xToCenter * sin + yToCenter * cos));
-
-      newWidth = Math.round(newWidth * 10f) / 10f;
-      newDepth = Math.round(newDepth * 10f) / 10f;
-      
-      // Update piece new dimension
-      if (newWidth > 0.1f || newDepth > 0.1f) {
-        home.setPieceOfFurnitureDimension(this.selectedPiece, 
-            newWidth > 0.1f ? newWidth : this.selectedPiece.getWidth(), 
-            newDepth > 0.1f ? newDepth : this.selectedPiece.getDepth(), 
-            this.selectedPiece.getHeight());
-      }
-
-      // Ensure point at (x,y) is visible
-      ((PlanComponent)getView()).makePointVisible(x, y);
-    }
-
-    @Override
-    public void releaseMouse(float x, float y) {
-      postPieceOfFurnitureResize(this.selectedPiece, this.oldWidth, this.oldDepth);
-      setState(getSelectionState());
-    }
-
-    @Override
-    public void escape() {
-      home.setPieceOfFurnitureDimension(this.selectedPiece, 
-          oldWidth, oldDepth, selectedPiece.getHeight());
       setState(getSelectionState());
     }
   }

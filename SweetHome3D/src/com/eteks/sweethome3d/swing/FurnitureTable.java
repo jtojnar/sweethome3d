@@ -24,7 +24,6 @@ import static com.eteks.sweethome3d.model.UserPreferences.Unit.centimerToInch;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -36,7 +35,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.ResourceBundle;
 
-import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JTable;
@@ -85,13 +83,11 @@ public class FurnitureTable extends JTable {
     setColumnIdentifiers();
     setColumnRenderers(preferences);
     setTableHeaderRenderer(home);
-    updateTableSelectedFurniture(home.getSelectedItems());
     // Add listeners to model
     if (controller != null) {
       addSelectionListeners(home, controller);
       // Enable sort in table with click in header
       addTableHeaderListener(controller);
-      addMouseListener(controller);
     }
     addHomeListener(home);
     addUserPreferencesListener(preferences);
@@ -149,21 +145,7 @@ public class FurnitureTable extends JTable {
     }
     getSelectionModel().addListSelectionListener(tableSelectionListener);
   }
-
-  /**
-   * Adds a double click mouse listener to modify selected furniture.
-   */
-  private void addMouseListener(final FurnitureController controller) {
-    addMouseListener(new MouseAdapter () {
-        @Override
-        public void mouseClicked(MouseEvent ev) {
-          if (ev.getClickCount() == 2) {
-            controller.modifySelection();
-          }
-        }
-      });
-  }
-
+  
   /**
    * Adds a listener to <code>preferences</code> to repaint this table
    * when unit changes.  
@@ -178,9 +160,9 @@ public class FurnitureTable extends JTable {
   }
 
   /**
-   * Adds <code>PropertyChange</code> and {@link FurnitureListener FurnitureListener} listeners 
-   * to home to update furniture sort in table when <code>furnitureSortedProperty</code>, 
-   * <code>furnitureAscendingSorted</code> or furniture in <code>home</code> changes.
+   * Adds a <code>PropertyChange</code> listener to home to update furniture sort
+   * in table when <code>furnitureSortedProperty</code> or <code>furnitureAscendingSorted</code> 
+   * in <code>home</code> changes.
    */
   private void addHomeListener(final Home home) {
     PropertyChangeListener sortListener = 
@@ -193,18 +175,7 @@ public class FurnitureTable extends JTable {
         }
       };
     home.addPropertyChangeListener("furnitureSortedProperty", sortListener);
-    home.addPropertyChangeListener("furnitureDescendingSorted", sortListener);
-    
-    home.addFurnitureListener(new FurnitureListener() {
-        public void pieceOfFurnitureChanged(FurnitureEvent ev) {
-          if (ev.getType() == FurnitureEvent.Type.UPDATE) {
-            // As furniture properties values change may alter sort order, udpate sort and whole table
-            ((FurnitureTableModel)getModel()).sortFurniture(home);
-            // Update selected rows
-            updateTableSelectedFurniture(home.getSelectedItems());
-          }
-        }
-      });
+    home.addPropertyChangeListener("furnitureDescendingSorted", sortListener);    
   }
 
   /**
@@ -230,8 +201,8 @@ public class FurnitureTable extends JTable {
     String [] columnNames = {
        resource.getString("nameColumn"),
        resource.getString("widthColumn"),
-       resource.getString("depthColumn"),
        resource.getString("heightColumn"),
+       resource.getString("depthColumn"),
        resource.getString("colorColumn"),
        resource.getString("movableColumn"),
        resource.getString("doorOrWindowColumn"),
@@ -244,7 +215,7 @@ public class FurnitureTable extends JTable {
    */
   private void setColumnIdentifiers() {
     HomePieceOfFurniture.SortableProperty [] furnitureProperties = 
-        {SortableProperty.NAME, SortableProperty.WIDTH, SortableProperty.DEPTH, SortableProperty.HEIGHT, 
+        {SortableProperty.NAME, SortableProperty.WIDTH, SortableProperty.HEIGHT, SortableProperty.DEPTH, 
          SortableProperty.COLOR, SortableProperty.MOVABLE, 
          SortableProperty.DOOR_OR_WINDOW, SortableProperty.VISIBLE};
     // Set identifiers of each column
@@ -319,26 +290,6 @@ public class FurnitureTable extends JTable {
    */
   private TableCellRenderer getColorRenderer() {
     return new DefaultTableCellRenderer() {
-      // A square icon filled with the foreground color of its component 
-      // and surrounded by table foreground color 
-      private Icon squareIcon = new Icon () {
-        public int getIconHeight() {
-          return getFont().getSize();
-        }
-
-        public int getIconWidth() {
-          return getIconHeight();
-        }
-
-        public void paintIcon(Component c, Graphics g, int x, int y) {
-          int squareSize = getIconHeight();
-          g.setColor(c.getForeground());          
-          g.fillRect(x + 2, y + 2, squareSize - 3, squareSize - 3);
-          g.setColor(c.getParent().getParent().getForeground());
-          g.drawRect(x + 1, y + 1, squareSize - 2, squareSize - 2);
-        }
-      };
-        
       @Override
       public Component getTableCellRendererComponent(JTable table, 
            Object value, boolean isSelected, boolean hasFocus, 
@@ -346,12 +297,10 @@ public class FurnitureTable extends JTable {
         JLabel label = (JLabel)super.getTableCellRendererComponent(
             table, value, isSelected, hasFocus, row, column);
         if (value != null) {
-          label.setText(null);
-          label.setIcon(squareIcon);
+          label.setText("\u25fc");
           label.setForeground(new Color((Integer)value));
         } else {
           label.setText("-");
-          label.setIcon(null);
           label.setForeground(table.getForeground());
         }
         label.setHorizontalAlignment(JLabel.CENTER);
@@ -414,8 +363,8 @@ public class FurnitureTable extends JTable {
    * Model used by this table
    */
   private static class FurnitureTableModel extends AbstractTableModel {
-    private String []                  columnNames;
-    private List<HomePieceOfFurniture> sortedFurniture;
+    private String []                        columnNames;
+    private List<HomePieceOfFurniture>       sortedFurniture;
     
     public FurnitureTableModel(Home home, String [] columnNames) {
       this.columnNames = columnNames;
@@ -428,13 +377,14 @@ public class FurnitureTable extends JTable {
         public void pieceOfFurnitureChanged(FurnitureEvent ev) {
           int pieceIndex = ev.getIndex();
           HomePieceOfFurniture piece = (HomePieceOfFurniture)ev.getPieceOfFurniture();
-          int sortedIndex = getPieceOfFurnitureIndex(piece, home, pieceIndex);
           switch (ev.getType()) {
             case ADD :
+              int sortedIndex = getPieceOfFurnitureIndex(piece, home, pieceIndex);
               sortedFurniture.add(sortedIndex, piece);
               fireTableRowsInserted(sortedIndex, sortedIndex);
               break;
             case DELETE :
+              sortedIndex = getPieceOfFurnitureIndex(piece, home, pieceIndex);
               sortedFurniture.remove(sortedIndex);
               fireTableRowsDeleted(sortedIndex, sortedIndex);
               break;
@@ -480,8 +430,8 @@ public class FurnitureTable extends JTable {
       switch (columnIndex) {
         case 0 : return piece;
         case 1 : return piece.getWidth();
-        case 2 : return piece.getDepth();
-        case 3 : return piece.getHeight();
+        case 2 : return piece.getHeight();
+        case 3 : return piece.getDepth();
         case 4 : return piece.getColor();
         case 5 : return piece.isMovable();
         case 6 : return piece.isDoorOrWindow();

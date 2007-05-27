@@ -33,7 +33,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
-import javax.swing.KeyStroke;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -73,7 +72,7 @@ public class UserPreferencesPanel extends JPanel {
    * Creates and initializes components and spinners model.
    */
   private void createComponents() {
-    this.unitLabel = new JLabel(this.resource.getString("unitLabel.text"));
+    unitLabel = new JLabel(this.resource.getString("unitLabel.text"));
     this.centimeterRadioButton = new JRadioButton(
         this.resource.getString("centimeterRadioButton.text"), true);
     this.inchRadioButton = new JRadioButton(
@@ -101,16 +100,16 @@ public class UserPreferencesPanel extends JPanel {
   private void setMnemonics() {
     if (!System.getProperty("os.name").startsWith("Mac OS X")) {
       this.centimeterRadioButton.setMnemonic(
-          KeyStroke.getKeyStroke(this.resource.getString("centimeterRadioButton.mnemonic")).getKeyCode());
+          this.resource.getString("centimeterRadioButton.mnemonic").charAt(0));
       this.inchRadioButton.setMnemonic(
-          KeyStroke.getKeyStroke(this.resource.getString("inchRadioButton.mnemonic")).getKeyCode());
+          this.resource.getString("inchRadioButton.mnemonic").charAt(0));
       this.magnetismCheckBox.setMnemonic(
-          KeyStroke.getKeyStroke(this.resource.getString("magnetismCheckBox.mnemonic")).getKeyCode());
+          this.resource.getString("magnetismCheckBox.mnemonic").charAt(0));
       this.newWallThicknessLabel.setDisplayedMnemonic(
-          KeyStroke.getKeyStroke(this.resource.getString("newWallThicknessLabel.mnemonic")).getKeyCode());
+          this.resource.getString("newWallThicknessLabel.mnemonic").charAt(0));
       this.newWallThicknessLabel.setLabelFor(this.newWallThicknessSpinner);
       this.newHomeWallHeightLabel.setDisplayedMnemonic(
-          KeyStroke.getKeyStroke(this.resource.getString("newHomeWallHeightLabel.mnemonic")).getKeyCode());
+          this.resource.getString("newHomeWallHeightLabel.mnemonic").charAt(0));
       this.newHomeWallHeightLabel.setLabelFor(this.newHomeWallHeightSpinner);
     }
   }

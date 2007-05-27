@@ -171,29 +171,15 @@ public class HomePieceOfFurniture implements PieceOfFurniture {
   /**
    * Returns the name of this piece of furniture.
    */
-  public String getName() {
+   public String getName() {
     return this.name;
   }
 
-  /**
-   * Sets the name of this piece of furniture.
-   */
-  void setName(String name) {
-    this.name = name;
-  }
-   
   /**
    * Returns the depth of this piece of furniture.
    */
   public float getDepth() {
     return this.depth;
-  }
-
-  /**
-   * Sets the depth of this piece of furniture.
-   */
-  void setDepth(float depth) {
-    this.depth = depth;
   }
 
   /**
@@ -204,24 +190,10 @@ public class HomePieceOfFurniture implements PieceOfFurniture {
   }
 
   /**
-   * Sets the height of this piece of furniture.
-   */
-  void setHeight(float height) {
-    this.height = height;
-  }
-
-  /**
    * Returns the width of this piece of furniture.
    */
   public float getWidth() {
     return this.width;
-  }
-
-  /**
-   * Sets the width of this piece of furniture.
-   */
-  void setWidth(float width) {
-    this.width = width;
   }
 
   /**
@@ -261,26 +233,12 @@ public class HomePieceOfFurniture implements PieceOfFurniture {
   }
   
   /**
-   * Sets the color of this piece of furniture or <code>null</code> if piece color is unchanged.
-   */
-  void setColor(Integer color) {
-    this.color = color;
-  }
-
-  /**
    * Returns <code>true</code> if this piece of furniture is visible.
    */
   public boolean isVisible() {
     return this.visible;
   }
   
-  /**
-   * Sets whether this piece of furniture is visible or not.
-   */
-  void setVisible(boolean visible) {
-    this.visible = visible;
-  }
-
   /**
    * Returns the abscissa of this piece of furniture.
    */
@@ -294,7 +252,6 @@ public class HomePieceOfFurniture implements PieceOfFurniture {
   void setX(float x) {
     this.x = x;
   }
-  
   /**
    * Returns the ordinate of this piece of furniture.
    */
@@ -359,7 +316,7 @@ public class HomePieceOfFurniture implements PieceOfFurniture {
   }
   
   /**
-   * Returns <code>true</code> if one of the vertex of this piece is 
+   * Returns <code>true</code> if one of the vertex of this piece vertex is 
    * the point at (<code>x</code>, <code>y</code>)
    * with a given <code>margin</code>.
    */
@@ -370,26 +327,6 @@ public class HomePieceOfFurniture implements PieceOfFurniture {
       }
     } 
     return false;
-  }
-
-  /**
-   * Returns <code>true</code> if the top left vertex of this piece is 
-   * the point at (<code>x</code>, <code>y</code>)
-   * with a given <code>margin</code>.
-   */
-  public boolean isTopLeftVertexAt(float x, float y, float margin) {
-    float [][] points = getPoints();
-    return (Math.abs(x - points[0][0]) <= margin && Math.abs(y - points[0][1]) <= margin);
-  }
-
-  /**
-   * Returns <code>true</code> if the bottom right vertex of this piece is 
-   * the point at (<code>x</code>, <code>y</code>)
-   * with a given <code>margin</code>.
-   */
-  public boolean isBottomRightVertexAt(float x, float y, float margin) {
-    float [][] points = getPoints();
-    return (Math.abs(x - points[2][0]) <= margin && Math.abs(y - points[2][1]) <= margin);
   }
 
   /**

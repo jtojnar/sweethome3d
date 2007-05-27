@@ -20,7 +20,6 @@
 package com.eteks.sweethome3d.swing;
 
 import java.awt.Color;
-import java.awt.EventQueue;
 import java.awt.GridLayout;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -44,7 +43,6 @@ import javax.media.j3d.Group;
 import javax.media.j3d.Light;
 import javax.media.j3d.Material;
 import javax.media.j3d.Node;
-import javax.media.j3d.RenderingAttributes;
 import javax.media.j3d.Shape3D;
 import javax.media.j3d.Transform3D;
 import javax.media.j3d.TransformGroup;
@@ -400,7 +398,7 @@ public class HomeComponent3D extends JComponent {
       
       addChild(getPieceOfFurnitureNode());
 
-      // Set piece model initial location, orientation and size
+      // Set piece model initial location, orientation and size 
       updatePieceOfFurnitureTransform();
     }
 
@@ -415,15 +413,12 @@ public class HomeComponent3D extends JComponent {
 
       pieceTransformGroup.setCapability(Group.ALLOW_CHILDREN_WRITE);
       pieceTransformGroup.setCapability(Group.ALLOW_CHILDREN_EXTEND);
-      pieceTransformGroup.setCapability(Group.ALLOW_CHILDREN_READ);
 
       // While loading model use a temporary node that displays a white box  
       final BranchGroup waitBranch = new BranchGroup();
       waitBranch.setCapability(BranchGroup.ALLOW_DETACH);
-      waitBranch.addChild(getModelBox(Color.WHITE));      
-      // Allow appearance change on all children
-      setAppearanceChangeCapability(waitBranch);
       
+      waitBranch.addChild(getModelBox(Color.WHITE));      
       pieceTransformGroup.addChild(waitBranch);
       
       // Load piece real 3D model
@@ -431,19 +426,9 @@ public class HomeComponent3D extends JComponent {
         public void run() {
           BranchGroup modelBranch = new BranchGroup();
           modelBranch.addChild(getModelNode());
-          // Allow appearance change on all children
-          setAppearanceChangeCapability(modelBranch);
-          // Add model branch to live scene
           pieceTransformGroup.addChild(modelBranch);
           // Remove temporary node
           waitBranch.detach();
-          EventQueue.invokeLater(new Runnable() {
-            public void run() {
-              // Update piece color and visibility
-              updatePieceOfFurnitureColor();      
-              updatePieceOfFurnitureVisibility();      
-            }
-          });
         }
       });
       
@@ -453,8 +438,6 @@ public class HomeComponent3D extends JComponent {
     @Override
     public void update() {
       updatePieceOfFurnitureTransform();
-      updatePieceOfFurnitureColor();      
-      updatePieceOfFurnitureVisibility();      
     }
 
     /**
@@ -477,32 +460,6 @@ public class HomeComponent3D extends JComponent {
       pieceTransform.mul(scale);
       // Change model transformation      
       ((TransformGroup)getChild(0)).setTransform(pieceTransform);
-    }
-
-    /**
-     * Sets the color applied to piece model.
-     */
-    private void updatePieceOfFurnitureColor() {
-      HomePieceOfFurniture piece = (HomePieceOfFurniture)getUserData();
-      if (piece.getColor() != null) {
-        Integer color = piece.getColor();
-        Color3f materialColor = new Color3f(((color >>> 16) & 0xFF) / 256f,
-                                             ((color >>> 8) & 0xFF) / 256f,
-                                                     (color & 0xFF) / 256f);
-        setMaterial(getChild(0), 
-            new Material(materialColor, new Color3f(), materialColor, materialColor, 64));
-      } else {
-        // Set default material of model
-        setMaterial(getChild(0), null);
-      }
-    }
-
-    /**
-     * Sets whether this piece model is visible or not.
-     */
-    private void updatePieceOfFurnitureVisibility() {
-      HomePieceOfFurniture piece = (HomePieceOfFurniture)getUserData();
-      setVisible(getChild(0), piece.isVisible());
     }
 
     /**
@@ -601,101 +558,5 @@ public class HomeComponent3D extends JComponent {
         bounds.combine(shapeBounds);
       }
     }
-
-    /**
-     * Sets the capability to change material and rendering attributes
-     * for all children of <code>node</code>.
-     */
-    private void setAppearanceChangeCapability(Node node) {
-      if (node instanceof Group) {
-        node.setCapability(Group.ALLOW_CHILDREN_READ);
-        Enumeration enumeration = ((Group)node).getAllChildren(); 
-        while (enumeration.hasMoreElements()) {
-          setAppearanceChangeCapability((Node)enumeration.nextElement());
-        }
-      } else if (node instanceof Shape3D) {
-        Appearance appearance = ((Shape3D)node).getAppearance();
-        if (appearance != null) {
-          // Allow future material and rendering attributes changes
-          appearance.setCapability(Appearance.ALLOW_MATERIAL_READ);
-          appearance.setCapability(Appearance.ALLOW_MATERIAL_WRITE);
-          appearance.setCapability(Appearance.ALLOW_RENDERING_ATTRIBUTES_READ);
-          appearance.setCapability(Appearance.ALLOW_RENDERING_ATTRIBUTES_WRITE);
-        }
-        node.setCapability(Shape3D.ALLOW_APPEARANCE_READ);
-        node.setCapability(Shape3D.ALLOW_APPEARANCE_WRITE);
-      }
-    }
-
-    /**
-     * Sets the material attribute of all <code>Shape3D</code> children nodes of <code>node</code> 
-     * with a given <code>color</code>. 
-     */
-    private void setMaterial(Node node, Material material) {
-      if (node instanceof Group) {
-        // Set material of all children
-        Enumeration enumeration = ((Group)node).getAllChildren(); 
-        while (enumeration.hasMoreElements()) {
-          setMaterial((Node)enumeration.nextElement(), material);
-        }
-      } else if (node instanceof Shape3D) {
-        Shape3D shape = (Shape3D)node;
-        Appearance appearance = shape.getAppearance();
-        if (appearance == null) {
-          shape.setAppearance(createAppearanceWithChangeCapability());
-        }
-        // Use shape user data to store shape default material
-        Material defaultMaterial = (Material)shape.getUserData();
-        if (defaultMaterial == null) {
-          defaultMaterial = appearance.getMaterial();
-          shape.setUserData(defaultMaterial);
-        }
-        // Change material
-        if (material != null) {
-          appearance.setMaterial(material);
-        } else {
-          // Restore default material
-          appearance.setMaterial(defaultMaterial);
-        }
-      }
-    }
-
-    /**
-     * Sets the visible attribute of all <code>Shape3D</code> children nodes of <code>node</code>. 
-     */
-    private void setVisible(Node node, boolean visible) {
-      if (node instanceof Group) {
-        // Set visibility of all children
-        Enumeration enumeration = ((Group)node).getAllChildren(); 
-        while (enumeration.hasMoreElements()) {
-          setVisible((Node)enumeration.nextElement(), visible);
-        }
-      } else if (node instanceof Shape3D) {
-        Appearance appearance = ((Shape3D)node).getAppearance();
-        if (appearance == null) {
-          ((Shape3D)node).setAppearance(createAppearanceWithChangeCapability());
-        }
-        RenderingAttributes renderingAttributes = appearance.getRenderingAttributes();
-        if (renderingAttributes == null) {
-          renderingAttributes = new RenderingAttributes();
-          renderingAttributes.setCapability(RenderingAttributes.ALLOW_VISIBLE_WRITE);
-          appearance.setRenderingAttributes(renderingAttributes);
-        }
-        
-        // Change visibility
-        renderingAttributes.setVisible(visible);
-      }
-    }
-
-    private Appearance createAppearanceWithChangeCapability() {
-      Appearance appearance = new Appearance();
-      // Allow future material and rendering attributes changes
-      appearance.setCapability(Appearance.ALLOW_MATERIAL_READ);
-      appearance.setCapability(Appearance.ALLOW_MATERIAL_WRITE);
-      appearance.setCapability(Appearance.ALLOW_RENDERING_ATTRIBUTES_READ);
-      appearance.setCapability(Appearance.ALLOW_RENDERING_ATTRIBUTES_WRITE);
-      return appearance;
-    }
-    
   }
 }

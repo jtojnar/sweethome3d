@@ -19,6 +19,7 @@
  */
 package com.eteks.sweethome3d.junit;
 
+import java.lang.reflect.Field;
 import java.util.Locale;
 
 import javax.swing.JCheckBox;
@@ -43,7 +44,7 @@ public class UserPreferencesPanelTest extends TestCase {
     // 1. Create default preferences for a user that uses centimeter
     Locale.setDefault(Locale.FRANCE);
     UserPreferences defaultPreferences = new DefaultUserPreferences();
-    // Copy these preferences into system preferences
+    // Copy this preferences into system preferences
     UserPreferences preferences = new FileUserPreferences();
     preferences.setUnit(defaultPreferences.getUnit());
     preferences.setMagnetismEnabled(
@@ -57,15 +58,15 @@ public class UserPreferencesPanelTest extends TestCase {
     UserPreferencesPanel panel = new UserPreferencesPanel();
     panel.setPreferences(preferences);
     JRadioButton centimeterRadioButton = 
-        (JRadioButton)TestUtilities.getField(panel, "centimeterRadioButton");
+        (JRadioButton)getField(panel, "centimeterRadioButton");
     JRadioButton inchRadioButton = 
-        (JRadioButton)TestUtilities.getField(panel, "inchRadioButton");
+        (JRadioButton)getField(panel, "inchRadioButton");
     JCheckBox    magnetismCheckBox = 
-        (JCheckBox)TestUtilities.getField(panel, "magnetismCheckBox");
+        (JCheckBox)getField(panel, "magnetismCheckBox");
     JSpinner newWallThicknessSpinner = 
-        (JSpinner)TestUtilities.getField(panel, "newWallThicknessSpinner");
+        (JSpinner)getField(panel, "newWallThicknessSpinner");
     JSpinner newHomeWallHeightSpinner = 
-        (JSpinner)TestUtilities.getField(panel, "newHomeWallHeightSpinner");
+        (JSpinner)getField(panel, "newHomeWallHeightSpinner");
     // Check panel components value
     assertTrue("Centimeter radio button isn't selected", 
         centimeterRadioButton.isSelected());
@@ -121,5 +122,16 @@ public class UserPreferencesPanelTest extends TestCase {
         preferences.getNewWallThickness());
     assertEquals("Wrong new home wall height", newHomeWallHeight,
         preferences.getNewHomeWallHeight());
+  }
+
+  /**
+   * Returns a reference to <code>fieldName</code> 
+   * in a given <code>instance</code> by reflection.
+   */
+  private Object getField(Object instance, String fieldName)
+      throws NoSuchFieldException, IllegalAccessException {
+    Field field = instance.getClass().getDeclaredField(fieldName);
+    field.setAccessible(true);
+    return field.get(instance);
   }
 }

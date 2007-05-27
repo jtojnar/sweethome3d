@@ -23,6 +23,7 @@ package com.eteks.sweethome3d.junit;
 import java.awt.Component;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Map;
@@ -55,8 +56,7 @@ public class IconManagerTest extends TestCase {
       throws NoSuchFieldException, IllegalAccessException, InterruptedException, BrokenBarrierException, ClassNotFoundException {
     // Stop iconsLoader of iconManager 
     IconManager iconManager = IconManager.getInstance();
-    ThreadPoolExecutor iconsLoader = 
-        (ThreadPoolExecutor)TestUtilities.getField(iconManager, "iconsLoader");
+    ThreadPoolExecutor iconsLoader = (ThreadPoolExecutor)getField(iconManager, "iconsLoader");
     iconsLoader.shutdownNow();
     // Replace it by an excecutor that controls the start of a task with a barrier
     final CyclicBarrier iconLoadingStartBarrier = new CyclicBarrier(2);
@@ -76,7 +76,7 @@ public class IconManagerTest extends TestCase {
     });
     
     // Empty existing icons to prove IconManager work
-    ((Map)TestUtilities.getField(iconManager, "icons")).clear();
+    ((Map)getField(iconManager, "icons")).clear();
     
     // Test icon loading on a good image
     testIconLoading(getClass().getResource("resources/test.png"), true, iconLoadingStartBarrier);
@@ -84,10 +84,8 @@ public class IconManagerTest extends TestCase {
     testIconLoading(getClass().getResource("IconManagerTest.class"), false, iconLoadingStartBarrier);
 
     Class iconProxyClass = Class.forName(iconManager.getClass().getName() + "$IconProxy");
-    URLContent waitIconContent = 
-        (URLContent)TestUtilities.getField(iconManager, "waitIconContent");
-    URLContent errorIconContent = 
-        (URLContent)TestUtilities.getField(iconManager, "errorIconContent");
+    URLContent waitIconContent = (URLContent)getField(iconManager, "waitIconContent");
+    URLContent errorIconContent = (URLContent)getField(iconManager, "errorIconContent");
 
     // Check waitIcon is loaded directly without proxy
     Icon waitIcon = iconManager.getIcon(waitIconContent, HEIGHT, null);
@@ -114,10 +112,8 @@ public class IconManagerTest extends TestCase {
     IconManager iconManager = IconManager.getInstance();
     Class iconProxyClass = Class.forName(iconManager.getClass().getName() + "$IconProxy");
     
-    URLContent waitIconContent = 
-        (URLContent)TestUtilities.getField(iconManager, "waitIconContent");
-    URLContent errorIconContent = 
-        (URLContent)TestUtilities.getField(iconManager, "errorIconContent");
+    URLContent waitIconContent = (URLContent)getField(iconManager, "waitIconContent");
+    URLContent errorIconContent = (URLContent)getField(iconManager, "errorIconContent");
     
     final CyclicBarrier waitingComponentBarrier = new CyclicBarrier(2);
     // A dummy waiting component that waits on a barrier in its repaint method 
@@ -155,6 +151,17 @@ public class IconManagerTest extends TestCase {
     } catch (Exception ex) {
       fail();
     }
+  }
+
+  /**
+   * Returns a reference to <code>fieldName</code> 
+   * in a given <code>instance</code> by reflection.
+   */
+  private Object getField(Object instance, String fieldName)
+      throws NoSuchFieldException, IllegalAccessException {
+    Field field = instance.getClass().getDeclaredField(fieldName);
+    field.setAccessible(true);
+    return field.get(instance);
   }
 
   /**
