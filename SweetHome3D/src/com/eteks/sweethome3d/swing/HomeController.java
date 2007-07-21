@@ -70,7 +70,6 @@ public class HomeController  {
   private FurnitureController    furnitureController;
   private PlanController         planController;
   private HomeController3D       homeController3D;
-  private static HelpController  helpController;  // Only one help controller 
   private UndoableEditSupport    undoSupport;
   private UndoManager            undoManager;
   private ResourceBundle         resource;
@@ -139,7 +138,6 @@ public class HomeController  {
         home, preferences, undoSupport);
     this.homeController3D = new HomeController3D(
         home, preferences, this.undoSupport);
-    helpController = new HelpController();
     
     this.homeView = new HomePane(home, preferences, contentManager, this);
     addListeners();
@@ -192,7 +190,6 @@ public class HomeController  {
     homeView.setEnabled(HomePane.ActionType.VIEW_FROM_TOP, true);
     homeView.setEnabled(HomePane.ActionType.VIEW_FROM_OBSERVER, true);
     homeView.setEnabled(HomePane.ActionType.MODIFY_3D_ATTRIBUTES, true);
-    homeView.setEnabled(HomePane.ActionType.HELP, true);
     homeView.setEnabled(HomePane.ActionType.ABOUT, true);
     homeView.setTransferEnabled(true);
   }
@@ -601,8 +598,7 @@ public class HomeController  {
     if (this.focusedView == getCatalogController().getView()) {
       getCatalogController().modifySelectedFurniture();
     } else if (this.focusedView == getFurnitureController().getView()
-               || this.focusedView == getPlanController().getView()
-               || this.focusedView == getHomeController3D().getView()) {
+               || this.focusedView == getPlanController().getView()) {
       getFurnitureController().modifySelectedFurniture();
     }    
   }
@@ -1045,13 +1041,6 @@ public class HomeController  {
             this.resource.getString("savePreferencesError"));
       }
     }
-  }
-
-  /**
-   * Displays help window.
-   */
-  public void help() {
-    helpController.displayView();
   }
 
   /**

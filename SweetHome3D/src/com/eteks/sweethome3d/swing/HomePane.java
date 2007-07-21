@@ -91,7 +91,7 @@ public class HomePane extends JRootPane {
     SELECT, CREATE_WALLS, DELETE_SELECTION, MODIFY_WALL, 
     IMPORT_BACKGROUND_IMAGE, MODIFY_BACKGROUND_IMAGE, DELETE_BACKGROUND_IMAGE, ZOOM_OUT, ZOOM_IN,  
     VIEW_FROM_TOP, VIEW_FROM_OBSERVER, MODIFY_3D_ATTRIBUTES,
-    HELP, ABOUT}
+    ABOUT}
   public enum SaveAnswer {SAVE, CANCEL, DO_NOT_SAVE}
   
   private ContentManager                  contentManager;
@@ -225,7 +225,6 @@ public class HomePane extends JRootPane {
     createAction(ActionType.MODIFY_3D_ATTRIBUTES, 
         controller.getHomeController3D(), "modifyAttributes");
     
-    createAction(ActionType.HELP, controller, "help");
     createAction(ActionType.ABOUT, controller, "about");
   }
 
@@ -460,9 +459,10 @@ public class HomePane extends JRootPane {
     preview3DMenu.add(getMenuAction(ActionType.MODIFY_3D_ATTRIBUTES));
     
     // Create Help menu
-    JMenu helpMenu = new JMenu(new ResourceAction(this.resource, "HELP_MENU", true));
-    helpMenu.add(getMenuAction(ActionType.HELP));      
+    JMenu helpMenu = null;
     if (!System.getProperty("os.name").startsWith("Mac OS X")) {
+      helpMenu = new JMenu(
+          new ResourceAction(this.resource, "HELP_MENU", true));
       helpMenu.add(getMenuAction(ActionType.ABOUT));      
     }
 
@@ -473,7 +473,9 @@ public class HomePane extends JRootPane {
     menuBar.add(furnitureMenu);
     menuBar.add(planMenu);
     menuBar.add(preview3DMenu);
-    menuBar.add(helpMenu);
+    if (helpMenu != null) {
+      menuBar.add(helpMenu);
+    }
 
     return menuBar;
   }
@@ -614,11 +616,8 @@ public class HomePane extends JRootPane {
     
     toolBar.add(actions.get(ActionType.ZOOM_OUT));
     toolBar.add(actions.get(ActionType.ZOOM_IN));
-    toolBar.addSeparator();
     
-    toolBar.add(actions.get(ActionType.HELP));
-    
-    // Remove focusable property on buttons
+    // Remove focuable property on buttons
     for (int i = 0, n = toolBar.getComponentCount(); i < n; i++) {
       toolBar.getComponentAtIndex(i).setFocusable(false);      
     }
