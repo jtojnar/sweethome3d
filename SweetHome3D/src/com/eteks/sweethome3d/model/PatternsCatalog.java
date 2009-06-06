@@ -26,7 +26,6 @@ import java.util.List;
 /**
  * A catalog of texture images used as patterns to fill plan areas.
  * @author Emmanuel Puybaret
- * @since  2.0
  */
 public class PatternsCatalog {
   private List<TextureImage> patterns;
