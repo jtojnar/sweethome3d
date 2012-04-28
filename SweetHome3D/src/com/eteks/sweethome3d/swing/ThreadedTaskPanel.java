@@ -1,7 +1,7 @@
 /*
  * ThreadedTaskPanel.java 29 sept. 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,6 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
-import javax.swing.SwingUtilities;
 
 import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.viewcontroller.ThreadedTaskController;
@@ -45,10 +44,10 @@ import com.eteks.sweethome3d.viewcontroller.View;
 public class ThreadedTaskPanel extends JPanel implements ThreadedTaskView {
   private final UserPreferences        preferences;
   private final ThreadedTaskController controller;
-  private JLabel                       taskLabel;
-  private JProgressBar                 taskProgressBar;
-  private JDialog                      dialog;
-  private boolean                      taskRunning;
+  private JLabel                 taskLabel;
+  private JProgressBar           taskProgressBar;
+  private JDialog                dialog;
+  private boolean                taskRunning;
 
   public ThreadedTaskPanel(String taskMessage, 
                            UserPreferences preferences, 
@@ -78,45 +77,6 @@ public class ThreadedTaskPanel extends JPanel implements ThreadedTaskView {
   }
   
   /**
-   * Sets the status of the progress bar shown by this panel as indeterminate.
-   * This method may be called from an other thread than EDT.  
-   */
-  public void setIndeterminateProgress() {
-    if (EventQueue.isDispatchThread()) {
-      this.taskProgressBar.setIndeterminate(true);
-    } else {
-      // Ensure modifications are done in EDT
-      invokeLater(new Runnable() {
-          public void run() {
-            setIndeterminateProgress();
-          }
-        });
-    }
-  }
-  
-  /**
-   * Sets the current value of the progress bar shown by this panel.  
-   * This method may be called from an other thread than EDT.  
-   */
-  public void setProgress(final int value, 
-                          final int minimum, 
-                          final int maximum) {
-    if (EventQueue.isDispatchThread()) {
-      this.taskProgressBar.setIndeterminate(false);
-      this.taskProgressBar.setValue(value);
-      this.taskProgressBar.setMinimum(minimum);
-      this.taskProgressBar.setMaximum(maximum);
-    } else {
-      // Ensure modifications are done in EDT
-      invokeLater(new Runnable() {
-          public void run() {
-            setProgress(value, minimum, maximum);
-          }
-        });
-    }
-  }
-  
-  /**
    * Executes <code>runnable</code> asynchronously in the Event Dispatch Thread.
    * Caution !!! This method may be called from an other thread than EDT.  
    */
@@ -143,7 +103,7 @@ public class ThreadedTaskPanel extends JPanel implements ThreadedTaskView {
             optionPane.setValue(cancelButton);
           }
         });
-      this.dialog = optionPane.createDialog(SwingUtilities.getRootPane((JComponent)executingView), dialogTitle);
+      this.dialog = optionPane.createDialog((JComponent)executingView, dialogTitle);
       
       try {
         // Sleep 200 ms before showing dialog to avoid displaying it 

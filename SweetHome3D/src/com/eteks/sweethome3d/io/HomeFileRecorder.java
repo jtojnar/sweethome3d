@@ -1,7 +1,7 @@
 /*
  * HomeFileRecorder.java 30 aout 2006
  *
- * Sweet Home 3D, Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@ package com.eteks.sweethome3d.io;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +31,6 @@ import com.eteks.sweethome3d.model.Home;
 import com.eteks.sweethome3d.model.HomeRecorder;
 import com.eteks.sweethome3d.model.InterruptedRecorderException;
 import com.eteks.sweethome3d.model.RecorderException;
-import com.eteks.sweethome3d.tools.OperatingSystem;
 
 /**
  * Recorder that stores homes in files with {@link DefaultHomeOutputStream} and
@@ -40,59 +38,17 @@ import com.eteks.sweethome3d.tools.OperatingSystem;
  * @author Emmanuel Puybaret
  */
 public class HomeFileRecorder implements HomeRecorder {
-  private final int     compressionLevel;
-  private final boolean includeOnlyTemporaryContent;
-
-  /**
-   * Creates a home recorder able to write and read homes in uncompressed files. 
-   */
-  public HomeFileRecorder() {
-    this(0);
-  }
-
-  /**
-   * Creates a home recorder able to write and read homes in files compressed 
-   * at a level from 0 to 9. 
-   * @param compressionLevel 0 (uncompressed) to 9 (compressed).
-   */
-  public HomeFileRecorder(int compressionLevel) {
-    this(compressionLevel, false);
-  }
-
-  /**
-   * Creates a home recorder able to write and read homes in files compressed 
-   * at a level from 0 to 9. 
-   * @param compressionLevel 0-9
-   * @param includeOnlyTemporaryContent if <code>true</code>, content instances of 
-   *            <code>TemporaryURLContent</code> class referenced by the saved home 
-   *            as well as the content previously saved with it will be written. 
-   *            If <code>false</code>, all the content instances 
-   *            referenced by the saved home will be written in the zip stream.  
-   */
-  public HomeFileRecorder(int     compressionLevel, 
-                          boolean includeOnlyTemporaryContent) {
-    this.compressionLevel = compressionLevel;
-    this.includeOnlyTemporaryContent = includeOnlyTemporaryContent;    
-  }
-
   /**
    * Writes home data.
    * @throws RecorderException if a problem occurred while writing home.
    */
   public void writeHome(Home home, String name) throws RecorderException {
-    File homeFile = new File(name);
-    if (homeFile.exists()
-        && !homeFile.canWrite()) {
-      throw new RecorderException("Can't write over file " + name);
-    }
-    
     DefaultHomeOutputStream homeOut = null;
     File tempFile = null;
     try {
       // Open a stream on a temporary file 
-      tempFile = OperatingSystem.createTemporaryFile("save", ".sweethome3d");
-      homeOut = new DefaultHomeOutputStream(new FileOutputStream(tempFile), 
-          this.compressionLevel, this.includeOnlyTemporaryContent);
+      tempFile = File.createTempFile("save", ".sh3d");
+      homeOut = new DefaultHomeOutputStream(new FileOutputStream(tempFile));
       // Write home with HomeOuputStream
       homeOut.writeHome(home);
     } catch (InterruptedIOException ex) {
@@ -105,52 +61,51 @@ public class HomeFileRecorder implements HomeRecorder {
           homeOut.close();
         }
       } catch (IOException ex) {
-        throw new RecorderException("Can't close temporary file " + name, ex);
-      }
-    }
-
-    // Open destination file
-    OutputStream out;
-    try {
-      out = new FileOutputStream(homeFile);
-    } catch (FileNotFoundException ex) {
-      if (tempFile != null) {
-        tempFile.delete();
-      }
-      throw new RecorderException("Can't save file " + name, ex);
-    }
-    
-    // Copy temporary file to home file
-    // Overwriting home file will ensure that its rights are kept
-    byte [] buffer = new byte [8192];
-    InputStream in = null;
-    try {
-      in = new FileInputStream(tempFile);          
-      int size; 
-      while ((size = in.read(buffer)) != -1) {
-        out.write(buffer, 0, size);
-      }
-    } catch (IOException ex) { 
-      throw new RecorderException("Can't copy file " + tempFile + " to " + name);
-    } finally {
-      try {
-        if (out != null) {          
-          out.close();
-        }
-      } catch (IOException ex) {
         throw new RecorderException("Can't close file " + name, ex);
       }
+    }
+    
+    // As writing succeeded, replace old file by temporary file
+    File homeFile = new File(name);
+    if (homeFile.exists()
+        && !homeFile.delete()) {
+      tempFile.delete();
+      throw new RecorderException("Can't replace file " + name);
+    }
+    if (!tempFile.renameTo(homeFile)) {
+      // If rename fails try to copy temporary file to home file
+      byte [] buffer = new byte [8096];
+      OutputStream out = null;
+      InputStream in = null;
       try {
-        if (in != null) {          
-          in.close();
-          tempFile.delete();
+        out = new FileOutputStream(homeFile);
+        in = new FileInputStream(tempFile);          
+        int size; 
+        while ((size = in.read(buffer)) != -1) {
+          out.write(buffer, 0, size);
         }
-      } catch (IOException ex) {
-        // Forget exception
+      } catch (IOException ex) { 
+        throw new RecorderException("Can't copy file " + tempFile + " to " + name);
+      } finally {
+        try {
+          if (out != null) {          
+            out.close();
+          }
+        } catch (IOException ex) {
+          throw new RecorderException("Can't close file " + name, ex);
+        }
+        try {
+          if (in != null) {          
+            in.close();
+            tempFile.delete();
+          }
+        } catch (IOException ex) {
+          // Forget exception
+        }
       }
     }
   }
-  
+
   /**
    * Returns a home instance read from its file <code>name</code>.
    * @throws RecorderException if a problem occurred while reading home, 

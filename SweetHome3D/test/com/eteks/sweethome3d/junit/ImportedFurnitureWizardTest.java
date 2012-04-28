@@ -156,22 +156,22 @@ public class ImportedFurnitureWizardTest extends ComponentTestFixture {
     // Retrieve ImportedFurnitureWizardStepsPanel components
     ImportedFurnitureWizardStepsPanel panel = (ImportedFurnitureWizardStepsPanel)TestUtilities.findComponent(
         frame, ImportedFurnitureWizardStepsPanel.class);
-    final JButton modelChoiceOrChangeButton = (JButton)TestUtilities.getField(panel, "modelChoiceOrChangeButton");
-    final JButton turnLeftButton = (JButton)TestUtilities.getField(panel, "turnLeftButton");
-    final JButton turnDownButton = (JButton)TestUtilities.getField(panel, "turnDownButton");
+    JButton modelChoiceOrChangeButton = (JButton)TestUtilities.getField(panel, "modelChoiceOrChangeButton");
+    JButton turnLeftButton = (JButton)TestUtilities.getField(panel, "turnLeftButton");
+    JButton turnDownButton = (JButton)TestUtilities.getField(panel, "turnDownButton");
     JCheckBox backFaceShownCheckBox = (JCheckBox)TestUtilities.getField(panel, "backFaceShownCheckBox");
-    final JTextField nameTextField = (JTextField)TestUtilities.getField(panel, "nameTextField");
-    final JCheckBox addToCatalogCheckBox = (JCheckBox)TestUtilities.getField(panel, "addToCatalogCheckBox");
-    final JComboBox categoryComboBox = (JComboBox)TestUtilities.getField(panel, "categoryComboBox");
-    final JSpinner widthSpinner = (JSpinner)TestUtilities.getField(panel, "widthSpinner");
+    JTextField nameTextField = (JTextField)TestUtilities.getField(panel, "nameTextField");
+    JCheckBox addToCatalogCheckBox = (JCheckBox)TestUtilities.getField(panel, "addToCatalogCheckBox");
+    JComboBox categoryComboBox = (JComboBox)TestUtilities.getField(panel, "categoryComboBox");
+    JSpinner widthSpinner = (JSpinner)TestUtilities.getField(panel, "widthSpinner");
     JSpinner heightSpinner = (JSpinner)TestUtilities.getField(panel, "heightSpinner");
     JSpinner depthSpinner = (JSpinner)TestUtilities.getField(panel, "depthSpinner");
-    final JCheckBox keepProportionsCheckBox = (JCheckBox)TestUtilities.getField(panel, "keepProportionsCheckBox");
+    JCheckBox keepProportionsCheckBox = (JCheckBox)TestUtilities.getField(panel, "keepProportionsCheckBox");
     JSpinner elevationSpinner = (JSpinner)TestUtilities.getField(panel, "elevationSpinner");
     JCheckBox movableCheckBox = (JCheckBox)TestUtilities.getField(panel, "movableCheckBox");
     JCheckBox doorOrWindowCheckBox = (JCheckBox)TestUtilities.getField(panel, "doorOrWindowCheckBox");
     ColorButton colorButton = (ColorButton)TestUtilities.getField(panel, "colorButton");
-    final JButton clearColorButton = (JButton)TestUtilities.getField(panel, "clearColorButton");
+    JButton clearColorButton = (JButton)TestUtilities.getField(panel, "clearColorButton");
     
     // Check current step is model
     tester.waitForIdle();
@@ -179,11 +179,7 @@ public class ImportedFurnitureWizardTest extends ComponentTestFixture {
     
     // 3. Choose tested model
     String modelChoiceOrChangeButtonText = modelChoiceOrChangeButton.getText();
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          modelChoiceOrChangeButton.doClick();
-        }
-      });
+    modelChoiceOrChangeButton.doClick();
     // Wait 1 s to let time to Java 3D to load the model
     Thread.sleep(1000);
     // Check choice button text changed
@@ -193,13 +189,10 @@ public class ImportedFurnitureWizardTest extends ComponentTestFixture {
     WizardPane view = (WizardPane)TestUtilities.findComponent(frame, WizardPane.class);
     // Retrieve wizard view next button
     final JButton nextFinishOptionButton = (JButton)TestUtilities.getField(view, "nextFinishOptionButton"); 
-    assertTrue("Next button isn't enabled", nextFinishOptionButton.isEnabled());    
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          nextFinishOptionButton.doClick();
-        }
-      });
+    assertTrue("Next button isn't enabled", nextFinishOptionButton.isEnabled());
+    nextFinishOptionButton.doClick();
     // Check current step is rotation
+    tester.waitForIdle();
     assertStepShowing(panel, false, true, false, false);    
     // Check back face shown check box isn't selected by default
     assertFalse("Back face shown check box is selected", backFaceShownCheckBox.isSelected());
@@ -208,42 +201,31 @@ public class ImportedFurnitureWizardTest extends ComponentTestFixture {
     float width = (Float)widthSpinner.getValue();
     float depth = (Float)depthSpinner.getValue();
     float height = (Float)heightSpinner.getValue();
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          turnLeftButton.doClick();
-        }
-      });
+    turnLeftButton.doClick();
     // Check depth and width values were swapped 
     float newWidth = (Float)widthSpinner.getValue();
     float newDepth = (Float)depthSpinner.getValue();
     float newHeight = (Float)heightSpinner.getValue();
-    TestUtilities.assertEqualsWithinEpsilon("Incorrect width", depth, newWidth, 1E-3f);
-    TestUtilities.assertEqualsWithinEpsilon("Incorrect depth", width, newDepth, 1E-3f);
-    TestUtilities.assertEqualsWithinEpsilon("Incorrect height", height, newHeight, 1E-3f);
+    assertEpsilonEquals("width", depth, newWidth);
+    assertEpsilonEquals("depth", width, newDepth);
+    assertEpsilonEquals("height", height, newHeight);
     // Click on down button
     width = newWidth;
     depth = newDepth;
     height = newHeight;
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          turnDownButton.doClick();
-        }
-      });
+    turnDownButton.doClick();
     // Check height and depth values were swapped 
     newWidth = (Float)widthSpinner.getValue();
     newDepth = (Float)depthSpinner.getValue();
     newHeight = (Float)heightSpinner.getValue();
-    TestUtilities.assertEqualsWithinEpsilon("Incorrect width", width, newWidth, 1E-3f);
-    TestUtilities.assertEqualsWithinEpsilon("Incorrect depth", height, newDepth, 1E-3f);
-    TestUtilities.assertEqualsWithinEpsilon("Incorrect height", depth, newHeight, 1E-3f);
+    assertEpsilonEquals("width", width, newWidth);
+    assertEpsilonEquals("depth", height, newDepth);
+    assertEpsilonEquals("height", depth, newHeight);
     
     // 5. Click on next button
     assertTrue("Next button isn't enabled", nextFinishOptionButton.isEnabled());
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          nextFinishOptionButton.doClick();
-        }
-      });
+    nextFinishOptionButton.doClick();
+    tester.waitForIdle();
     // Check current step is attributes
     assertStepShowing(panel, false, false, true, false);    
         
@@ -256,33 +238,21 @@ public class ImportedFurnitureWizardTest extends ComponentTestFixture {
     assertFalse("Add to catalog check box is selected", addToCatalogCheckBox.isSelected());
     assertFalse("Category combo box isn't disabled", categoryComboBox.isEnabled());
     // Check default category is first category  
-    final FurnitureCategory firstCategory = preferences.getFurnitureCatalog().getCategories().get(0);
+    FurnitureCategory firstCategory = preferences.getFurnitureCatalog().getCategories().get(0);
     assertEquals("Wrong default category", firstCategory, categoryComboBox.getSelectedItem());
     // Rename furniture with the name of the catalog first piece
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          nameTextField.setText(firstCategory.getFurniture().get(0).getName());
-        }
-      });
+    nameTextField.setText(firstCategory.getFurniture().get(0).getName());    
     // Check next button is enabled 
     assertTrue("Next button isn't enabled", nextFinishOptionButton.isEnabled());
     // Select Add to catalog check box
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          addToCatalogCheckBox.setSelected(true);
-        }
-      });
+    addToCatalogCheckBox.setSelected(true);
     // Check next button is disabled because imported furniture has a wrong name
     assertFalse("Next button isn't disabled", nextFinishOptionButton.isEnabled());
     // Rename furniture and its category 
     final String pieceTestName = "#@" + System.currentTimeMillis() + "@#";
+    nameTextField.setText(pieceTestName);    
     final String categoryTestName = "sdfghjkl";
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          nameTextField.setText(pieceTestName);
-          categoryComboBox.getEditor().selectAll();
-        }
-      });
+    categoryComboBox.getEditor().selectAll();
     tester.actionKeyString(categoryComboBox.getEditor().getEditorComponent(), categoryTestName);    
     // Check next button is enabled again
     assertTrue("Next button isn't enabled", nextFinishOptionButton.isEnabled());
@@ -293,42 +263,28 @@ public class ImportedFurnitureWizardTest extends ComponentTestFixture {
     width = newWidth;
     depth = newDepth;
     height = newHeight;
-    final float enteredWidth = newWidth * 10;
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          widthSpinner.setValue(enteredWidth);
-        }
-      });
+    widthSpinner.setValue(newWidth * 10);
     // Check height and depth values are 10 times greater 
     newWidth = (Float)widthSpinner.getValue();
     newDepth = (Float)depthSpinner.getValue();
     newHeight = (Float)heightSpinner.getValue();
-    TestUtilities.assertEqualsWithinEpsilon("Incorrect width", 10 * width, newWidth, 1E-3f);
-    TestUtilities.assertEqualsWithinEpsilon("Incorrect depth", 10 * depth, newDepth, 1E-3f);
-    TestUtilities.assertEqualsWithinEpsilon("Incorrect height", 10 * height, newHeight, 1E-3f);
+    assertEpsilonEquals("width", 10 * width, newWidth);
+    assertEpsilonEquals("depth", 10 * depth, newDepth);
+    assertEpsilonEquals("height", 10 * height, newHeight);
     // Deselect keep proportions check box 
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          keepProportionsCheckBox.setSelected(false);
-        }
-      });       
+    keepProportionsCheckBox.setSelected(false);
     // Change width with a value 2 times greater
     width = newWidth;
     depth = newDepth;
     height = newHeight;
-    final float twiceValue = newWidth * 2;
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          widthSpinner.setValue(twiceValue);
-        }
-      });
+    widthSpinner.setValue(newWidth * 2);
     // Check height and depth values didn't change
     newWidth = (Float)widthSpinner.getValue();
     newDepth = (Float)depthSpinner.getValue();
     newHeight = (Float)heightSpinner.getValue();
-    TestUtilities.assertEqualsWithinEpsilon("Incorrect width", 2 * width, newWidth, 1E-3f);
-    TestUtilities.assertEqualsWithinEpsilon("Incorrect depth", depth, newDepth, 1E-3f);
-    TestUtilities.assertEqualsWithinEpsilon("Incorrect height", height, newHeight, 1E-3f);
+    assertEpsilonEquals("width", 2 * width, newWidth);
+    assertEpsilonEquals("depth", depth, newDepth);
+    assertEpsilonEquals("height", height, newHeight);
 
     // 8. Change elevation, movable, door or window, color default values
     assertEquals("Wrong default elevation", 0f, (Float)elevationSpinner.getValue());
@@ -344,22 +300,15 @@ public class ImportedFurnitureWizardTest extends ComponentTestFixture {
     // Check clear color button is enabled
     assertTrue("Clear color button isn't enabled", clearColorButton.isEnabled());
     // Click on clear color button
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          clearColorButton.doClick();
-        }
-      });
+    clearColorButton.doClick();
     // Check color is null and clear color button is disabled
     assertEquals("Wrong color", null, colorButton.getColor());
     assertFalse("Clear color button isn't disabled", clearColorButton.isEnabled());
  
     // 9. Click on next button
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          nextFinishOptionButton.doClick();
-        }
-      });
+    nextFinishOptionButton.doClick();
     // Check current step is icon
+    tester.waitForIdle();
     assertStepShowing(panel, false, false, false, true);    
     tester.invokeAndWait(new Runnable() {
         public void run() {
@@ -378,10 +327,10 @@ public class ImportedFurnitureWizardTest extends ComponentTestFixture {
     assertEquals("Wrong catalog piece category name", categoryTestName, catalogPiece.getCategory().getName());
     assertTrue("Catalog doesn't contain new piece", 
         preferences.getFurnitureCatalog().getCategories().contains(catalogPiece.getCategory()));
-    TestUtilities.assertEqualsWithinEpsilon("Incorrect width", newWidth, catalogPiece.getWidth(), 1E-3f);
-    TestUtilities.assertEqualsWithinEpsilon("Incorrect depth", newDepth, catalogPiece.getDepth(), 1E-3f);
-    TestUtilities.assertEqualsWithinEpsilon("Incorrect height", newHeight, catalogPiece.getHeight(), 1E-3f);
-    TestUtilities.assertEqualsWithinEpsilon("Incorrect elevation", 10, catalogPiece.getElevation(), 1E-3f);
+    assertEpsilonEquals("width", newWidth, catalogPiece.getWidth());
+    assertEpsilonEquals("depth", newDepth, catalogPiece.getDepth());
+    assertEpsilonEquals("height", newHeight, catalogPiece.getHeight());
+    assertEpsilonEquals("elevation", 10, catalogPiece.getElevation());
     assertFalse("Catalog piece is movable", catalogPiece.isMovable());
     assertTrue("Catalog piece isn't a door or window", catalogPiece.isDoorOrWindow());
     assertEquals("Wrong catalog piece color", null, catalogPiece.getColor());
@@ -435,19 +384,11 @@ public class ImportedFurnitureWizardTest extends ComponentTestFixture {
     assertTrue("Home piece isn't selected", home.getSelectedItems().contains(homePiece));
     
     // 12. Undo furniture creation in home
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          homeView.getActionMap().get(HomePane.ActionType.UNDO).actionPerformed(null);
-        }
-      });
+    homeView.getActionMap().get(HomePane.ActionType.UNDO).actionPerformed(null);
     // Check home is empty
     assertTrue("Home isn't empty", home.getFurniture().isEmpty());
     // Redo
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          homeView.getActionMap().get(HomePane.ActionType.REDO).actionPerformed(null);
-        }
-      });
+    homeView.getActionMap().get(HomePane.ActionType.REDO).actionPerformed(null);
     // Check home piece of furniture is in home and selected
     assertTrue("Home piece isn't in home", home.getFurniture().contains(homePiece));
     assertTrue("Home piece isn't selecteed", home.getSelectedItems().contains(homePiece));
@@ -470,5 +411,13 @@ public class ImportedFurnitureWizardTest extends ComponentTestFixture {
         ((JComponent)TestUtilities.getField(panel, "attributesPreviewComponent")).isShowing());
     assertEquals("Wrong icon step visibility", iconStepShowing,
         ((JComponent)TestUtilities.getField(panel, "iconPreviewComponent")).isShowing());
+  }
+  
+  /**
+   * Asserts <code>expectedValue</code> is equal to <code>value</code>. 
+   */
+  private void assertEpsilonEquals(String valueName, float expectedValue, float value) {
+    assertTrue("Incorrect " + valueName + " " + value + ", should be " + expectedValue, 
+        Math.abs(expectedValue - value) < 1E-3);
   }
 }

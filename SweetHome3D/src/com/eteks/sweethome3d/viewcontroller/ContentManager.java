@@ -1,7 +1,7 @@
 /*
  * ContentManager.java 11 juil. 07
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ import com.eteks.sweethome3d.model.RecorderException;
  * @author Emmanuel Puybaret
  */
 public interface ContentManager {
-  public enum ContentType {SWEET_HOME_3D, MODEL, IMAGE, SVG, OBJ, PNG, MOV, PDF, LANGUAGE_LIBRARY, TEXTURES_LIBRARY, FURNITURE_LIBRARY, PLUGIN, USER_DEFINED};
+  public enum ContentType {SWEET_HOME_3D, MODEL, IMAGE, OBJ, PDF, FURNITURE_LIBRARY, PLUGIN, USER_DEFINED};
 
   /**
    * Returns a {@link Content content} object that references a given content name.

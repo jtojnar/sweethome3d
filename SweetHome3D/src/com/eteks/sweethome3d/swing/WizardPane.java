@@ -1,7 +1,7 @@
 /*
  * WizardPane.java 7 juin 07
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,9 +81,9 @@ public class WizardPane extends JOptionPane implements DialogView {
     // Make backOptionButton appear at left of nextFinishOptionButton
     if (UIManager.getBoolean("OptionPane.isYesLast")
         || OperatingSystem.isMacOSX()) {
-      setOptions(new Object [] {this.nextFinishOptionButton, this.backOptionButton, cancelOption});      
+      setOptions(new Object [] {cancelOption, this.nextFinishOptionButton, this.backOptionButton});      
     } else {
-      setOptions(new Object [] {this.backOptionButton, this.nextFinishOptionButton, cancelOption});      
+      setOptions(new Object [] {cancelOption, this.backOptionButton, this.nextFinishOptionButton});      
     }
     setInitialValue(this.nextFinishOptionButton);
     
@@ -107,7 +107,7 @@ public class WizardPane extends JOptionPane implements DialogView {
 
   private void createOptionButtons(UserPreferences preferences, 
                                    final WizardController controller) {
-    this.backOptionButton = new JButton(SwingTools.getLocalizedLabelText(preferences, 
+    this.backOptionButton = new JButton(preferences.getLocalizedString(
         WizardPane.class, "backOptionButton.text"));
     this.backOptionButton.setEnabled(controller.isBackStepEnabled());
     controller.addPropertyChangeListener(WizardController.Property.BACK_STEP_ENABLED, 
@@ -166,7 +166,7 @@ public class WizardPane extends JOptionPane implements DialogView {
    * Sets whether this wizard view is displaying the last step or not.
    */
   private void updateNextFinishOptionButton(WizardController controller) {
-    this.nextFinishOptionButton.setText(SwingTools.getLocalizedLabelText(this.preferences, WizardPane.class, 
+    this.nextFinishOptionButton.setText(this.preferences.getLocalizedString(WizardPane.class, 
         controller.isLastStep() 
             ? "finishOptionButton.text" 
             : "nextOptionButton.text"));

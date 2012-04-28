@@ -1,7 +1,7 @@
 /*
  * PluginManager.java 24 oct. 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,6 @@ import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -54,7 +53,6 @@ import com.eteks.sweethome3d.model.Home;
 import com.eteks.sweethome3d.model.HomeApplication;
 import com.eteks.sweethome3d.model.RecorderException;
 import com.eteks.sweethome3d.model.UserPreferences;
-import com.eteks.sweethome3d.viewcontroller.HomeController;
 
 /**
  * Sweet Home 3D plug-ins manager.
@@ -75,7 +73,7 @@ public class PluginManager {
   private static final String DEFAULT_APPLICATION_PLUGIN_PROPERTIES_FILE = 
       APPLICATION_PLUGIN_FAMILY + ".properties";
 
-  private final File [] pluginFolders;
+  private final File pluginFolder;
   private final Map<String, PluginDefinition> pluginDefinitions = 
       new TreeMap<String, PluginDefinition>();
   private final Map<Home, List<Plugin>> homePlugins = new HashMap<Home, List<Plugin>>();
@@ -84,34 +82,24 @@ public class PluginManager {
    * Reads application plug-ins from resources in the given plug-in folder.
    */
   public PluginManager(File pluginFolder) {
-    this(new File [] {pluginFolder});
-  }
-  
-  /**
-   * Reads application plug-ins from resources in the given plug-in folders.
-   * @since 3.0
-   */
-  public PluginManager(File [] pluginFolders) {
-    this.pluginFolders = pluginFolders;
-    if (pluginFolders != null) {
-      for (File pluginFolder : pluginFolders) {
-        // Try to load plugin files from plugin folder
-        File [] pluginFiles = pluginFolder.listFiles(new FileFilter () {
-          public boolean accept(File pathname) {
-            return pathname.isFile();
-          }
-        });
-        
-        if (pluginFiles != null) {
-          // Treat plug in files in reverse order so file named with a date will be taken into account 
-          // from most recent to least recent
-          Arrays.sort(pluginFiles, Collections.reverseOrder());
-          for (File pluginFile : pluginFiles) {
-            try {
-              loadPlugins(pluginFile.toURI().toURL());
-            } catch (MalformedURLException ex) {
-              // Files are supposed to exist !
-            }
+    this.pluginFolder = pluginFolder;
+    if (pluginFolder != null) {
+      // Try to load plugin files from plugin folder
+      File [] pluginFiles = pluginFolder.listFiles(new FileFilter () {
+        public boolean accept(File pathname) {
+          return pathname.isFile();
+        }
+      });
+      
+      if (pluginFiles != null) {
+        // Treat plug in files in reverse order so file named with a date will be taken into account 
+        // from most recent to least recent
+        Arrays.sort(pluginFiles, Collections.reverseOrder());
+        for (File pluginFile : pluginFiles) {
+          try {
+            loadPlugins(pluginFile.toURI().toURL());
+          } catch (MalformedURLException ex) {
+            // Files are supposed to exist !
           }
         }
       }
@@ -122,7 +110,7 @@ public class PluginManager {
    * Reads application plug-ins from resources in the given URLs.
    */
   public PluginManager(URL [] pluginUrls) {
-    this.pluginFolders = null;
+    this.pluginFolder = null;
     for (URL pluginUrl : pluginUrls) {
       loadPlugins(pluginUrl);
     }
@@ -149,8 +137,7 @@ public class PluginManager {
             applicationPluginFamily += APPLICATION_PLUGIN_FAMILY;
             ClassLoader classLoader = new URLClassLoader(new URL [] {pluginUrl}, getClass().getClassLoader());
             readPlugin(ResourceBundle.getBundle(applicationPluginFamily, Locale.getDefault(), classLoader), 
-                "jar:" + pluginUrl.toString() + "!/" + URLEncoder.encode(zipEntryName, "UTF-8").replace("+", "%20"), 
-                classLoader);
+                "jar:" + pluginUrl.toString() + "!/" + zipEntryName, classLoader);
           } catch (MissingResourceException ex) {
             // Ignore malformed plugins
           }
@@ -288,8 +275,6 @@ public class PluginManager {
             pluginClassName + " constructor not accessible");
       }
       return pluginClass;
-    } catch (NoClassDefFoundError ex) {
-      throw new IllegalArgumentException(ex.getMessage(), ex);
     } catch (ClassNotFoundException ex) {
       throw new IllegalArgumentException(ex.getMessage(), ex);
     } catch (NoSuchMethodException ex) {
@@ -303,21 +288,8 @@ public class PluginManager {
    */
   public List<Plugin> getPlugins(final HomeApplication application, 
                                  final Home home, 
-                                 UserPreferences preferences,                                 
+                                 UserPreferences preferences,
                                  UndoableEditSupport undoSupport) {
-    return getPlugins(application, home, preferences, null, undoSupport);
-  }
-    
-  /**
-   * Returns an unmodifiable list of plug-in instances initialized with the 
-   * given parameters.
-   * @since 3.5
-   */
-  List<Plugin> getPlugins(final HomeApplication application, 
-                          final Home home, 
-                          UserPreferences preferences,
-                          HomeController homeController,
-                          UndoableEditSupport undoSupport) {
     if (application.getHomes().contains(home)) {
       List<Plugin> plugins = this.homePlugins.get(home);
       if (plugins == null) {
@@ -334,7 +306,6 @@ public class PluginManager {
             plugin.setProvider(pluginDefinition.getProvider());
             plugin.setUserPreferences(preferences);
             plugin.setHome(home);
-            plugin.setHomeController(homeController);
             plugin.setUndoableEditSupport(undoSupport);
             plugins.add(plugin);
           } catch (InstantiationException ex) {
@@ -369,42 +340,39 @@ public class PluginManager {
   }
   
   /**
-   * Returns <code>true</code> if a plug-in with the given file name already exists
-   * in the first plug-ins folder.
+   * Returns <code>true</code> if a plug-in with the given file name already exists.
    * @throws RecorderException if no plug-ins folder is associated to this manager.
    */
   public boolean pluginExists(String pluginName) throws RecorderException {
-    if (this.pluginFolders == null
-        || this.pluginFolders.length == 0) {
+    if (this.pluginFolder == null) {
       throw new RecorderException("Can't access to plugins folder");
     } else {
       String pluginFileName = new File(pluginName).getName();
-      return new File(this.pluginFolders [0], pluginFileName).exists();
+      return new File(this.pluginFolder, pluginFileName).exists();
     }
   }
 
   /**
-   * Adds the file <code>pluginName</code> to the first plug-ins folders if it exists.
+   * Adds the file <code>pluginName</code> to plug-ins folder if it exists.
    * Once added, the plug-in will be available at next application start. 
    * @throws RecorderException if no plug-ins folder is associated to this manager.
    */
   public void addPlugin(String pluginName) throws RecorderException {
     try {
-      if (this.pluginFolders == null
-          || this.pluginFolders.length == 0) {
+      if (this.pluginFolder == null) {
         throw new RecorderException("Can't access to plugins folder");
       }
       String pluginFileName = new File(pluginName).getName();
-      File destinationFile = new File(this.pluginFolders [0], pluginFileName);
+      File destinationFile = new File(this.pluginFolder, pluginFileName);
 
       // Copy furnitureCatalogFile to furniture plugin folder
       InputStream tempIn = null;
       OutputStream tempOut = null;
       try {
         tempIn = new BufferedInputStream(new FileInputStream(pluginName));
-        this.pluginFolders [0].mkdirs();
+        this.pluginFolder.mkdirs();
         tempOut = new FileOutputStream(destinationFile);          
-        byte [] buffer = new byte [8192];
+        byte [] buffer = new byte [8096];
         int size; 
         while ((size = tempIn.read(buffer)) != -1) {
           tempOut.write(buffer, 0, size);

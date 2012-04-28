@@ -1,7 +1,7 @@
 /*
  * Room.java 18 nov. 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,15 +37,15 @@ import java.util.List;
  * A room or a polygon in a home plan. 
  * @author Emmanuel Puybaret
  */
-public class Room implements Serializable, Selectable, Elevatable {
+public class Room implements Serializable, Selectable {
   /**
    * The properties of a room that may change. <code>PropertyChangeListener</code>s added 
    * to a room will be notified under a property name equal to the string value of one these properties.
    */
   public enum Property {NAME, NAME_X_OFFSET, NAME_Y_OFFSET, NAME_STYLE,
       POINTS, AREA_VISIBLE, AREA_X_OFFSET, AREA_Y_OFFSET, AREA_STYLE,
-      FLOOR_COLOR, FLOOR_TEXTURE, FLOOR_VISIBLE, FLOOR_SHININESS,
-      CEILING_COLOR, CEILING_TEXTURE, CEILING_VISIBLE, CEILING_SHININESS, LEVEL}
+      FLOOR_COLOR, FLOOR_TEXTURE, FLOOR_VISIBLE, 
+      CEILING_COLOR, CEILING_TEXTURE, CEILING_VISIBLE}
   
   private static final long serialVersionUID = 1L;
   
@@ -61,12 +61,9 @@ public class Room implements Serializable, Selectable, Elevatable {
   private boolean     floorVisible;
   private Integer     floorColor;
   private HomeTexture floorTexture;
-  private float       floorShininess;
   private boolean     ceilingVisible;
   private Integer     ceilingColor;
   private HomeTexture ceilingTexture;
-  private float       ceilingShininess;
-  private Level       level;
   
   private transient PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
   private transient Shape shapeCache;
@@ -76,9 +73,6 @@ public class Room implements Serializable, Selectable, Elevatable {
    * Creates a room from its name and the given coordinates.
    */
   public Room(float [][] points) {
-    if (points.length <= 1) {
-      throw new IllegalStateException("Room points must containt at least two points");
-    }
     this.points = deepCopy(points);
     this.areaVisible = true;
     this.nameYOffset = -40f;
@@ -196,14 +190,6 @@ public class Room implements Serializable, Selectable, Elevatable {
     return deepCopy(this.points);  
   }
 
-  /**
-   * Returns the number of points of the polygon matching this room.
-   * @since 2.0 
-   */
-  public int getPointCount() {
-    return this.points.length;  
-  }
-
   private float [][] deepCopy(float [][] points) {
     float [][] pointsCopy = new float [points.length][];
     for (int i = 0; i < points.length; i++) {
@@ -218,93 +204,12 @@ public class Room implements Serializable, Selectable, Elevatable {
    */
   public void setPoints(float [][] points) {
     if (!Arrays.deepEquals(this.points, points)) {
-      updatePoints(points);
-    }
-  }
-
-  /**
-   * Update the points of the polygon matching this room.
-   */
-  private void updatePoints(float [][] points) {
-    float [][] oldPoints = this.points;
-    this.points = deepCopy(points);
-    this.shapeCache = null;
-    this.areaCache  = null;
-    this.propertyChangeSupport.firePropertyChange(Property.POINTS.name(), oldPoints, points);
-  }
-
-  /**
-   * Adds a point at the end of room points.
-   * @since 2.0
-   */
-  public void addPoint(float x, float y) {
-    addPoint(x, y, this.points.length);
-  }
-  
-  /**
-   * Adds a point at the given <code>index</code>.
-   * @throws IndexOutOfBoundsException if <code>index</code> is negative or > <code>getPointCount()</code> 
-   * @since 2.0
-   */
-  public void addPoint(float x, float y, int index) {
-    if (index < 0 || index > this.points.length) {
-      throw new IndexOutOfBoundsException("Invalid index " + index);
-    }
-    
-    float [][] newPoints = new float [this.points.length + 1][];
-    System.arraycopy(this.points, 0, newPoints, 0, index);
-    newPoints [index] = new float [] {x, y};
-    System.arraycopy(this.points, index, newPoints, index + 1, this.points.length - index);
-    
-    float [][] oldPoints = this.points;
-    this.points = newPoints;
-    this.shapeCache = null;
-    this.areaCache  = null;
-    this.propertyChangeSupport.firePropertyChange(Property.POINTS.name(), oldPoints, deepCopy(this.points));
-  }
-  
-  /**
-   * Sets the point at the given <code>index</code>.
-   * @throws IndexOutOfBoundsException if <code>index</code> is negative or >= <code>getPointCount()</code> 
-   * @since 2.0
-   */
-  public void setPoint(float x, float y, int index) {
-    if (index < 0 || index >= this.points.length) {
-      throw new IndexOutOfBoundsException("Invalid index " + index);
-    }
-    if (this.points [index][0] != x 
-        || this.points [index][1] != y) {
       float [][] oldPoints = this.points;
-      this.points = deepCopy(this.points);
-      this.points [index][0] = x;
-      this.points [index][1] = y;
+      this.points = deepCopy(points);
       this.shapeCache = null;
       this.areaCache  = null;
-      this.propertyChangeSupport.firePropertyChange(Property.POINTS.name(), oldPoints, deepCopy(this.points));
+      this.propertyChangeSupport.firePropertyChange(Property.POINTS.name(), oldPoints, points);
     }
-  }
-  
-  /**
-   * Removes the point at the given <code>index</code>.
-   * @throws IndexOutOfBoundsException if <code>index</code> is negative or >= <code>getPointCount()</code> 
-   * @since 2.0
-   */
-  public void removePoint(int index) {
-    if (index < 0 || index >= this.points.length) {
-      throw new IndexOutOfBoundsException("Invalid index " + index);
-    } else if (this.points.length <= 1) {
-      throw new IllegalStateException("Room points must containt at least one point");
-    }
-    
-    float [][] newPoints = new float [this.points.length - 1][];
-    System.arraycopy(this.points, 0, newPoints, 0, index);
-    System.arraycopy(this.points, index + 1, newPoints, index, this.points.length - index - 1);
-    
-    float [][] oldPoints = this.points;
-    this.points = newPoints;
-    this.shapeCache = null;
-    this.areaCache  = null;
-    this.propertyChangeSupport.firePropertyChange(Property.POINTS.name(), oldPoints, deepCopy(this.points));
   }
   
   /**
@@ -411,7 +316,7 @@ public class Room implements Serializable, Selectable, Elevatable {
   }
   
   /**
-   * Returns the floor color of this room. 
+   * Returns the floor color color of this room. 
    */
   public Integer getFloorColor() {
     return this.floorColor;
@@ -471,29 +376,6 @@ public class Room implements Serializable, Selectable, Elevatable {
   }
   
   /**
-   * Returns the floor shininess of this room. 
-   * @return a value between 0 (matt) and 1 (very shiny)  
-   * @since 3.0
-   */
-  public float getFloorShininess() {
-    return this.floorShininess;
-  }
-
-  /**
-   * Sets the floor shininess of this room. Once this room is updated, 
-   * listeners added to this room will receive a change notification.
-   * @since 3.0
-   */
-  public void setFloorShininess(float floorShininess) {
-    if (floorShininess != this.floorShininess) {
-      float oldFloorShininess = this.floorShininess;
-      this.floorShininess = floorShininess;
-      this.propertyChangeSupport.firePropertyChange(Property.FLOOR_SHININESS.name(), 
-          oldFloorShininess, floorShininess);
-    }
-  }
-
-  /**
    * Returns the ceiling color color of this room. 
    */
   public Integer getCeilingColor() {
@@ -551,58 +433,6 @@ public class Room implements Serializable, Selectable, Elevatable {
       this.ceilingVisible = ceilingVisible;
       this.propertyChangeSupport.firePropertyChange(Property.CEILING_VISIBLE.name(), !ceilingVisible, ceilingVisible);
     }
-  }
-  
-  /**
-   * Returns the ceiling shininess of this room.
-   * @return a value between 0 (matt) and 1 (very shiny)  
-   * @since 3.0
-   */
-  public float getCeilingShininess() {
-    return this.ceilingShininess;
-  }
-
-  /**
-   * Sets the ceiling shininess of this room. Once this room is updated, 
-   * listeners added to this room will receive a change notification.
-   * @since 3.0
-   */
-  public void setCeilingShininess(float ceilingShininess) {
-    if (ceilingShininess != this.ceilingShininess) {
-      float oldCeilingShininess = this.ceilingShininess;
-      this.ceilingShininess = ceilingShininess;
-      this.propertyChangeSupport.firePropertyChange(Property.CEILING_SHININESS.name(), 
-          oldCeilingShininess, ceilingShininess);
-    }
-  }
-
-  /**
-   * Returns the level which this room belongs to. 
-   * @since 3.4
-   */
-  public Level getLevel() {
-    return this.level;
-  }
-
-  /**
-   * Sets the level of this room. Once this room is updated, 
-   * listeners added to this room will receive a change notification.
-   * @since 3.4
-   */
-  public void setLevel(Level level) {
-    if (level != this.level) {
-      Level oldLevel = this.level;
-      this.level = level;
-      this.propertyChangeSupport.firePropertyChange(Property.LEVEL.name(), oldLevel, level);
-    }
-  }
-
-  /**
-   * Returns <code>true</code> if this room is at the given level.
-   * @since 3.4
-   */
-  public boolean isAtLevel(Level level) {
-    return this.level == level;
   }
   
   /**
@@ -761,7 +591,7 @@ public class Room implements Serializable, Selectable, Elevatable {
         points [i][0] += dx;
         points [i][1] += dy;
       }
-      updatePoints(points);
+      setPoints(points);
     }
   }
   
@@ -773,7 +603,6 @@ public class Room implements Serializable, Selectable, Elevatable {
     try {
       Room clone = (Room)super.clone();
       clone.propertyChangeSupport = new PropertyChangeSupport(clone);
-      clone.level = null;
       return clone;
     } catch (CloneNotSupportedException ex) {
       throw new IllegalStateException("Super class isn't cloneable"); 

@@ -1,7 +1,7 @@
 /*
  * LabelPanel.java 29 nov. 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,10 +75,9 @@ public class LabelPanel extends JPanel implements DialogView {
                                 UserPreferences preferences, 
                                 final LabelController controller) {
     // Create text label and its text field bound to NAME controller property
-    this.textLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
-        LabelPanel.class, "textLabel.text"));
-    this.textTextField = new AutoCompleteTextField(controller.getText(), 20, preferences.getAutoCompletionStrings("LabelText"));
-    if (!OperatingSystem.isMacOSXLeopardOrSuperior()) {
+    this.textLabel = new JLabel(preferences.getLocalizedString(LabelPanel.class, "textLabel.text"));
+    this.textTextField = new JTextField(controller.getText(), 20);
+    if (!OperatingSystem.isMacOSX()) {
       SwingTools.addAutoSelectionOnFocusGain(this.textTextField);
     }
     final PropertyChangeListener textChangeListener = new PropertyChangeListener() {

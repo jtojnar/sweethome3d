@@ -21,9 +21,6 @@
 package com.eteks.sweethome3d.junit;
 
 import java.awt.Component;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.GeneralPath;
-import java.awt.geom.Rectangle2D;
 import java.util.Arrays;
 import java.util.List;
 
@@ -38,13 +35,11 @@ import javax.swing.JTable;
 import junit.framework.TestCase;
 
 import com.eteks.sweethome3d.io.DefaultUserPreferences;
-import com.eteks.sweethome3d.model.CatalogPieceOfFurniture;
 import com.eteks.sweethome3d.model.FurnitureCategory;
 import com.eteks.sweethome3d.model.Home;
-import com.eteks.sweethome3d.model.HomeFurnitureGroup;
 import com.eteks.sweethome3d.model.HomePieceOfFurniture;
-import com.eteks.sweethome3d.model.LengthUnit;
 import com.eteks.sweethome3d.model.Selectable;
+import com.eteks.sweethome3d.model.LengthUnit;
 import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.model.Wall;
 import com.eteks.sweethome3d.swing.FurnitureCatalogTree;
@@ -74,7 +69,6 @@ public class HomeControllerTest extends TestCase {
   protected void setUp() {
     this.viewFactory = new SwingViewFactory();
     this.preferences = new DefaultUserPreferences();
-    this.preferences.setFurnitureCatalogViewedInTree(true);
     this.home = new Home();
     this.homeController = 
         new HomeController(this.home, this.preferences, viewFactory);
@@ -193,7 +187,7 @@ public class HomeControllerTest extends TestCase {
     secondPiece.setAngle(15);
     this.home.addPieceOfFurniture(secondPiece);
     // Add a wall to home
-    this.home.addWall(new Wall(0, 0, 100, 0, 7, this.home.getWallHeight()));
+    this.home.addWall(new Wall(0, 0, 100, 0, 7));
     
     PlanController planController = this.homeController.getPlanController();
     float scale = planController.getScale();
@@ -218,9 +212,9 @@ public class HomeControllerTest extends TestCase {
     // 4. Select all while plan has focus
     this.homeController.focusedViewChanged(planController.getView());
     runAction(HomePane.ActionType.SELECT_ALL);
-    // Check selection contains the two pieces, the wall and the compass
+    // Check selection contains the two pieces and the wall
     assertEquals("Selection doesn't contain home objects", 
-        4, this.home.getSelectedItems().size());
+        3, this.home.getSelectedItems().size());
     
     // 5. Select the first two pieces 
     this.home.setSelectedItems(Arrays.asList(new Selectable [] {firstPiece, secondPiece}));
@@ -229,26 +223,26 @@ public class HomeControllerTest extends TestCase {
     // Align on bottom
     runAction(HomePane.ActionType.ALIGN_FURNITURE_ON_BOTTOM);
     // Check bottom of second piece equals bottom of first piece
-    TestUtilities.assertEqualsWithinEpsilon("Second piece isn't aligned on bottom of first piece",
-        getMaxY(firstPiece), getMaxY(secondPiece), 10E-4f);
+    assertEpsilonEquals("Second piece isn't aligned on bottom of first piece",
+        getMaxY(firstPiece), getMaxY(secondPiece));
 
     // 6. Align on top
     runAction(HomePane.ActionType.ALIGN_FURNITURE_ON_TOP);
     // Check bottom of second piece equals bottom of first piece
-    TestUtilities.assertEqualsWithinEpsilon("Second piece isn't aligned on top of first piece",
-        getMinY(firstPiece), getMinY(secondPiece), 10E-4f);
+    assertEpsilonEquals("Second piece isn't aligned on top of first piece",
+        getMinY(firstPiece), getMinY(secondPiece));
     
     // 7. Align on left
     runAction(HomePane.ActionType.ALIGN_FURNITURE_ON_LEFT);
     // Check bottom of second piece equals bottom of first piece
-    TestUtilities.assertEqualsWithinEpsilon("Second piece isn't aligned on left of first piece",
-        getMinX(firstPiece), getMinX(secondPiece), 10E-4f);
+    assertEpsilonEquals("Second piece isn't aligned on left of first piece",
+        getMinX(firstPiece), getMinX(secondPiece));
     
     // 8. Align on right
     runAction(HomePane.ActionType.ALIGN_FURNITURE_ON_RIGHT);
     // Check bottom of second piece equals bottom of first piece
-    TestUtilities.assertEqualsWithinEpsilon("Second piece isn't aligned on right of first piece",
-        getMaxX(firstPiece), getMaxX(secondPiece), 10E-4f);
+    assertEpsilonEquals("Second piece isn't aligned on right of first piece",
+        getMaxX(firstPiece), getMaxX(secondPiece));
     float alignedPieceX = secondPiece.getX();
     float alignedPieceY = secondPiece.getY();
 
@@ -258,10 +252,10 @@ public class HomeControllerTest extends TestCase {
     runAction(HomePane.ActionType.UNDO);
     runAction(HomePane.ActionType.UNDO);
     // Check second piece is back to its place
-    TestUtilities.assertEqualsWithinEpsilon("Second piece abcissa is incorrect",
-        secondPieceX, secondPiece.getX(), 10E-4f);
-    TestUtilities.assertEqualsWithinEpsilon("Second piece ordinate is incorrect",
-        secondPieceY, secondPiece.getY(), 10E-4f);
+    assertEpsilonEquals("Second piece abcissa is incorrect",
+        secondPieceX, secondPiece.getX());
+    assertEpsilonEquals("Second piece ordinate is incorrect",
+        secondPieceY, secondPiece.getY());
 
     // 10. Redo alignments
     runAction(HomePane.ActionType.REDO);
@@ -269,10 +263,10 @@ public class HomeControllerTest extends TestCase {
     runAction(HomePane.ActionType.REDO);
     runAction(HomePane.ActionType.REDO);
     // Check second piece is back to its place
-    TestUtilities.assertEqualsWithinEpsilon("Second piece abcissa is incorrect",
-        alignedPieceX, secondPiece.getX(), 10E-4f);
-    TestUtilities.assertEqualsWithinEpsilon("Second piece ordinate is incorrect",
-        alignedPieceY, secondPiece.getY(), 10E-4f);
+    assertEpsilonEquals("Second piece abcissa is incorrect",
+        alignedPieceX, secondPiece.getX());
+    assertEpsilonEquals("Second piece ordinate is incorrect",
+        alignedPieceY, secondPiece.getY());
   }
   
   /**
@@ -323,122 +317,6 @@ public class HomeControllerTest extends TestCase {
   }
   
   /**
-   * Tests furniture group / ungroup.
-   */
-  public void testFurnitureGroup() {
-    assertGroupActionsEnabled(false, false);
-    
-    // 1. Add the first two pieces of catalog first category to home
-    FurnitureCategory firstCategory = this.preferences.getFurnitureCatalog().getCategories().get(0);
-    List<CatalogPieceOfFurniture> catalogPieces = Arrays.asList(new CatalogPieceOfFurniture [] {
-        firstCategory.getFurniture().get(0), firstCategory.getFurniture().get(1)});
-    this.homeController.getFurnitureCatalogController().setSelectedFurniture(catalogPieces);
-    runAction(HomePane.ActionType.ADD_HOME_FURNITURE);
-    List<HomePieceOfFurniture> pieces = this.home.getFurniture();
-    // Check home contains two selected pieces
-    assertEquals("Home doesn't contain 2 pieces", 2, pieces.size());
-    assertEquals("Home doesn't contain 2 selected items", 2, this.home.getSelectedItems().size());
-    assertGroupActionsEnabled(true, false);
-    HomePieceOfFurniture piece1 = pieces.get(0);
-    HomePieceOfFurniture piece2 = pieces.get(1);
-    piece2.move(100, 100);
-    piece2.setElevation(100);
-    
-    // 2. Group selected furniture
-    runAction(HomePane.ActionType.GROUP_FURNITURE);
-    // Check home contains one selected piece that replaced added pieces
-    pieces = this.home.getFurniture();
-    assertEquals("Home doesn't contain 1 piece", 1, pieces.size());
-    assertEquals("Home doesn't contain 1 selected item", 1, this.home.getSelectedItems().size());
-    assertFalse("Home still contains first added piece", pieces.contains(piece1));
-    assertFalse("Home still contains scond added piece", pieces.contains(piece2));
-    assertGroupActionsEnabled(false, true);
-    HomeFurnitureGroup group = (HomeFurnitureGroup)pieces.get(0);
-    // Compare surrounding rectangles
-    Rectangle2D piecesRectangle = getSurroundingRectangle(piece1);
-    piecesRectangle.add(getSurroundingRectangle(piece2));
-    Rectangle2D groupRectangle = getSurroundingRectangle(group);
-    assertEquals("Surrounding rectangle is incorrect", piecesRectangle, groupRectangle);
-    // Compare elevation and height
-    assertEquals("Wrong elevation", Math.min(piece1.getElevation(), piece2.getElevation()), group.getElevation());
-    assertEquals("Wrong height", 
-        Math.max(piece1.getElevation() + piece1.getHeight(), piece2.getElevation() + piece2.getHeight()) 
-        - Math.min(piece1.getElevation(), piece2.getElevation()), group.getHeight());
-    
-    // 3. Rotate group
-    float angle = (float)(Math.PI / 2);
-    group.setAngle(angle);
-    // Check pieces rotation
-    assertEquals("Piece angle is wrong", angle, piece1.getAngle());
-    assertEquals("Piece angle is wrong", angle, piece2.getAngle());
-    assertEquals("Group angle is wrong", angle, group.getAngle());
-    // Check surrounding rectangles
-    Rectangle2D rotatedGroupRectangle = new GeneralPath(groupRectangle).createTransformedShape(
-        AffineTransform.getRotateInstance(angle, groupRectangle.getCenterX(), groupRectangle.getCenterY())).getBounds2D();
-    groupRectangle = getSurroundingRectangle(group);
-    assertEquals("Surrounding rectangle is incorrect", rotatedGroupRectangle, groupRectangle);
-    piecesRectangle = getSurroundingRectangle(piece1);
-    piecesRectangle.add(getSurroundingRectangle(piece2));
-    assertEquals("Surrounding rectangle is incorrect", piecesRectangle.getWidth(), groupRectangle.getWidth());
-    assertEquals("Surrounding rectangle is incorrect", piecesRectangle.getHeight(), groupRectangle.getHeight());
-    
-    // 4. Undo / Redo
-    assertActionsEnabled(true, true, true, false);
-    runAction(HomePane.ActionType.UNDO);
-    pieces = this.home.getFurniture();
-    assertEquals("Home doesn't contain 2 pieces", 2, pieces.size());
-    assertEquals("Home doesn't contain 2 selected items", 2, this.home.getSelectedItems().size());
-    assertFalse("Home contains group", pieces.contains(group));
-    assertGroupActionsEnabled(true, false);
-
-    assertActionsEnabled(true, true, true, true);
-    runAction(HomePane.ActionType.REDO);
-    pieces = this.home.getFurniture();
-    assertEquals("Home doesn't contain 1 piece", 1, pieces.size());
-    assertEquals("Home doesn't contain 1 selected item", 1, this.home.getSelectedItems().size());
-    assertTrue("Home doesn't contain group", pieces.contains(group));
-    assertGroupActionsEnabled(false, true);
-    
-    // 5. Add one more piece to home
-    catalogPieces = Arrays.asList(new CatalogPieceOfFurniture [] {firstCategory.getFurniture().get(0)});
-    this.homeController.getFurnitureCatalogController().setSelectedFurniture(catalogPieces);
-    runAction(HomePane.ActionType.ADD_HOME_FURNITURE);
-    pieces = this.home.getFurniture();
-    // Check home contains two pieces with one selected
-    assertEquals("Home doesn't contain 2 pieces", 2, pieces.size());
-    assertEquals("Home doesn't contain 1 selected item", 1, this.home.getSelectedItems().size());
-    assertGroupActionsEnabled(false, false);
-    
-    // 6. Group it with the other group
-    HomePieceOfFurniture piece3 = pieces.get(1);
-    this.home.setSelectedItems(Arrays.asList(new Selectable [] {group, piece3}));
-    assertEquals("Home doesn't contain 2 selected items", 2, this.home.getSelectedItems().size());
-    assertGroupActionsEnabled(true, true);
-    runAction(HomePane.ActionType.GROUP_FURNITURE);
-    pieces = this.home.getFurniture();
-    assertEquals("Home doesn't contain 1 piece", 1, pieces.size());
-    assertEquals("Home doesn't contain 1 selected item", 1, this.home.getSelectedItems().size());
-    HomeFurnitureGroup group2 = (HomeFurnitureGroup)pieces.get(0);
-    assertFalse("Home doesn't contain a different group", group == group2);
-    assertGroupActionsEnabled(false, true);
-    
-    // 7. Ungroup furniture
-    runAction(HomePane.ActionType.UNGROUP_FURNITURE);
-    assertGroupActionsEnabled(true, true);
-    pieces = this.home.getFurniture();
-    assertEquals("Home doesn't contain 2 piece", 2, pieces.size());
-    assertEquals("Home doesn't contain 2 selected item", 2, this.home.getSelectedItems().size());
-    assertFalse("Home contains second group", pieces.contains(group2));
-    assertTrue("Home doesn't contain group", pieces.contains(group));
-    runAction(HomePane.ActionType.UNGROUP_FURNITURE);
-    assertGroupActionsEnabled(true, false);
-    pieces = this.home.getFurniture();
-    assertEquals("Home doesn't contain 3 piece", 3, pieces.size());
-    assertEquals("Home doesn't contain 2 selected item", 2, this.home.getSelectedItems().size());
-    assertFalse("Home contains group", pieces.contains(group));
-  }
-    
-  /**
    * Runs <code>actionPerformed</code> method matching <code>actionType</code> 
    * in <code>HomePane</code>. 
    */
@@ -474,16 +352,12 @@ public class HomeControllerTest extends TestCase {
   }
   
   /**
-   * Asserts GROUP_FURNITURE, UNGROUP_FURNITURE are enabled or disabled. 
+   * Asserts <code>value1</code> equals <code>value2</code> at epsilon.
    */
-  private void assertGroupActionsEnabled(boolean groupActionEnabled, 
-                                         boolean ungroupActionEnabled) {
-    assertTrue("Group action invalid state", 
-        getAction(HomePane.ActionType.GROUP_FURNITURE).isEnabled() == groupActionEnabled);
-    assertTrue("Ungroup action invalid state", 
-        getAction(HomePane.ActionType.UNGROUP_FURNITURE).isEnabled() == ungroupActionEnabled);
+  private void assertEpsilonEquals(String message, float value1, float value2) {
+    assertTrue(message, Math.abs(value1 - value2) < 1E-4);
   }
-  
+
   /**
    * Returns the minimum abcissa of the vertices of <code>piece</code>.  
    */
@@ -555,18 +429,6 @@ public class HomeControllerTest extends TestCase {
     }    
   }
 
-  /**
-   * Returns the rectangle surrounding the given <code>piece</code>.
-   */
-  private Rectangle2D getSurroundingRectangle(HomePieceOfFurniture piece) {
-    float [][] points = piece.getPoints();
-    Rectangle2D rectangle = new Rectangle2D.Float(points [0][0], points [0][1], 0, 0);
-    for (int i = 1; i < points.length; i++) {
-      rectangle.add(points [i][0], points [i][1]);
-    }
-    return rectangle;
-  }
-  
   public static void main(String [] args) {
     ViewFactory viewFactory = new SwingViewFactory();
     UserPreferences preferences = new DefaultUserPreferences();

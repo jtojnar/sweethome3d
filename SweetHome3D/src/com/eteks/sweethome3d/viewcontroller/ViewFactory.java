@@ -1,7 +1,7 @@
 /*
  * ViewFactory.java 28 oct. 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -106,12 +106,6 @@ public interface ViewFactory {
   public abstract DialogView createUserPreferencesView(
                                           UserPreferences preferences,
                                           UserPreferencesController userPreferencesController);
-  
-  /**
-   * Returns a new view that edits level values.
-   */
-  public abstract DialogView createLevelView(UserPreferences preferences, LevelController levelController);
-
   /**
    * Returns a new view that edits furniture values.
    */
@@ -136,18 +130,6 @@ public interface ViewFactory {
   public abstract DialogView createLabelView(boolean modification,
                                              UserPreferences preferences,
                                              LabelController labelController);
-
-  /**
-   * Returns a new view that edits compass values.
-   */
-  public abstract DialogView createCompassView(UserPreferences preferences, 
-                                               CompassController compassController);
-  
-  /**
-   * Returns a new view that edits observer camera values.
-   */
-  public abstract DialogView createObserverCameraView(UserPreferences preferences,
-                                                      ObserverCameraController home3DAttributesController);
   
   /**
    * Returns a new view that edits 3D attributes.
@@ -174,18 +156,6 @@ public interface ViewFactory {
                                                     UserPreferences preferences,
                                                     HomeController homeController,
                                                     PrintPreviewController printPreviewController);
-
-  /**
-   * Returns a new view able to compute a photo realistic image of a home. 
-   */
-  public abstract DialogView createPhotoView(Home home, UserPreferences preferences, 
-                                             PhotoController photoController);
-
-  /**
-   * Returns a new view able to compute a 3D video of a home. 
-   */
-  public abstract DialogView createVideoView(Home home, UserPreferences preferences, 
-                                             VideoController videoController);
 
   /**
    * Returns a new view that displays Sweet Home 3D help.

@@ -50,7 +50,6 @@ import com.eteks.sweethome3d.swing.SwingViewFactory;
 import com.eteks.sweethome3d.viewcontroller.HomeController;
 import com.eteks.sweethome3d.viewcontroller.HomeView;
 import com.eteks.sweethome3d.viewcontroller.PlanController;
-import com.eteks.sweethome3d.viewcontroller.PlanView;
 import com.eteks.sweethome3d.viewcontroller.ViewFactory;
 
 /**
@@ -96,7 +95,7 @@ public class RoomTest extends ComponentTestFixture {
     // Check room point count and area
     Room room = frame.home.getRooms().get(0);
     assertEquals("Wrong point count", 5, room.getPoints().length);
-    assertEquals("Wrong room area", 69244.76f, room.getArea());
+    assertEquals("Wrong room area", 69273.02f, room.getArea());
     
     // 4. Edit created room
     JDialog attributesDialog = showRoomPanel(frame.preferences, frame.homeController, frame, tester);
@@ -141,46 +140,46 @@ public class RoomTest extends ComponentTestFixture {
     
     // 5. Increase font size of room name text
     assertNull("Text style exists", room.getNameStyle());
-    runAction(frame.homeController, HomeView.ActionType.INCREASE_TEXT_SIZE, tester);
+    runAction(frame.homeController, HomeView.ActionType.INCREASE_TEXT_SIZE);
     // Check text style
     assertEquals("Wrong text size", 26.f, room.getNameStyle().getFontSize());
     // Decrease font size of room name text
-    runAction(frame.homeController, HomeView.ActionType.DECREASE_TEXT_SIZE, tester);
-    runAction(frame.homeController, HomeView.ActionType.DECREASE_TEXT_SIZE, tester);    
+    runAction(frame.homeController, HomeView.ActionType.DECREASE_TEXT_SIZE);
+    runAction(frame.homeController, HomeView.ActionType.DECREASE_TEXT_SIZE);    
     assertEquals("Wrong text size", 22.f, room.getNameStyle().getFontSize());
     // Change style to italic
-    runAction(frame.homeController, HomeView.ActionType.TOGGLE_ITALIC_STYLE, tester);
+    runAction(frame.homeController, HomeView.ActionType.TOGGLE_ITALIC_STYLE);
     assertTrue("Text isn't italic", room.getNameStyle().isItalic());
     assertFalse("Text is bold", room.getNameStyle().isBold());
     // Change style to bold
-    runAction(frame.homeController, HomeView.ActionType.TOGGLE_BOLD_STYLE, tester);
+    runAction(frame.homeController, HomeView.ActionType.TOGGLE_BOLD_STYLE);
     assertTrue("Text isn't italic", room.getNameStyle().isItalic());
     assertTrue("Text isn't bold", room.getNameStyle().isBold());
     
     // 6. Undo style change
-    runAction(frame.homeController, HomeView.ActionType.UNDO, tester);
-    runAction(frame.homeController, HomeView.ActionType.UNDO, tester);
+    runAction(frame.homeController, HomeView.ActionType.UNDO);
+    runAction(frame.homeController, HomeView.ActionType.UNDO);
     // Check style
     assertFalse("Text is italic", room.getNameStyle().isItalic());
     assertFalse("Text is bold", room.getNameStyle().isBold());
     // Undo text size change
-    runAction(frame.homeController, HomeView.ActionType.UNDO, tester);
-    runAction(frame.homeController, HomeView.ActionType.UNDO, tester);
-    runAction(frame.homeController, HomeView.ActionType.UNDO, tester);
+    runAction(frame.homeController, HomeView.ActionType.UNDO);
+    runAction(frame.homeController, HomeView.ActionType.UNDO);
+    runAction(frame.homeController, HomeView.ActionType.UNDO);
     assertEquals("Wrong text size", 24.f, room.getNameStyle().getFontSize());
     // Undo room modification
-    runAction(frame.homeController, HomeView.ActionType.UNDO, tester);
+    runAction(frame.homeController, HomeView.ActionType.UNDO);
     assertNull("Name isn't empty", room.getName());
     assertTrue("Area isn't visible", room.isAreaVisible());
     assertTrue("Floor isn't visible", room.isFloorVisible());
     assertTrue("Ceiling isn't visible", room.isCeilingVisible());
     // Undo room creation
-    runAction(frame.homeController, HomeView.ActionType.UNDO, tester);
+    runAction(frame.homeController, HomeView.ActionType.UNDO);
     assertEquals("Wrong room count in home", 0, frame.home.getRooms().size());
    
     // 7. Redo everything
     for (int i = 0; i < 7; i++) {
-      runAction(frame.homeController, HomeView.ActionType.REDO, tester);
+      runAction(frame.homeController, HomeView.ActionType.REDO);
     }
     // Check room is back
     assertEquals("Wrong room count in home", 1, frame.home.getRooms().size());
@@ -198,13 +197,9 @@ public class RoomTest extends ComponentTestFixture {
    * Runs <code>actionPerformed</code> method matching <code>actionType</code> 
    * in <code>HomePane</code>. 
    */
-  private void runAction(final HomeController controller,
-                         final HomePane.ActionType actionType, JComponentTester tester) {
-    tester.invokeAndWait(new Runnable() { 
-        public void run() {
-          ((JComponent)controller.getView()).getActionMap().get(actionType).actionPerformed(null);
-        }
-      });
+  private void runAction(HomeController controller,
+                         HomePane.ActionType actionType) {
+    ((JComponent)controller.getView()).getActionMap().get(actionType).actionPerformed(null);
   }
   
   /**
@@ -217,7 +212,7 @@ public class RoomTest extends ComponentTestFixture {
     tester.invokeLater(new Runnable() { 
         public void run() {
           // Display dialog box later in Event Dispatch Thread to avoid blocking test thread
-          ((JComponent)controller.getView()).getActionMap().get(HomeView.ActionType.MODIFY_ROOM).actionPerformed(null);
+          runAction(controller, HomeView.ActionType.MODIFY_ROOM);
         }
       });
     // Wait for wall view to be shown
@@ -251,12 +246,7 @@ public class RoomTest extends ComponentTestFixture {
           public void write() throws RecorderException {
           }
         };
-      ViewFactory viewFactory = new SwingViewFactory() {
-          @Override
-          public PlanView createPlanView(Home home, UserPreferences preferences, PlanController controller) {
-            return new PlanComponent(home, preferences, controller);
-          }
-        };
+      ViewFactory viewFactory = new SwingViewFactory();
       FileContentManager contentManager = new FileContentManager(this.preferences);
       this.homeController = new HomeController(this.home, this.preferences, viewFactory, contentManager);
       setRootPane((JRootPane)this.homeController.getView());

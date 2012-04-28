@@ -1,7 +1,7 @@
 /*
  * FurnitureCatalogTree.java 7 avr. 2006
  *
- * Sweet Home 3D, Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,22 +24,16 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import java.awt.dnd.DnDConstants;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionAdapter;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javax.imageio.ImageIO;
 import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.JTree;
-import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
 import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
@@ -98,34 +92,13 @@ public class FurnitureCatalogTree extends JTree implements View {
     setRootVisible(false);
     setShowsRootHandles(true);
     setCellRenderer(new CatalogCellRenderer());
-    addDragListener();
     if (controller != null) {
       updateTreeSelectedFurniture(catalog, controller);
       addSelectionListeners(catalog, controller);
       addMouseListener(controller);
     }
+    setDragEnabled(true);
     ToolTipManager.sharedInstance().registerComponent(this);
-    // Remove Select all action
-    getActionMap().getParent().remove("selectAll");
-  }
-
-  /**
-   * Adds a mouse motion listener that will initiate a drag operation 
-   * when the user drags a piece of furniture.
-   */
-  private void addDragListener() {
-    addMouseMotionListener(new MouseMotionAdapter() {
-      public void mouseDragged(MouseEvent ev) {
-        if (SwingUtilities.isLeftMouseButton(ev)) {
-          TreePath clickedPath = getPathForLocation(ev.getX(), ev.getY());
-          if (clickedPath != null
-              && clickedPath.getLastPathComponent() instanceof CatalogPieceOfFurniture
-              && getTransferHandler() != null) {
-            getTransferHandler().exportAsDrag(FurnitureCatalogTree.this, ev, DnDConstants.ACTION_COPY);
-          }
-        }
-      }
-    });
   }
   
   /** 
@@ -218,28 +191,16 @@ public class FurnitureCatalogTree extends JTree implements View {
         && path != null
         && path.getPathCount() == 3) {
       CatalogPieceOfFurniture piece = (CatalogPieceOfFurniture)path.getLastPathComponent();
-      String tooltip = "<html><table><tr><td align='center'><b>" + piece.getName() + "</b>";
+      String tooltip = "<html><center>&nbsp;<b>" + piece.getName() + "</b>&nbsp;";
       if (piece.getCreator() != null) {
         tooltip += "<br>" + this.preferences.getLocalizedString(FurnitureCatalogTree.class, 
-            "tooltipCreator", piece.getCreator() + "</td></tr>");
+            "tooltipCreator", piece.getCreator());
       }
       if (piece.getIcon() instanceof URLContent) {
-        try {
-          // Ensure image will always be viewed in a 128x128 pixels cell
-          BufferedImage image = ImageIO.read(((URLContent)piece.getIcon()).getURL());
-          if (image == null) {
-            return null;
-          }
-          int width = Math.round(128f * Math.min(1, image.getWidth() / image.getHeight()));
-          int height = Math.round((float)width * image.getHeight() / image.getWidth());
-          tooltip += "<tr><td width='128' height='128' align='center' valign='middle'><img width='" + width 
-              + "' height='" + height + "' src='" 
-              + ((URLContent)piece.getIcon()).getURL() + "'></td></tr>";
-        } catch (IOException ex) {
-          return null;
-        }
+        tooltip += "<br><img width='128' height='128' src='" 
+          + ((URLContent)piece.getIcon()).getURL() + "'>"; 
       }
-      return tooltip + "</table>";
+      return tooltip;
     } else {
       return null;
     }
@@ -308,7 +269,7 @@ public class FurnitureCatalogTree extends JTree implements View {
    * Tree model adaptor to Catalog / Category / PieceOfFurniture classes.  
    */
   private static class CatalogTreeModel implements TreeModel {
-    private FurnitureCatalog        catalog;
+    private FurnitureCatalog                 catalog;
     private List<TreeModelListener> listeners;
     
     public CatalogTreeModel(FurnitureCatalog catalog) {
@@ -404,13 +365,13 @@ public class FurnitureCatalogTree extends JTree implements View {
             case ADD :
               if (piece.getCategory().getFurnitureCount() == 1) {
                 // Fire nodes inserted for new category
-                catalogTreeModel.fireTreeNodesInserted(new TreeModelEvent(catalogTreeModel,
+                catalogTreeModel.fireTreeNodesInserted(new TreeModelEvent(this,
                     new Object [] {catalog}, 
                     new int [] {Collections.binarySearch(catalog.getCategories(), piece.getCategory())}, 
                     new Object [] {piece.getCategory()}));
               } else {
                 // Fire nodes inserted for new piece
-                catalogTreeModel.fireTreeNodesInserted(new TreeModelEvent(catalogTreeModel,
+                catalogTreeModel.fireTreeNodesInserted(new TreeModelEvent(this,
                     new Object [] {catalog, piece.getCategory()},
                     new int [] {ev.getIndex()},
                     new Object [] {piece}));
@@ -419,13 +380,13 @@ public class FurnitureCatalogTree extends JTree implements View {
             case DELETE :
               if (piece.getCategory().getFurnitureCount() == 0) {
                 // Fire nodes removed for deleted category
-                catalogTreeModel.fireTreeNodesRemoved(new TreeModelEvent(catalogTreeModel,
+                catalogTreeModel.fireTreeNodesRemoved(new TreeModelEvent(this,
                     new Object [] {catalog},
                     new int [] {-(Collections.binarySearch(catalog.getCategories(), piece.getCategory()) + 1)},
                     new Object [] {piece.getCategory()}));
               } else {
                 // Fire nodes removed for deleted piece
-                catalogTreeModel.fireTreeNodesRemoved(new TreeModelEvent(catalogTreeModel, 
+                catalogTreeModel.fireTreeNodesRemoved(new TreeModelEvent(this, 
                     new Object [] {catalog, piece.getCategory()},
                     new int [] {ev.getIndex()},
                     new Object [] {piece}));

@@ -1,7 +1,7 @@
 /*
  * SweetHome3DApplet.java 10 oct. 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,17 +21,16 @@ package com.eteks.sweethome3d.applet;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.AccessControlException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -54,13 +53,6 @@ import com.eteks.sweethome3d.tools.ExtensionsClassLoader;
  *     <br>By default, the value of this parameter is <code>catalog.zip</code>. If this file
  *     or one of the URLs specified by this parameter doesn't exist, it will be ignored.</li>
  *     
- *     <li><code>furnitureResourcesURLBase</code> specifies the URL used as a base to build the URLs of 
- *     the 3D models and icons cited in the <code>PluginFurnitureCatalog.properties</code> file of a 
- *     furniture catalog. If this URL isn't an absolute URL it will be considered relative to 
- *     applet codebase. If this URL base should the applet code base itself, use a value equal to ".".
- *     <br>If this parameter isn't defined, the URLs of 3D model and icons will be relative to their 
- *     furniture catalog file or absolute.</li>
- * 
  *     <li><code>texturesCatalogURLs</code> specifies the URLs of the textures libraries available 
  *     in Sweet Home 3D catalog. These URLs are comma or space separated, and if they are not 
  *     absolute URLs, they will be considered as relative to applet codebase. Each URL is a ZIP file 
@@ -69,14 +61,7 @@ import com.eteks.sweethome3d.tools.ExtensionsClassLoader;
  *     <br>By default, the value of this parameter is <code>catalog.zip</code>, meaning that the 
  *     furniture and textures can be stored in the same file. If this file
  *     or one of the URLs specified by this parameter doesn't exist, it will be ignored.</li>
- *
- *     <li><code>texturesResourcesURLBase</code> specifies the URL used as a base to build the URLs of
- *     the texture images cited in the <code>PluginTexturesCatalog.properties</code> file of a 
- *     textures catalog. If this URL isn't an absolute URL it will be considered relative to 
- *     applet codebase. If this URL base should the applet code base itself, use a value equal to ".".
- *     <br>If this parameter isn't defined, the URLs of texture images will be relative to their 
- *     textures catalog file or absolute.</li>
- *
+ *     
  *     <li><code>pluginURLs</code> specifies the URLs of the actions available to users through 
  *     {@link com.eteks.sweethome3d.plugin.Plugin plugins}.These URLs are comma or space separated, 
  *     and if they are not absolute URLs, they will be considered as relative to applet codebase. 
@@ -90,7 +75,7 @@ import com.eteks.sweethome3d.tools.ExtensionsClassLoader;
  *     to write the data of a home. This data will be uploaded in the file parameter named 
  *     <code>home</code> of a POST request encoded with multipart/form-data MIME type, with 
  *     the name of the uploaded home being stored in its <code>filename</code> attribute.
- *     This service must return 1 if it wrote the uploaded data successfully.
+ *     This service must return 1 if it wrote the uploaded successfully.
  *     <br>By default, this URL is <code>writeHome.php</code> and if it's not an absolute URL 
  *     it will be considered as relative to applet codebase. If its value is empty,
  *     <i>New</i>, <i>Save</i> and <i>Save as...</i> actions will be disabled and their buttons 
@@ -118,66 +103,40 @@ import com.eteks.sweethome3d.tools.ExtensionsClassLoader;
  *     <br>If you want the applet open a home at launch without creating a <code>readHomeURL</code> 
  *     service, set <code>%s</code> value for <code>readHomeURL</code> parameter and put the absolute 
  *     URL of the home file or its URL relative to applet codebase in <code>defaultHome</code> 
- *     parameter.</li>
+ *     parameter.</li></ul>
  * 
- *     <li><code>writePreferencesURL</code> specifies the URL of the HTTP service able 
- *     to write the XML content describing the user preferences. This data will be uploaded 
- *     in the parameter named <code>preferences</code> of a POST request.
- *     This service must return 1 if it completed successfully.
- *     <br>By default, this URL is empty and if it's not an absolute URL 
- *     it will be considered as relative to applet codebase.</li>
- *     
- *     <li><code>readPreferencesURL</code> specifies the URL of the HTTP service able 
- *     to return an XML content describing the user preferences as a set of properties. 
- *     The DTD of the XML content supported by the applet is specified at 
- *     <a href="http://java.sun.com/dtd/properties.dtd">http://java.sun.com/dtd/properties.dtd</a>.
- *     <br>By default, this URL is empty and if it's not an absolute URL it will be 
- *     considered as relative to applet codebase.</li>
- *     
- *     <li><code>enableExportToSH3D</code> specifies whether this applet should enable
- *     the action that lets the user export the edited home to a SH3D file. 
- *     <br>By default, the value of this parameter is <code>false</code>.</li>
- *     
- *     <li><code>enableExportToSVG</code> specifies whether this applet should enable
- *     the action that lets the user export the plan of the edited home to a SVG file. 
- *     <br>By default, the value of this parameter is <code>false</code>.</li>
- *     
- *     <li><code>enableExportToOBJ</code> specifies whether this applet should enable
- *     the action that lets the user export the 3D view of the edited home to an OBJ file. 
- *     <br>By default, the value of this parameter is <code>false</code>.</li>
- *     
- *     <li><code>enablePrintToPDF</code> specifies whether this applet should enable
- *     the action that lets the user print the edited home to a PDF file. 
- *     <br>By default, the value of this parameter is <code>false</code>.</li>
- *     
- *     <li><code>enableCreatePhoto</code> specifies whether this applet should enable
- *     the action that lets the user create a photo from the 3D view of the edited home. 
- *     <br>By default, the value of this parameter is <code>false</code>.</li>
- *     
- *     <li><code>enableCreateVideo</code> specifies whether this applet should enable
- *     the action that lets the user create a 3D video of the edited home. 
- *     <br>By default, the value of this parameter is <code>false</code>.</li>
- *     
- *     <li><code>showMemoryStatus</code> specifies whether this applet should display
- *     each second the available memory in browser status bar when it has focus. 
- *     <br>By default, the value of this parameter is <code>false</code> and 
- *     the status message won't be modified by the applet.</li>
- *     
- *     <li><code>userLanguage</code> specifies the ISO 639 code (fr, en...) of the 
- *     language used by the items displayed by this applet. 
- *     <br>By default, the selected language depends on the user environment.</li></ul>
- *     
- * <p>The bytecode of this class is Java 1.1 compatible to be able to notify users that 
+ * <p>The bytecode of this class is Java 1.1 compatible and to be able to notify users that 
  * it requires Java 5 when it's run under an old JVM.
  *     
  * @author Emmanuel Puybaret
  */
 public class SweetHome3DApplet extends JApplet {
+  static {
+    initSystemProperties();
+  }
+  
   private Object appletApplication;
-   
+  
+  /**
+   * Sets various <code>System</code> properties required to be set before Applet is displayed.
+   */
+  private static void initSystemProperties() {
+    try {
+      // Enables Java 5 bug correction about dragging directly
+      // a tree element without selecting it before :
+      // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4521075
+      System.setProperty("sun.swing.enableImprovedDragGesture", "true");
+    } catch (SecurityException ex) {
+      // Too bad Java refuses access to system properties
+    }
+  }
+  
   public void init() {
     if (!isJava5OrSuperior()) {
-      showText(getLocalizedString("requirementsMessage"));
+      showError("<html><p>This applet may be run under Windows, Mac OS X 10.4 / 10.5, Linux and Solaris." +
+          "<br>It requires Java version 5 or superior.</p>" +
+          "<p>Please, check Java version set in Java preferences under Mac OS X," +
+          "<br>or update your Java Runtime to the latest version available at java.com under the other systems.</p>");
     } else {
       createAppletApplication();
     }
@@ -194,24 +153,7 @@ public class SweetHome3DApplet extends JApplet {
       }
     }
     this.appletApplication = null;
-    // Collect deleted objects (seems to be required under Mac OS X when the applet is being reloaded)
     System.gc();
-  }
-  
-  /**
-   * Returns <code>true</code> if one of the homes edited by this applet is modified. 
-   */
-  public boolean isModified() {
-    if (this.appletApplication != null) {
-      try {
-        Method destroyMethod = this.appletApplication.getClass().getMethod("isModified", new Class [0]);
-        return ((Boolean)destroyMethod.invoke(this.appletApplication, new Object [0])).booleanValue();
-      } catch (Exception ex) {
-        // Can't do better than print stack trace
-        ex.printStackTrace();
-      }
-    }
-    return false;
   }
   
   /**
@@ -233,132 +175,64 @@ public class SweetHome3DApplet extends JApplet {
   }
 
   /**
-   * Returns the localized string matching the given <code>key</code>. 
-   */
-  private String getLocalizedString(String key) {
-    Class SweetHome3DAppletClass = SweetHome3DApplet.class;
-    return ResourceBundle.getBundle(SweetHome3DAppletClass.getPackage().getName().replace('.', '/') + "/package").
-        getString(SweetHome3DAppletClass.getName().substring(SweetHome3DAppletClass.getName().lastIndexOf('.') + 1) + "." + key);
-  }
-  
-  /**
    * Shows the given text in a label.
    */
-  private void showText(String text) {
+  private void showError(String text) {
     JLabel label = new JLabel(text, JLabel.CENTER);
     setContentPane(label);
   }
   
   /**
-   * Reports the given exception at screen.
-   */
-  private void showError(Throwable ex) {
-    showText("<html>" + getLocalizedString("startError") 
-        + "<br>Exception " + ex.getClass().getName() 
-        + (ex.getMessage() != null ? " " + ex.getMessage() : ""));
-    ex.printStackTrace();
-  }
-
-  /**
    * Creates a new <code>AppletApplication</code> instance that manages this applet content.
    */
   private void createAppletApplication() {
-    String applicationClassName = null;
     try {
-      applicationClassName = getApplicationClassName();
       Class sweetHome3DAppletClass = SweetHome3DApplet.class;
-      List java3DFiles = new ArrayList(Arrays.asList(new String [] {
+      String [] java3DFiles = {
           "j3dcore.jar", // Main Java 3D jars
           "vecmath.jar",
           "j3dutils.jar",
-          "macosx/gluegen-rt.jar", // Mac OS X jars and DLLs
-          "macosx/jogl.jar",
-          "macosx/libgluegen-rt.jnilib",
-          "macosx/libjogl.jnilib",
-          "macosx/libjogl_awt.jnilib",
-          "macosx/libjogl_cg.jnilib"}));
-      if ("64".equals(System.getProperty("sun.arch.data.model"))) {
-        java3DFiles.add("linux/x64/libj3dcore-ogl.so"); // Linux DLL
-        java3DFiles.add("windows/x64/j3dcore-ogl.dll"); // Windows DLL
-      } else {
-        java3DFiles.add("linux/i386/libj3dcore-ogl.so"); // Linux DLLs
-        java3DFiles.add("linux/i386/libj3dcore-ogl-cg.so");
-        java3DFiles.add("windows/i386/j3dcore-d3d.dll"); // Windows DLLs
-        java3DFiles.add("windows/i386/j3dcore-ogl.dll");
-        java3DFiles.add("windows/i386/j3dcore-ogl-cg.dll");
-        java3DFiles.add("windows/i386/j3dcore-ogl-chk.dll");
-      }
+          "j3dcore-d3d.dll", // Windows DLLs
+          "j3dcore-ogl.dll",
+          "j3dcore-ogl-cg.dll",
+          "j3dcore-ogl-chk.dll",
+          "libj3dcore-ogl.so", // Linux DLLs
+          "libj3dcore-ogl-cg.so",
+          "gluegen-rt.jar", // Mac OS X jars and DLLs
+          "jogl.jar",
+          "libgluegen-rt.jnilib",
+          "libjogl.jnilib",
+          "libjogl_awt.jnilib",
+          "libjogl_cg.jnilib"};
       List applicationPackages = new ArrayList(Arrays.asList(new String [] {
           "com.eteks.sweethome3d",
-          "javax.media",
+          "javax.media.j3d",
           "javax.vecmath",
           "com.sun.j3d",
           "com.sun.opengl",
           "com.sun.gluegen.runtime",
           "javax.media.opengl",
-          "com.sun.media",
-          "com.ibm.media",
-          "jmpapps.util",
-          "com.microcrowd.loader.java3d",
-          "org.sunflow",
-          "org.apache.batik"}));
+          "com.microcrowd.loader.java3d"}));
       applicationPackages.addAll(getPluginsPackages());
-      
-      if (!applicationClassName.startsWith((String)applicationPackages.get(0))) {
-        String [] applicationClassParts = applicationClassName.split("\\.");
-        String applicationClassPackageBase = ""; 
-        // Contains the two first part of class package at most
-        for (int i = 0, n = Math.min(applicationClassParts.length - 1, 2); i < n; i++) {
-          if (i > 0) {
-            applicationClassPackageBase += ".";
-          }
-          applicationClassPackageBase += applicationClassParts [i];
-        }
-        applicationPackages.add(applicationClassPackageBase);
-      }
       
       ClassLoader extensionsClassLoader = new ExtensionsClassLoader(
           sweetHome3DAppletClass.getClassLoader(), sweetHome3DAppletClass.getProtectionDomain(),
-          (String [])java3DFiles.toArray(new String [java3DFiles.size()]), 
-          (String [])applicationPackages.toArray(new String [applicationPackages.size()]));
-      startApplication(applicationClassName, extensionsClassLoader);
-    } catch (AccessControlException ex) {
-      String runWithoutSignature = getParameter("runWithoutSignature");
-      if (runWithoutSignature != null && Boolean.parseBoolean(runWithoutSignature)) {
-        // Try to run application without 3D
-        startApplication(applicationClassName, getClass().getClassLoader());
-      } else {
-        showText(getLocalizedString("signatureError"));
-      }
-    } catch (Throwable ex) {
-      showError(ex);
-    }
-  }
-
-  private void startApplication(String applicationClassName, ClassLoader extensionsClassLoader) {
-    try {
+          java3DFiles, (String [])applicationPackages.toArray(new String [applicationPackages.size()]));
+      
       // Call application constructor with reflection
+      String applicationClassName = "com.eteks.sweethome3d.applet.AppletApplication";
       Class applicationClass = extensionsClassLoader.loadClass(applicationClassName);
-      Constructor applicationConstructor = applicationClass.getConstructor(new Class [] {JApplet.class});
+      Constructor applicationConstructor = 
+          applicationClass.getConstructor(new Class [] {JApplet.class});
       this.appletApplication = applicationConstructor.newInstance(new Object [] {this});
-    } catch (Exception ex) {
-      showError(ex);
+    } catch (Throwable ex) {
+      if (ex instanceof InvocationTargetException) {
+        ex = ((InvocationTargetException)ex).getCause();
+      }
+      showError("<html>Can't start applet:<br>Exception" 
+          + ex.getClass().getName() + " " + ex.getMessage());
+      ex.printStackTrace();
     }
-  }
-
-  /**
-   * Returns the name of the {@linkplain AppletApplication application} class associated to this applet. 
-   * This class must have a constructor taking in parameter a <code>JApplet</code>. 
-   */
-  protected String getApplicationClassName() {
-    return "com.eteks.sweethome3d.applet.AppletApplication";
-  }  
-  
-  /**
-   * Returns the application instance created by the applet. 
-   */
-  protected Object getApplication() {
-    return this.appletApplication;
   }  
   
   /**

@@ -1,7 +1,7 @@
 /*
  * NullableSpinner.java 29 mai 07
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import java.text.ParseException;
 
 import javax.swing.JFormattedTextField;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.text.DefaultFormatter;
 import javax.swing.text.NumberFormatter;
 
 import com.eteks.sweethome3d.model.LengthUnit;
@@ -51,52 +52,9 @@ public class NullableSpinner extends AutoCommitSpinner {
         @Override
         public JFormattedTextField.AbstractFormatter getFormatter(JFormattedTextField tf) {
           return new NumberFormatter () {
-              @Override
-              public boolean getCommitsOnValidEdit() {
-                if (defaultFormatter instanceof NumberFormatter) {
-                  return ((NumberFormatter)defaultFormatter).getCommitsOnValidEdit();
-                } else {
-                  return super.getCommitsOnValidEdit();
-                }
-              }
-              
-              @SuppressWarnings("unchecked")
-              @Override
-              public Comparable getMaximum() {
-                if (defaultFormatter instanceof NumberFormatter) {
-                  return ((NumberFormatter)defaultFormatter).getMaximum();
-                } else {
-                  return super.getMaximum();
-                }
-              }
-              
-              @SuppressWarnings("unchecked")
-              @Override
-              public Comparable getMinimum() {
-                if (defaultFormatter instanceof NumberFormatter) {
-                  return ((NumberFormatter)defaultFormatter).getMinimum();
-                } else {
-                  return super.getMinimum();
-                }
-              }
-              
-              @SuppressWarnings("unchecked")
-              @Override
-              public void setMaximum(Comparable maximum) {
-                if (defaultFormatter instanceof NumberFormatter) {
-                  ((NumberFormatter)defaultFormatter).setMaximum(maximum);
-                } else {
-                  super.setMaximum(maximum);
-                }
-              }
-              
-              @SuppressWarnings("unchecked")
-              @Override
-              public void setMinimum(Comparable minimum) {
-                if (defaultFormatter instanceof NumberFormatter) {
-                  ((NumberFormatter)defaultFormatter).setMinimum(minimum);
-                } else {
-                  super.setMinimum(minimum);
+              {
+                if (defaultFormatter instanceof DefaultFormatter) {
+                  setCommitsOnValidEdit(((DefaultFormatter)defaultFormatter).getCommitsOnValidEdit());
                 }
               }
               
@@ -145,13 +103,7 @@ public class NullableSpinner extends AutoCommitSpinner {
       if (this.isNull) {
         return super.getValue();
       } 
-      Object nextValue = super.getNextValue();
-      if (nextValue == null) {
-        // Force to maximum value
-        return getMaximum();
-      } else {
-        return nextValue;
-      }
+      return super.getNextValue();
     }
 
     @Override
@@ -159,13 +111,7 @@ public class NullableSpinner extends AutoCommitSpinner {
       if (this.isNull) {
         return super.getValue();
       } 
-      Object previousValue = super.getPreviousValue();
-      if (previousValue == null) {
-        // Force to minimum value
-        return getMinimum();
-      } else {
-        return previousValue;
-      }
+      return super.getPreviousValue();
     }
 
     @Override
@@ -232,15 +178,10 @@ public class NullableSpinner extends AutoCommitSpinner {
   public static class NullableSpinnerLengthModel extends NullableSpinnerNumberModel {
     private final UserPreferences preferences;
 
-    /**
-     * Creates a model managing lengths between the given <code>minimum</code> and <code>maximum</code> values in centimeter. 
-     */
     public NullableSpinnerLengthModel(UserPreferences preferences, float minimum, float maximum) {
-      super(preferences.getLengthUnit().centimeterToUnit(minimum), 
-            preferences.getLengthUnit().centimeterToUnit(minimum), 
-            preferences.getLengthUnit().centimeterToUnit(maximum), 
+      super(minimum, minimum, maximum, 
             preferences.getLengthUnit() == LengthUnit.INCH
-              ? 0.125f : preferences.getLengthUnit().centimeterToUnit(0.5f));
+              ? 0.125f : 0.5f);
       this.preferences = preferences;
     }
 
@@ -250,8 +191,10 @@ public class NullableSpinner extends AutoCommitSpinner {
     public Float getLength() {
       if (getValue() == null) {
         return null;
+      } else if (this.preferences.getLengthUnit() == LengthUnit.INCH) {
+        return LengthUnit.inchToCentimeter(((Number)getValue()).floatValue());
       } else {
-        return this.preferences.getLengthUnit().unitToCentimeter(((Number)getValue()).floatValue());
+        return ((Number)getValue()).floatValue();
       }
     }
 
@@ -259,8 +202,9 @@ public class NullableSpinner extends AutoCommitSpinner {
      * Sets the length in centimeter displayed in this model.
      */
     public void setLength(Float length) {
-      if (length != null) {
-        length = this.preferences.getLengthUnit().centimeterToUnit(length);
+      if (length != null 
+          && this.preferences.getLengthUnit() == LengthUnit.INCH) {
+        length = LengthUnit.centimeterToInch(length);
       } 
       setValue(length);
     }

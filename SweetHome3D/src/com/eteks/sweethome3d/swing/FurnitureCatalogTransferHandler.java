@@ -1,7 +1,7 @@
 /*
  * FurnitureCatalogTransferHandler.java 12 sept. 2006
  *
- * Sweet Home 3D, Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,10 +19,27 @@
  */
 package com.eteks.sweethome3d.swing;
 
+import java.awt.AlphaComposite;
 import java.awt.EventQueue;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.Point;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.dnd.DragGestureEvent;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragGestureRecognizer;
+import java.awt.dnd.DragSource;
+import java.awt.dnd.DragSourceContext;
+import java.awt.dnd.DragSourceDragEvent;
+import java.awt.dnd.DragSourceDropEvent;
+import java.awt.dnd.DragSourceEvent;
+import java.awt.dnd.DragSourceListener;
+import java.awt.dnd.InvalidDnDOperationException;
+import java.awt.event.InputEvent;
+import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,33 +48,38 @@ import java.util.List;
 
 import javax.swing.Icon;
 import javax.swing.JComponent;
+import javax.swing.TransferHandler;
 
+import com.eteks.sweethome3d.model.CatalogDoorOrWindow;
+import com.eteks.sweethome3d.model.CatalogLight;
 import com.eteks.sweethome3d.model.CatalogPieceOfFurniture;
+import com.eteks.sweethome3d.model.DoorOrWindow;
+import com.eteks.sweethome3d.model.HomeDoorOrWindow;
+import com.eteks.sweethome3d.model.HomeLight;
 import com.eteks.sweethome3d.model.HomePieceOfFurniture;
+import com.eteks.sweethome3d.model.Light;
 import com.eteks.sweethome3d.model.PieceOfFurniture;
 import com.eteks.sweethome3d.model.Selectable;
 import com.eteks.sweethome3d.viewcontroller.ContentManager;
 import com.eteks.sweethome3d.viewcontroller.FurnitureCatalogController;
-import com.eteks.sweethome3d.viewcontroller.FurnitureController;
 
 /**
  * Catalog transfer handler.
  * @author Emmanuel Puybaret
  */
-public class FurnitureCatalogTransferHandler extends VisualTransferHandler {
-  private final ContentManager             contentManager;
-  private final FurnitureCatalogController catalogController;
-  private final FurnitureController        furnitureController;
+public class FurnitureCatalogTransferHandler extends TransferHandler {
+  private final ContentManager                                contentManager;
+  private final FurnitureCatalogController                    catalogController;
+  private final DragGestureRecognizerWithVisualRepresentation dragGestureRecognizerWithVisualRepresentation; 
   
   /**
    * Creates a handler able to transfer catalog selected furniture.
    */
   public FurnitureCatalogTransferHandler(ContentManager contentManager,
-                                         FurnitureCatalogController catalogController,
-                                         FurnitureController furnitureController) {
+                                         FurnitureCatalogController catalogController) {
     this.contentManager = contentManager;
     this.catalogController = catalogController;
-    this.furnitureController = furnitureController;
+    this.dragGestureRecognizerWithVisualRepresentation = new DragGestureRecognizerWithVisualRepresentation();
   }
 
   /**
@@ -66,6 +88,24 @@ public class FurnitureCatalogTransferHandler extends VisualTransferHandler {
   @Override
   public int getSourceActions(JComponent source) {
     return COPY;
+  }
+
+  /**
+   * Causes the Swing drag support to be initiated with a drag icon if necessary. 
+   * This method implements the expected behavior of <code>exportAsDrag</code> 
+   * if <code>getVisualRepresentation</code> was used in <code>TransferHandler</code> implementation.  
+   * As only Mac OS X supports drag image, the drag icon will actually appear only on this system.
+   */
+  public void exportAsDrag(JComponent source, InputEvent ev, int action) {
+    int sourceActions = getSourceActions(source);
+    int dragAction = sourceActions & action;
+    if (DragSource.isDragImageSupported() 
+        && dragAction != NONE 
+        && (ev instanceof MouseEvent)) {
+      this.dragGestureRecognizerWithVisualRepresentation.gestured(source, (MouseEvent)ev, sourceActions, dragAction);
+    } else {
+      super.exportAsDrag(source, ev, action);
+    }
   }
 
   /**
@@ -106,8 +146,14 @@ public class FurnitureCatalogTransferHandler extends VisualTransferHandler {
     List<CatalogPieceOfFurniture> selectedCatalogFurniture = this.catalogController.getSelectedFurniture();
     List<HomePieceOfFurniture> transferedFurniture = 
         new ArrayList<HomePieceOfFurniture>(selectedCatalogFurniture.size());
-    for (CatalogPieceOfFurniture catalogPiece : selectedCatalogFurniture) {
-      transferedFurniture.add(this.furnitureController.createHomePieceOfFurniture(catalogPiece));
+    for (CatalogPieceOfFurniture piece : selectedCatalogFurniture) {
+      if (piece instanceof CatalogDoorOrWindow) {
+        transferedFurniture.add(new HomeDoorOrWindow((DoorOrWindow)piece));
+      } else if (piece instanceof CatalogLight) {
+        transferedFurniture.add(new HomeLight((Light)piece));
+      } else {
+        transferedFurniture.add(new HomePieceOfFurniture(piece));
+      }
     }
     return new HomeTransferableList(transferedFurniture);
   }
@@ -150,6 +196,92 @@ public class FurnitureCatalogTransferHandler extends VisualTransferHandler {
       }
     } else {
       return false;
+    }
+  }
+
+  /**
+   * A drag gesture recognizer that uses transfer handler visual representation.
+   * See <code>TransferHandler$SwingDragGestureRecognizer</code> for original code. 
+   */
+  private class DragGestureRecognizerWithVisualRepresentation extends DragGestureRecognizer {
+    public DragGestureRecognizerWithVisualRepresentation() {
+      super(DragSource.getDefaultDragSource(), null, NONE, new DragListenerWithVisualRepresentation());
+    }
+
+    void gestured(JComponent component, MouseEvent ev, int sourceActions, int action) {
+      setComponent(component);
+      setSourceActions(sourceActions);
+      appendEvent(ev);
+      fireDragGestureRecognized(action, ev.getPoint());
+    }
+
+    @Override
+    protected void registerListeners() {
+    }
+
+    @Override
+    protected void unregisterListeners() {
+    }
+  };
+
+  /**
+   * A drag listener that uses transfer handler visual representation for drag image.
+   * See <code>TransferHandler$DragHandler</code> for base code. 
+   */
+  private class DragListenerWithVisualRepresentation implements DragGestureListener, DragSourceListener {
+    private boolean autoscrolls;
+    private final Image EMPTY_IMAGE = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+
+    public void dragGestureRecognized(DragGestureEvent ev) {
+      JComponent component = (JComponent)ev.getComponent();
+      Transferable transferable = createTransferable(component);
+      if (transferable != null) {
+        this.autoscrolls = component.getAutoscrolls();
+        component.setAutoscrolls(false);
+        try {
+          Icon icon = getVisualRepresentation(transferable);
+          if (icon != null) {
+            // Create a half transparent drag image from icon
+            BufferedImage image = new BufferedImage(icon.getIconWidth(), icon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g2D = (Graphics2D)image.getGraphics();
+            g2D.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.66f));
+            icon.paintIcon(component, g2D, 0, 0);
+            g2D.dispose();
+            
+            ev.startDrag(null, image, new Point(12, 24),  transferable, this);
+          } else {
+            // Force the use of an empty image otherwise Mac OS X uses a grey rectangle
+            ev.startDrag(null, EMPTY_IMAGE, new Point(48, 48), transferable, this);
+          }          
+        } catch (InvalidDnDOperationException re) {
+          component.setAutoscrolls(this.autoscrolls);
+        }
+      }
+
+      exportDone(component, transferable, NONE);
+    }
+
+    public void dragEnter(DragSourceDragEvent ev) {
+    }
+
+    public void dragOver(DragSourceDragEvent ev) {
+    }
+
+    public void dragExit(DragSourceEvent ev) {
+    }
+
+    public void dragDropEnd(DragSourceDropEvent ev) {
+      DragSourceContext dragSourceContext = ev.getDragSourceContext();
+      JComponent component = (JComponent)dragSourceContext.getComponent();
+      if (ev.getDropSuccess()) {
+        exportDone(component, dragSourceContext.getTransferable(), ev.getDropAction());
+      } else {
+        exportDone(component, dragSourceContext.getTransferable(), NONE);
+      }
+      component.setAutoscrolls(this.autoscrolls);
+    }
+
+    public void dropActionChanged(DragSourceDragEvent ev) {
     }
   }
 }

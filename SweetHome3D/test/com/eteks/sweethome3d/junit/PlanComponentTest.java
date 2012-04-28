@@ -48,7 +48,6 @@ import abbot.tester.JComponentTester;
 import com.eteks.sweethome3d.io.DefaultUserPreferences;
 import com.eteks.sweethome3d.model.CollectionEvent;
 import com.eteks.sweethome3d.model.CollectionListener;
-import com.eteks.sweethome3d.model.DimensionLine;
 import com.eteks.sweethome3d.model.Home;
 import com.eteks.sweethome3d.model.Selectable;
 import com.eteks.sweethome3d.model.UserPreferences;
@@ -56,7 +55,6 @@ import com.eteks.sweethome3d.model.Wall;
 import com.eteks.sweethome3d.swing.PlanComponent;
 import com.eteks.sweethome3d.swing.SwingViewFactory;
 import com.eteks.sweethome3d.viewcontroller.PlanController;
-import com.eteks.sweethome3d.viewcontroller.PlanView;
 import com.eteks.sweethome3d.viewcontroller.ViewFactory;
 
 /**
@@ -65,11 +63,11 @@ import com.eteks.sweethome3d.viewcontroller.ViewFactory;
  * @author Emmanuel Puybaret
  */
 public class PlanComponentTest extends ComponentTestFixture {
-  public void testPlanComponentWithMouse() {
+  public void testPlanComponent() {
     // 1. Create a frame that displays a PlanComponent instance of 
     // a new home at 540 pixels by 400 preferred size, and a tool bar
     // with a mode toggle button, an undo button and a redo button
-    final PlanTestFrame frame = new PlanTestFrame();    
+    PlanTestFrame frame = new PlanTestFrame();    
     // Show home plan frame
     showWindow(frame);
     PlanComponent planComponent = (PlanComponent)frame.planController.getView();
@@ -86,11 +84,11 @@ public class PlanComponentTest extends ComponentTestFixture {
     });
     
     // 2. Use WALL_CREATION mode
-    JComponentTester tester = new JComponentTester();
-    tester.click(frame.modeButton);
+    frame.modeButton.doClick();
     assertEquals("Current mode isn't " + PlanController.Mode.WALL_CREATION, 
         PlanController.Mode.WALL_CREATION, frame.planController.getMode());
     // Click at (30, 30), (270, 31), (269, 170), then double click at (30, 171)
+    JComponentTester tester = new JComponentTester();
     tester.actionClick(planComponent, 30, 30);
     tester.actionClick(planComponent, 270, 31);
     tester.actionClick(planComponent, 269, 170);
@@ -125,7 +123,7 @@ public class PlanComponentTest extends ComponentTestFixture {
     assertWallsAreJoined(wall3, wall4, null);
     
     // 4. Use SELECTION mode
-    tester.click(frame.modeButton); 
+    frame.modeButton.doClick(); 
     // Check current mode is SELECTION
     assertEquals("Current mode isn't " + PlanController.Mode.SELECTION, 
         PlanController.Mode.SELECTION, frame.planController.getMode());
@@ -137,7 +135,7 @@ public class PlanComponentTest extends ComponentTestFixture {
     assertHomeContains(frame.home, wall1, wall2, wall3);
     
     // 5. Use WALL_CREATION mode
-    tester.click(frame.modeButton);   
+    frame.modeButton.doClick();   
     //  Click at (31, 29), then double click at (30, 170)
     tester.actionClick(planComponent, 31, 29); 
     tester.actionClick(planComponent, 30, 170, InputEvent.BUTTON1_MASK, 2);
@@ -148,7 +146,7 @@ public class PlanComponentTest extends ComponentTestFixture {
     assertWallsAreJoined(wall1, wall4, wall3);
     
     // 6. Use SELECTION mode
-    tester.click(frame.modeButton); 
+    frame.modeButton.doClick(); 
     // Drag and drop cursor from (200, 100) to (300, 180)
     tester.actionMousePress(planComponent, 
         new ComponentLocation(new Point(200, 100))); 
@@ -189,22 +187,14 @@ public class PlanComponentTest extends ComponentTestFixture {
 
     // 10. Click 6 times on undo button
     for (int i = 0; i < 6; i++) {
-      tester.invokeAndWait(new Runnable() {
-          public void run() {
-            frame.undoButton.doClick();
-          }
-        });
+      frame.undoButton.doClick();
     }
     // Check home doesn't contain any wall
     assertHomeContains(frame.home);
     
     // 11. Click 6 times on redo button
     for (int i = 0; i < 6; i++) {
-      tester.invokeAndWait(new Runnable() {
-          public void run() {
-            frame.redoButton.doClick();
-          }
-        });
+      frame.redoButton.doClick();
     }
     // Check plan contains the four wall
     assertHomeContains(frame.home, wall1, wall2, wall3, wall4);
@@ -223,11 +213,7 @@ public class PlanComponentTest extends ComponentTestFixture {
     float yStartWall3 = wall3.getYStart();
     float xEndWall3 = wall3.getXEnd();
     float yEndWall3 = wall3.getYEnd();
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          frame.reverseDirectionButton.doClick();
-        }
-      });
+    frame.reverseDirectionButton.doClick();
     // Check the second and the third wall are still selected
     assertSelectionContains(frame.home, wall2, wall3);
     // Check wall2 and wall3 were reserved
@@ -256,7 +242,7 @@ public class PlanComponentTest extends ComponentTestFixture {
     tester.actionClick(planComponent, 60, 50);
     assertSelectionContains(frame.home, wall1);
     // Split first wall in two walls
-    tester.click(frame.splitButton);
+    frame.splitButton.doClick();
     Wall wall5 = orderedWalls.get(orderedWalls.size() - 2);
     Wall wall6 = orderedWalls.get(orderedWalls.size() - 1);
     assertSelectionContains(frame.home, wall5);
@@ -266,7 +252,7 @@ public class PlanComponentTest extends ComponentTestFixture {
     assertWallsAreJoined(wall5, wall6, wall2); 
     assertFalse("Split wall still present in home", frame.home.getWalls().contains(wall1));
     // Undo operation and check undone state
-    tester.click(frame.undoButton);
+    frame.undoButton.doClick();
     assertSelectionContains(frame.home, wall1);
     assertCoordinatesEqualWallPoints(60, 60, 504, 20, wall1);
     assertWallsAreJoined(wall4, wall1, wall2); 
@@ -275,151 +261,19 @@ public class PlanComponentTest extends ComponentTestFixture {
     assertFalse("Wall still present in home", frame.home.getWalls().contains(wall6));
   }
 
-  public void testPlanComponentWithKeyboard() throws InterruptedException {
-    // 1. Create a frame that displays a PlanComponent instance 
-    PlanTestFrame frame = new PlanTestFrame();    
-    // Show home plan frame
-    showWindow(frame);
-    PlanComponent planComponent = (PlanComponent)frame.planController.getView();
-  
-    // Build an ordered list of walls added to home
-    final ArrayList<Wall> orderedWalls = new ArrayList<Wall>();
-    frame.home.addWallsListener(new CollectionListener<Wall>() {
-      public void collectionChanged(CollectionEvent<Wall> ev) {
-        if (ev.getType() == CollectionEvent.Type.ADD) {
-          orderedWalls.add(ev.getItem());
-        }
-      }
-    });
-    
-    // 2. Create walls with keyboard
-    frame.planController.setMode(PlanController.Mode.WALL_CREATION);
-    assertEquals("Current mode isn't " + PlanController.Mode.WALL_CREATION, 
-        PlanController.Mode.WALL_CREATION, frame.planController.getMode());
-    planComponent.requestFocus();
-    JComponentTester tester = new JComponentTester();
-    tester.waitForIdle();
-    assertTrue("Plan component doesn't have focus", planComponent.hasFocus());
-    tester.actionKeyStroke(KeyEvent.VK_ENTER);
-    // Enter the coordinates of the start point
-    tester.actionKeyString("10");
-    tester.actionKeyStroke(KeyEvent.VK_TAB);
-    tester.actionKeyString("21");
-    tester.actionKeyStroke(KeyEvent.VK_ENTER);
-    // Enter the length of the wall
-    tester.actionKeyString("200");
-    tester.actionKeyStroke(KeyEvent.VK_ENTER);
-    // Create a wall with same length
-    Thread.sleep(500);
-    tester.actionKeyStroke(KeyEvent.VK_ENTER);
-    // Create a wall with same length, an angle at 270° and a thickness of 7,55 cm
-    tester.actionKeyStroke(KeyEvent.VK_DOWN);
-    tester.actionKeyStroke(KeyEvent.VK_HOME);
-    tester.actionKeyString("27");
-    tester.actionKeyStroke(KeyEvent.VK_DELETE); // Remove the 9 digit
-    tester.actionKeyStroke(KeyEvent.VK_UP);
-    tester.actionKeyStroke(KeyEvent.VK_UP);
-    tester.actionKeyStroke(KeyEvent.VK_END);
-    tester.actionKeyString("5 ");
-    tester.actionKeyStroke(KeyEvent.VK_ENTER);
-    tester.actionKeyStroke(KeyEvent.VK_ESCAPE);
-    // Check created walls
-    assertEquals("Wrong walls count", 3, frame.home.getWalls().size());
-    Wall wall1 = orderedWalls.get(0);
-    assertCoordinatesEqualWallPoints(10, 21, 210, 21, wall1);
-    Wall wall2 = orderedWalls.get(1);
-    assertCoordinatesEqualWallPoints(210, 21, 210, 221, wall2);
-    assertEquals("Wrong wall thickness", wall1.getThickness(), wall2.getThickness());
-    Wall wall3 = orderedWalls.get(2);
-    assertCoordinatesEqualWallPoints(210, 221, 410, 221, wall3);
-    assertEquals("Wrong wall thickness", 
-        Float.parseFloat(String.valueOf(wall1.getThickness()) + "5"), wall3.getThickness());
-    assertWallsAreJoined(wall1, wall2, wall3);
-    assertSelectionContains(frame.home, wall1, wall2, wall3);
-    
-    // 3. Mix mouse and keyboard to create other walls
-    tester.actionClick(planComponent, 300, 200);
-    tester.actionMouseMove(planComponent, 
-        new ComponentLocation(new Point(310, 200)));
-    tester.actionKeyStroke(KeyEvent.VK_ENTER);
-    // Enter the length and the angle of the wall
-    tester.actionKeyString("100");
-    tester.actionKeyStroke(KeyEvent.VK_TAB);
-    tester.actionKeyString("315");
-    tester.actionKeyStroke(KeyEvent.VK_ENTER);
-    // Create 3 walls with same length
-    Thread.sleep(500);
-    tester.actionKeyStroke(KeyEvent.VK_ENTER);
-    Thread.sleep(500);
-    tester.actionKeyStroke(KeyEvent.VK_ENTER);
-    // Take control with mouse
-    tester.actionMouseMove(planComponent, 
-        new ComponentLocation(new Point(200, 200)));
-    tester.actionKeyPress(KeyEvent.VK_SHIFT);
-    Wall wall7 = orderedWalls.get(7);
-    assertCoordinatesEqualWallPoints(wall7.getXStart(), wall7.getYStart(), 
-        planComponent.convertXPixelToModel(200), 
-        planComponent.convertYPixelToModel(200), wall7);
-    tester.waitForIdle();
-    tester.actionKeyRelease(KeyEvent.VK_SHIFT);
-    // Take control again with keyboard and close the walls square
-    tester.actionKeyStroke(KeyEvent.VK_ENTER);
-    tester.actionKeyString("100");
-    tester.actionKeyStroke(KeyEvent.VK_TAB);
-    tester.actionKeyString("90");
-    tester.actionKeyStroke(KeyEvent.VK_ENTER);
-    // Check created walls
-    assertEquals("Wrong walls count", 7, frame.home.getWalls().size());
-    Wall wall4 = orderedWalls.get(4);
-    Wall wall5 = orderedWalls.get(5);
-    Wall wall6 = orderedWalls.get(6);
-    assertSelectionContains(frame.home, wall4, wall5, wall6, wall7);
-    assertWallsAreJoined(wall6, wall7, wall4);
-    
-    // 4. Create a dimension line with keyboard
-    frame.planController.setMode(PlanController.Mode.DIMENSION_LINE_CREATION);
-    assertEquals("Current mode isn't " + PlanController.Mode.DIMENSION_LINE_CREATION, 
-        PlanController.Mode.DIMENSION_LINE_CREATION, frame.planController.getMode());
-    tester.actionClick(planComponent, 200, 300);
-    tester.actionKeyStroke(KeyEvent.VK_ENTER);
-    tester.actionKeyString("250"); // x start
-    tester.actionKeyStroke(KeyEvent.VK_ENTER);
-    tester.actionKeyString("200"); // length
-    tester.actionKeyStroke(KeyEvent.VK_TAB);
-    tester.actionKeyString("45"); // angle
-    tester.actionKeyStroke(KeyEvent.VK_ENTER);
-    tester.actionKeyString("50"); // offset
-    tester.actionKeyStroke(KeyEvent.VK_ENTER);
-    
-
-    Collection<DimensionLine> dimensionLines = frame.home.getDimensionLines();
-    assertEquals("Incorrect dimension lines count", 1, dimensionLines.size());
-    DimensionLine dimensionLine = dimensionLines.iterator().next();
-    assertTrue("Incorrect X start " + 250 + " " + dimensionLine.getXStart(), 
-        Math.abs(250 - dimensionLine.getXStart()) < 1E-10);
-    assertTrue("Incorrect Y start " + 560 + " " + dimensionLine.getYStart(), 
-        Math.abs(560 - dimensionLine.getYStart()) < 1E-10);
-    assertTrue("Incorrect X end " + 391.421 + " " + dimensionLine.getXEnd(), 
-        Math.abs(391.421 - dimensionLine.getXEnd()) < 1E-3);
-    assertTrue("Incorrect Y end " + 418.579 + " " + dimensionLine.getYEnd(), 
-        Math.abs(418.579 - dimensionLine.getYEnd()) < 1E-3);
-    assertTrue("Incorrect offset " + 50 + " " + dimensionLine.getYEnd(), 
-        Math.abs(50 - dimensionLine.getOffset()) < 1E-10);
-  }
-    
   /**
    * Asserts the start point and the end point of 
    * <code>wall</code> are at (<code>xStart</code>, <code>yStart</code>), (<code>xEnd</code>, <code>yEnd</code>). 
    */
   private void assertCoordinatesEqualWallPoints(float xStart, float yStart, float xEnd, float yEnd, Wall wall) {
     assertTrue("Incorrect X start " + xStart + " " + wall.getXStart(), 
-        Math.abs(xStart - wall.getXStart()) < 1E-4);
+        Math.abs(xStart - wall.getXStart()) < 1E-10);
     assertTrue("Incorrect Y start " + yStart + " " + wall.getYStart(), 
-        Math.abs(yStart - wall.getYStart()) < 1E-4);
+        Math.abs(yStart - wall.getYStart()) < 1E-10);
     assertTrue("Incorrect X end " + xEnd + " " + wall.getXEnd(), 
-        Math.abs(xEnd - wall.getXEnd()) < 1E-4);
+        Math.abs(xEnd - wall.getXEnd()) < 1E-10);
     assertTrue("Incorrect Y end " + yEnd + " " + wall.getYEnd(), 
-        Math.abs(yEnd - wall.getYEnd()) < 1E-4);
+        Math.abs(yEnd - wall.getYEnd()) < 1E-10);
   }
 
   /**
@@ -475,15 +329,9 @@ public class PlanComponentTest extends ComponentTestFixture {
       super("Plan Component Test");
       // Create model objects
       this.home = new Home();
-      this.home.getCompass().setVisible(false);
       Locale.setDefault(Locale.FRANCE);
       this.preferences = new DefaultUserPreferences();
-      ViewFactory viewFactory = new SwingViewFactory() {
-          @Override
-          public PlanView createPlanView(Home home, UserPreferences preferences, PlanController controller) {
-            return new PlanComponent(home, preferences, controller);
-          }
-        };
+      ViewFactory viewFactory = new SwingViewFactory();
       UndoableEditSupport undoSupport = new UndoableEditSupport();
       final UndoManager undoManager = new UndoManager();
       undoSupport.addUndoableEditListener(undoManager);

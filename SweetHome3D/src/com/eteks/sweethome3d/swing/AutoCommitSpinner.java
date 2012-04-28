@@ -1,7 +1,7 @@
 /*
  * AutoSelectSpinner.java 10 sept. 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,16 +19,11 @@
  */
 package com.eteks.sweethome3d.swing;
 
-import java.text.DecimalFormat;
-import java.text.Format;
-
 import javax.swing.JComponent;
 import javax.swing.JFormattedTextField;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerModel;
 import javax.swing.text.DefaultFormatter;
-import javax.swing.text.DefaultFormatterFactory;
-import javax.swing.text.NumberFormatter;
 
 /**
  * A spinner which commits its value during edition and selects 
@@ -43,70 +38,12 @@ public class AutoCommitSpinner extends JSpinner {
     super(model);    
     JComponent editor = getEditor();
     if (editor instanceof JSpinner.DefaultEditor) {
-      final JFormattedTextField textField = ((JSpinner.DefaultEditor)editor).getTextField();      
+      final JFormattedTextField textField = ((JSpinner.DefaultEditor)editor).getTextField();
       SwingTools.addAutoSelectionOnFocusGain(textField);
       
       // Commit text during edition
-      if (textField.getFormatterFactory() instanceof DefaultFormatterFactory) {
-        DefaultFormatterFactory formatterFactory = (DefaultFormatterFactory)textField.getFormatterFactory();
-        JFormattedTextField.AbstractFormatter defaultFormatter = formatterFactory.getDefaultFormatter();
-        if (defaultFormatter instanceof DefaultFormatter) {
-          ((DefaultFormatter)defaultFormatter).setCommitsOnValidEdit(true);
-        }
-        if (defaultFormatter instanceof NumberFormatter) {
-          final NumberFormatter numberFormatter = (NumberFormatter)defaultFormatter;
-          final DecimalFormat defaultFormat = (DecimalFormat)numberFormatter.getFormat();
-          final DecimalFormat noGroupingFormat = (DecimalFormat)defaultFormat.clone();
-          noGroupingFormat.setGroupingUsed(false);
-          // Create a delegate of default formatter to change value returned by getFormat
-          NumberFormatter editFormatter = new NumberFormatter() {
-              @Override
-              public Format getFormat() {
-                // Use a different format depending on whether the text field has focus or not
-                if (textField.hasFocus()) {
-                  // No grouping when text field has focus 
-                  return noGroupingFormat;
-                } else {
-                  return defaultFormat;
-                }
-              }
-            
-              @Override
-              public boolean getCommitsOnValidEdit() {
-                return true;
-              }
-              
-              @SuppressWarnings("unchecked")
-              @Override
-              public Comparable getMaximum() {
-                return numberFormatter.getMaximum();
-              }
-              
-              @SuppressWarnings("unchecked")
-              @Override
-              public Comparable getMinimum() {
-                return numberFormatter.getMinimum();
-              }
-              
-              @SuppressWarnings("unchecked")
-              @Override
-              public void setMaximum(Comparable maximum) {
-                numberFormatter.setMaximum(maximum);
-              }
-              
-              @SuppressWarnings("unchecked")
-              @Override
-              public void setMinimum(Comparable minimum) {
-                numberFormatter.setMinimum(minimum);
-              }
-              
-              @Override
-              public Class<?> getValueClass() {
-                return numberFormatter.getValueClass();
-              }
-            };
-          textField.setFormatterFactory(new DefaultFormatterFactory(editFormatter));
-        }
+      if (textField.getFormatter() instanceof DefaultFormatter) {
+        ((DefaultFormatter)textField.getFormatter()).setCommitsOnValidEdit(true);
       }
     }
   }

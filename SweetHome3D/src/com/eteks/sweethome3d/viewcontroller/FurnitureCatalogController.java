@@ -1,7 +1,7 @@
 /*
  * FurnitureCatalogController.java 15 mai 2006
  *
- * Sweet Home 3D, Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,6 @@
  */
 package com.eteks.sweethome3d.viewcontroller;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -77,10 +75,6 @@ public class FurnitureCatalogController implements Controller {
     this.selectedFurniture  = Collections.emptyList();
     
     this.catalog.addFurnitureListener(new FurnitureCatalogChangeListener(this));
-    if (preferences != null) {
-      preferences.addPropertyChangeListener(UserPreferences.Property.FURNITURE_CATALOG_VIEWED_IN_TREE, 
-          new FurnitureCatalogViewChangeListener(this));
-    }
   }
 
   /**
@@ -100,29 +94,6 @@ public class FurnitureCatalogController implements Controller {
         ((FurnitureCatalog)ev.getSource()).removeFurnitureListener(this);
       } else if (ev.getType() == CollectionEvent.Type.DELETE) {
         controller.deselectPieceOfFurniture(ev.getItem());
-      }
-    }
-  }
-
-  /**
-   * Preferences listener that reset view when furniture catalog view should change.  
-   */
-  private static class FurnitureCatalogViewChangeListener implements PropertyChangeListener {
-    private WeakReference<FurnitureCatalogController> controller;
-
-    public FurnitureCatalogViewChangeListener(FurnitureCatalogController controller) {
-      this.controller = new WeakReference<FurnitureCatalogController>(controller);
-    }
-    
-    public void propertyChange(PropertyChangeEvent ev) {
-      // If home pane was garbage collected, remove this listener from preferences
-      FurnitureCatalogController controller = this.controller.get();
-      if (controller == null) {
-        ((UserPreferences)ev.getSource()).removePropertyChangeListener(
-            UserPreferences.Property.FURNITURE_CATALOG_VIEWED_IN_TREE, this);
-      } else {
-        // Forgot current view and create a new one at next getView call 
-        controller.catalogView = null;
       }
     }
   }

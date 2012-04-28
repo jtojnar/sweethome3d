@@ -1,7 +1,7 @@
 /*
  * ImportedTextureWizardStepsPanel.java 01 oct. 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,6 +50,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
 import javax.swing.ComboBoxEditor;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
@@ -62,7 +63,6 @@ import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
 import javax.swing.TransferHandler;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -150,7 +150,7 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
         }
       });
     this.imageChoiceErrorLabel = new JLabel(preferences.getLocalizedString(
-        ImportedTextureWizardStepsPanel.class, "imageChoiceErrorLabel.text"));
+        ImportedTextureWizardStepsPanel.class, "imageChoiceErrolLabel.text"));
     // Make imageChoiceErrorLabel visible only if an error occurred during image content loading
     this.imageChoiceErrorLabel.setVisible(false);
     this.imageChoicePreviewComponent = new ScaledImageComponent();
@@ -166,37 +166,30 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
           boolean success = true;
           try {
             List<File> files = (List<File>)transferedFiles.getTransferData(DataFlavor.javaFileListFlavor);
-            final String textureName = files.get(0).getAbsolutePath();
-            EventQueue.invokeLater(new Runnable() {
-                public void run() {
-                  updateController(textureName, controller.getContentManager(), preferences, false);
-                }
-              });
+            String textureName = files.get(0).getAbsolutePath();
+            updateController(textureName, controller.getContentManager(), preferences, false);
           } catch (UnsupportedFlavorException ex) {
             success = false;
           } catch (IOException ex) {
             success = false;
           }
           if (!success) {
-            EventQueue.invokeLater(new Runnable() {
-                public void run() {
-                  JOptionPane.showMessageDialog(SwingUtilities.getRootPane(ImportedTextureWizardStepsPanel.this), 
-                      preferences.getLocalizedString(ImportedTextureWizardStepsPanel.class, "imageChoiceError"));
-                }
-              });
+            JOptionPane.showMessageDialog(ImportedTextureWizardStepsPanel.this, 
+                preferences.getLocalizedString(
+                    ImportedTextureWizardStepsPanel.class, "imageChoiceError"));
           }
           return success;
         }
       });
-    this.imageChoicePreviewComponent.setBorder(SwingTools.getDropableComponentBorder());
+    this.imageChoicePreviewComponent.setBorder(BorderFactory.createLoweredBevelBorder());
     
     // Attributes panel components
     this.attributesLabel = new JLabel(preferences.getLocalizedString(
         ImportedTextureWizardStepsPanel.class, "attributesLabel.text"));
-    this.nameLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
+    this.nameLabel = new JLabel(preferences.getLocalizedString(
         ImportedTextureWizardStepsPanel.class, "nameLabel.text"));
     this.nameTextField = new JTextField(10);
-    if (!OperatingSystem.isMacOSXLeopardOrSuperior()) {
+    if (!OperatingSystem.isMacOSX()) {
       SwingTools.addAutoSelectionOnFocusGain(this.nameTextField);
     }
     final Color defaultNameTextFieldColor = this.nameTextField.getForeground();
@@ -227,7 +220,7 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
           }
         });
 
-    this.categoryLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences,
+    this.categoryLabel = new JLabel(preferences.getLocalizedString(
         ImportedTextureWizardStepsPanel.class, "categoryLabel.text")); 
     this.categoryComboBox = new JComboBox(preferences.getTexturesCatalog().getCategories().toArray());
     this.categoryComboBox.setEditable(true); 
@@ -299,12 +292,10 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
           }
         });
 
-    this.widthLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences,
+    this.widthLabel = new JLabel(preferences.getLocalizedString(
         ImportedTextureWizardStepsPanel.class, "widthLabel.text", unitName)); 
-    float minimumLength = preferences.getLengthUnit().getMinimumLength();
-    float maximumLength = preferences.getLengthUnit().getMaximumLength();
     final NullableSpinner.NullableSpinnerLengthModel widthSpinnerModel = 
-        new NullableSpinner.NullableSpinnerLengthModel(preferences, minimumLength, maximumLength);
+        new NullableSpinner.NullableSpinnerLengthModel(preferences, 0.1f, 1000f);
     this.widthSpinner = new NullableSpinner(widthSpinnerModel);
     widthSpinnerModel.addChangeListener(new ChangeListener () {
         public void stateChanged(ChangeEvent ev) {
@@ -322,10 +313,10 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
           }
         });
     
-    this.heightLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences,
+    this.heightLabel = new JLabel(preferences.getLocalizedString(
             ImportedTextureWizardStepsPanel.class, "heightLabel.text", unitName)); 
     final NullableSpinner.NullableSpinnerLengthModel heightSpinnerModel = 
-        new NullableSpinner.NullableSpinnerLengthModel(preferences, minimumLength, maximumLength);
+        new NullableSpinner.NullableSpinnerLengthModel(preferences, 0.1f, 1000f);
     this.heightSpinner = new NullableSpinner(heightSpinnerModel);
     heightSpinnerModel.addChangeListener(new ChangeListener () {
         public void stateChanged(ChangeEvent ev) {
@@ -532,7 +523,7 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
             if (!ignoreException) {
               EventQueue.invokeLater(new Runnable() {
                   public void run() {
-                    JOptionPane.showMessageDialog(SwingUtilities.getRootPane(ImportedTextureWizardStepsPanel.this), 
+                    JOptionPane.showMessageDialog(ImportedTextureWizardStepsPanel.this, 
                         preferences.getLocalizedString(
                             ImportedTextureWizardStepsPanel.class, "imageChoiceError", imageName));
                   }
@@ -635,7 +626,7 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
   private void setImageChangeTexts(UserPreferences preferences) {
     this.imageChoiceOrChangeLabel.setText(preferences.getLocalizedString(
         ImportedTextureWizardStepsPanel.class, "imageChangeLabel.text")); 
-    this.imageChoiceOrChangeButton.setText(SwingTools.getLocalizedLabelText(preferences,
+    this.imageChoiceOrChangeButton.setText(preferences.getLocalizedString(
         ImportedTextureWizardStepsPanel.class, "imageChangeButton.text"));
     if (!OperatingSystem.isMacOSX()) {
       this.imageChoiceOrChangeButton.setMnemonic(
@@ -651,7 +642,7 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
   private void setImageChoiceTexts(UserPreferences preferences) {
     this.imageChoiceOrChangeLabel.setText(preferences.getLocalizedString(
         ImportedTextureWizardStepsPanel.class, "imageChoiceLabel.text")); 
-    this.imageChoiceOrChangeButton.setText(SwingTools.getLocalizedLabelText(preferences,
+    this.imageChoiceOrChangeButton.setText(preferences.getLocalizedString(
         ImportedTextureWizardStepsPanel.class, "imageChoiceButton.text"));
     if (!OperatingSystem.isMacOSX()) {
       this.imageChoiceOrChangeButton.setMnemonic(
