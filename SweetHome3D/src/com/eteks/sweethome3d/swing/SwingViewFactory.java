@@ -1,7 +1,7 @@
 /*
  * SwingViewFactory.java 28 oct. 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,6 @@
  */
 package com.eteks.sweethome3d.swing;
 
-import java.security.AccessControlException;
-
 import com.eteks.sweethome3d.model.BackgroundImage;
 import com.eteks.sweethome3d.model.CatalogPieceOfFurniture;
 import com.eteks.sweethome3d.model.CatalogTexture;
@@ -28,7 +26,6 @@ import com.eteks.sweethome3d.model.FurnitureCatalog;
 import com.eteks.sweethome3d.model.Home;
 import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.viewcontroller.BackgroundImageWizardController;
-import com.eteks.sweethome3d.viewcontroller.CompassController;
 import com.eteks.sweethome3d.viewcontroller.DialogView;
 import com.eteks.sweethome3d.viewcontroller.FurnitureCatalogController;
 import com.eteks.sweethome3d.viewcontroller.FurnitureController;
@@ -43,10 +40,7 @@ import com.eteks.sweethome3d.viewcontroller.ImportedFurnitureWizardController;
 import com.eteks.sweethome3d.viewcontroller.ImportedFurnitureWizardStepsView;
 import com.eteks.sweethome3d.viewcontroller.ImportedTextureWizardController;
 import com.eteks.sweethome3d.viewcontroller.LabelController;
-import com.eteks.sweethome3d.viewcontroller.LevelController;
-import com.eteks.sweethome3d.viewcontroller.ObserverCameraController;
 import com.eteks.sweethome3d.viewcontroller.PageSetupController;
-import com.eteks.sweethome3d.viewcontroller.PhotoController;
 import com.eteks.sweethome3d.viewcontroller.PlanController;
 import com.eteks.sweethome3d.viewcontroller.PlanView;
 import com.eteks.sweethome3d.viewcontroller.PrintPreviewController;
@@ -56,7 +50,6 @@ import com.eteks.sweethome3d.viewcontroller.TextureChoiceView;
 import com.eteks.sweethome3d.viewcontroller.ThreadedTaskController;
 import com.eteks.sweethome3d.viewcontroller.ThreadedTaskView;
 import com.eteks.sweethome3d.viewcontroller.UserPreferencesController;
-import com.eteks.sweethome3d.viewcontroller.VideoController;
 import com.eteks.sweethome3d.viewcontroller.View;
 import com.eteks.sweethome3d.viewcontroller.ViewFactory;
 import com.eteks.sweethome3d.viewcontroller.WallController;
@@ -73,11 +66,7 @@ public class SwingViewFactory implements ViewFactory {
   public View createFurnitureCatalogView(FurnitureCatalog catalog,
                                          UserPreferences preferences,
                                          FurnitureCatalogController furnitureCatalogController) {
-    if (preferences == null || preferences.isFurnitureCatalogViewedInTree()) {
-      return new FurnitureCatalogTree(catalog, preferences, furnitureCatalogController);
-    } else {
-      return new FurnitureCatalogListPanel(catalog, preferences, furnitureCatalogController);
-    }
+    return new FurnitureCatalogTree(catalog, preferences, furnitureCatalogController);
   }
   
   /**
@@ -93,7 +82,7 @@ public class SwingViewFactory implements ViewFactory {
    */
   public PlanView createPlanView(Home home, UserPreferences preferences,
                                  PlanController planController) {
-    return new MultipleLevelsPlanPanel(home, preferences, planController);
+    return new PlanComponent(home, preferences, planController);
   }
 
   /**
@@ -101,15 +90,7 @@ public class SwingViewFactory implements ViewFactory {
    */
   public View createView3D(Home home, UserPreferences preferences,
                            HomeController3D homeController3D) {
-    try {
-      if (!Boolean.getBoolean("com.eteks.sweethome3d.no3D")) {
-        return new HomeComponent3D(home, preferences, homeController3D);
-      }
-    } catch (AccessControlException ex) {
-      // If com.eteks.sweethome3d.no3D property can't be read, 
-      // security manager won't allow to access to Java 3D DLLs required by HomeComponent3D class too
-    }
-    return null;
+    return new HomeComponent3D(home, preferences, homeController3D);
   }
 
   /**
@@ -177,16 +158,9 @@ public class SwingViewFactory implements ViewFactory {
                                           UserPreferencesController userPreferencesController) {
     return new UserPreferencesPanel(preferences, userPreferencesController);
   }
-
+  
   /**
-   * Returns a new view that edits level values.
-   */
-  public DialogView createLevelView(UserPreferences preferences, LevelController levelController) {
-    return new LevelPanel(preferences, levelController);
-  }
-
-  /**
-   * Returns a new view that edits furniture values.
+   * Returns a new view that edits the selected furniture in <code>home</code>.
    */
   public DialogView createHomeFurnitureView(UserPreferences preferences,
                                HomeFurnitureController homeFurnitureController) {
@@ -219,27 +193,11 @@ public class SwingViewFactory implements ViewFactory {
   }
   
   /**
-   * Returns a new view that edits compass values.
-   */
-  public DialogView createCompassView(UserPreferences preferences,
-                                    CompassController compassController) {
-    return new CompassPanel(preferences, compassController);
-  }
-  
-  /**
    * Returns a new view that edits 3D attributes.
    */
   public DialogView createHome3DAttributesView(UserPreferences preferences,
                                   Home3DAttributesController home3DAttributesController) {
     return new Home3DAttributesPanel(preferences, home3DAttributesController);    
-  }
-  
-  /**
-   * Returns a new view that edits observer camera values.
-   */
-  public DialogView createObserverCameraView(UserPreferences preferences,
-                                             ObserverCameraController observerCameraController) {
-    return new ObserverCameraPanel(preferences, observerCameraController);    
   }
   
   /**
@@ -266,24 +224,6 @@ public class SwingViewFactory implements ViewFactory {
                                            HomeController homeController,
                                            PrintPreviewController printPreviewController) {
     return new PrintPreviewPanel(home, preferences, homeController, printPreviewController);
-  }
-  
-  /**
-   * Returns a new view able to create photo realistic images of the given home. 
-   */
-  public DialogView createPhotoView(Home home, 
-                                    UserPreferences preferences, 
-                                    PhotoController photoController) {
-    return new PhotoPanel(home, preferences, photoController);
-  }
-  
-  /**
-   * Returns a new view able to create 3D videos of the given home. 
-   */
-  public DialogView createVideoView(Home home, 
-                                    UserPreferences preferences, 
-                                    VideoController videoController) {
-    return new VideoPanel(home, preferences, videoController);
   }
   
   /**

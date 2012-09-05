@@ -1,7 +1,7 @@
 /*
  * UserPreferencesController.java 28 oct 2008
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
 import com.eteks.sweethome3d.model.LengthUnit;
-import com.eteks.sweethome3d.model.TextureImage;
 import com.eteks.sweethome3d.model.UserPreferences;
 
 /**
@@ -34,32 +33,21 @@ public class UserPreferencesController implements Controller {
   /**
    * The properties that may be edited by the view associated to this controller. 
    */
-  public enum Property {LANGUAGE, UNIT, MAGNETISM_ENABLED, RULERS_VISIBLE, GRID_VISIBLE, 
-      FURNITURE_VIEWED_FROM_TOP, ROOM_FLOOR_COLORED_OR_TEXTURED, WALL_PATTERN,  
-      NEW_WALL_THICKNESS, NEW_WALL_HEIGHT, NEW_FLOOR_THICKNESS, FURNITURE_CATALOG_VIEWED_IN_TREE, NAVIGATION_PANEL_VISIBLE, 
-      AUTO_SAVE_DELAY_FOR_RECOVERY, AUTO_SAVE_FOR_RECOVERY_ENABLED}
+  public enum Property {LANGUAGE, UNIT, MAGNETISM_ENABLED, RULERS_VISIBLE, 
+      GRID_VISIBLE, NEW_WALL_THICKNESS, NEW_WALL_HEIGHT}
   
-  private final UserPreferences         preferences;
-  private final ViewFactory             viewFactory;
-  private final HomeController          homeController;
-  private final PropertyChangeSupport   propertyChangeSupport;
-  private DialogView                    userPreferencesView;
+  private final UserPreferences       preferences;
+  private final ViewFactory           viewFactory;
+  private final PropertyChangeSupport propertyChangeSupport;
+  private DialogView                  userPreferencesView;
 
-  private String                        language;
-  private LengthUnit                    unit;
-  private boolean                       furnitureCatalogViewedInTree;
-  private boolean                       navigationPanelVisible;
-  private boolean                       magnetismEnabled;
-  private boolean                       rulersVisible;
-  private boolean                       gridVisible;
-  private boolean                       furnitureViewedFromTop;
-  private boolean                       roomFloorColoredOrTextured;
-  private TextureImage                  wallPattern;
-  private float                         newWallThickness;
-  private float                         newWallHeight;
-  private float                         newFloorThickness;
-  private int                           autoSaveDelayForRecovery;
-  private boolean                       autoSaveForRecoveryEnabled;
+  private String      language;
+  private LengthUnit  unit;
+  private boolean     magnetismEnabled;
+  private boolean     rulersVisible;
+  private boolean     gridVisible;
+  private float       newWallThickness;
+  private float       newWallHeight;
 
   /**
    * Creates the controller of user preferences view.
@@ -67,19 +55,8 @@ public class UserPreferencesController implements Controller {
   public UserPreferencesController(UserPreferences preferences,
                                    ViewFactory viewFactory, 
                                    ContentManager contentManager) {
-    this(preferences, viewFactory, contentManager, null);
-  }
-
-  /**
-   * Creates the controller of user preferences view.
-   */
-  public UserPreferencesController(UserPreferences preferences,
-                                   ViewFactory viewFactory, 
-                                   ContentManager contentManager,
-                                   HomeController homeController) {
     this.preferences = preferences;
     this.viewFactory = viewFactory;
-    this.homeController = homeController;
     this.propertyChangeSupport = new PropertyChangeSupport(this);
     
     updateProperties();
@@ -123,38 +100,13 @@ public class UserPreferencesController implements Controller {
   protected void updateProperties() {
     setLanguage(this.preferences.getLanguage());
     setUnit(this.preferences.getLengthUnit());
-    setFurnitureCatalogViewedInTree(this.preferences.isFurnitureCatalogViewedInTree());
-    setNavigationPanelVisible(this.preferences.isNavigationPanelVisible());
     setMagnetismEnabled(this.preferences.isMagnetismEnabled());
     setGridVisible(this.preferences.isGridVisible());
     setRulersVisible(this.preferences.isRulersVisible());
-    setFurnitureViewedFromTop(this.preferences.isFurnitureViewedFromTop());
-    setRoomFloorColoredOrTextured(this.preferences.isRoomFloorColoredOrTextured());
-    setWallPattern(this.preferences.getWallPattern());
-    float minimumLength = getUnit().getMinimumLength();
-    float maximumLength = getUnit().getMaximumLength();
-    setNewWallThickness(Math.min(Math.max(minimumLength, this.preferences.getNewWallThickness()), maximumLength / 10));
-    setNewWallHeight(Math.min(Math.max(minimumLength, this.preferences.getNewWallHeight()), maximumLength));
-    setNewFloorThickness(Math.min(Math.max(minimumLength, this.preferences.getNewFloorThickness()), maximumLength / 10));
-    setAutoSaveDelayForRecovery(this.preferences.getAutoSaveDelayForRecovery());
-    setAutoSaveForRecoveryEnabled(this.preferences.getAutoSaveDelayForRecovery() > 0);
+    setNewWallThickness(this.preferences.getNewWallThickness());
+    setNewWallHeight(this.preferences.getNewWallHeight());
   }  
 
-  /**
-   * Returns <code>true</code> if the given <code>property</code> is editable.
-   * Depending on whether a property is editable or not, the view associated to this controller
-   * may render it differently.
-   * The implementation of this method always returns <code>true</code> except for <code>LANGUAGE</code> if it's not editable. 
-   */
-  public boolean isPropertyEditable(Property property) {
-    switch (property) {
-      case LANGUAGE :
-        return this.preferences.isLanguageEditable();
-      default :
-        return true;
-    }
-  }
-  
   /**
    * Sets the edited language.
    */
@@ -192,42 +144,6 @@ public class UserPreferencesController implements Controller {
   }
 
   /**
-   * Sets whether the furniture catalog should be viewed in a tree or a different way.
-   */
-  public void setFurnitureCatalogViewedInTree(boolean furnitureCatalogViewedInTree) {
-    if (this.furnitureCatalogViewedInTree != furnitureCatalogViewedInTree) {
-      this.furnitureCatalogViewedInTree = furnitureCatalogViewedInTree;
-      this.propertyChangeSupport.firePropertyChange(Property.FURNITURE_CATALOG_VIEWED_IN_TREE.name(), 
-          !furnitureCatalogViewedInTree, furnitureCatalogViewedInTree);
-    }
-  }
-  
-  /**
-   * Returns <code>true</code> if furniture catalog should be viewed in a tree.
-   */
-  public boolean isFurnitureCatalogViewedInTree() {
-    return this.furnitureCatalogViewedInTree;
-  }
-  
-  /**
-   * Sets whether the navigation panel should be displayed or not.
-   */
-  public void setNavigationPanelVisible(boolean navigationPanelVisible) {
-    if (this.navigationPanelVisible != navigationPanelVisible) {
-      this.navigationPanelVisible = navigationPanelVisible;
-      this.propertyChangeSupport.firePropertyChange(Property.NAVIGATION_PANEL_VISIBLE.name(), 
-          !navigationPanelVisible, navigationPanelVisible);
-    }
-  }
-  
-  /**
-   * Returns <code>true</code> if the navigation panel should be displayed.
-   */
-  public boolean isNavigationPanelVisible() {
-    return this.navigationPanelVisible;
-  }
-  
-  /**
    * Sets whether magnetism is enabled or not.
    */
   public void setMagnetismEnabled(boolean magnetismEnabled) {
@@ -250,7 +166,7 @@ public class UserPreferencesController implements Controller {
   public void setRulersVisible(boolean rulersVisible) {
     if (rulersVisible != this.rulersVisible) {
       this.rulersVisible = rulersVisible;
-      this.propertyChangeSupport.firePropertyChange(Property.RULERS_VISIBLE.name(), !rulersVisible, rulersVisible);
+      this.propertyChangeSupport.firePropertyChange(Property.MAGNETISM_ENABLED.name(), !rulersVisible, rulersVisible);
     }
   }
 
@@ -267,7 +183,7 @@ public class UserPreferencesController implements Controller {
   public void setGridVisible(boolean gridVisible) {
     if (gridVisible != this.gridVisible) {
       this.gridVisible = gridVisible;
-      this.propertyChangeSupport.firePropertyChange(Property.GRID_VISIBLE.name(), !gridVisible, gridVisible);
+      this.propertyChangeSupport.firePropertyChange(Property.MAGNETISM_ENABLED.name(), !gridVisible, gridVisible);
     }
   }
 
@@ -278,62 +194,6 @@ public class UserPreferencesController implements Controller {
     return this.gridVisible;
   }
 
-  /**
-   * Sets how furniture should be displayed in plan. 
-   */
-  public void setFurnitureViewedFromTop(boolean furnitureViewedFromTop) {
-    if (this.furnitureViewedFromTop != furnitureViewedFromTop) {
-      this.furnitureViewedFromTop = furnitureViewedFromTop;
-      this.propertyChangeSupport.firePropertyChange(Property.FURNITURE_VIEWED_FROM_TOP.name(), 
-          !furnitureViewedFromTop, furnitureViewedFromTop);
-    }
-  }
-  
-  /**
-   * Returns how furniture should be displayed in plan.
-   */
-  public boolean isFurnitureViewedFromTop() {
-    return this.furnitureViewedFromTop;
-  }
-
-  /**
-   * Sets whether floor texture is visible in plan or not.
-   */
-  public void setRoomFloorColoredOrTextured(boolean floorTextureVisible) {
-    if (this.roomFloorColoredOrTextured != floorTextureVisible) {
-      this.roomFloorColoredOrTextured = floorTextureVisible;
-      this.propertyChangeSupport.firePropertyChange(Property.ROOM_FLOOR_COLORED_OR_TEXTURED.name(), 
-          !floorTextureVisible, floorTextureVisible);
-    }
-  }
-
-  /**
-   * Returns <code>true</code> if floor texture is visible in plan.
-   */
-  public boolean isRoomFloorColoredOrTextured() {
-    return this.roomFloorColoredOrTextured;
-  }
-  
-  /**
-   * Sets how furniture should be displayed in plan, and notifies
-   * listeners of this change.
-   */
-  public void setWallPattern(TextureImage wallPattern) {
-    if (this.wallPattern != wallPattern) {
-      TextureImage oldWallPattern = this.wallPattern;
-      this.wallPattern = wallPattern;
-      this.propertyChangeSupport.firePropertyChange(Property.WALL_PATTERN.name(), 
-          oldWallPattern, wallPattern);
-    }
-  }
-
-  /**
-   * Returns the wall pattern in plan.
-   */
-  public TextureImage getWallPattern() {
-    return this.wallPattern;
-  }
-  
   /**
    * Sets the edited new wall thickness.
    */
@@ -371,95 +231,16 @@ public class UserPreferencesController implements Controller {
   }
 
   /**
-   * Sets the edited new floor thickness.
-   */
-  public void setNewFloorThickness(float newFloorThickness) {
-    if (newFloorThickness != this.newFloorThickness) {
-      float oldNewFloorThickness = this.newFloorThickness;
-      this.newFloorThickness = newFloorThickness;
-      this.propertyChangeSupport.firePropertyChange(Property.NEW_FLOOR_THICKNESS.name(), oldNewFloorThickness, newFloorThickness);
-    }
-  }
-
-  /**
-   * Returns the edited new floor thickness.
-   */
-  public float getNewFloorThickness() {
-    return this.newFloorThickness;
-  }
-
-  /**
-   * Sets the edited auto recovery save delay.
-   */
-  public void setAutoSaveDelayForRecovery(int autoSaveDelayForRecovery) {
-    if (autoSaveDelayForRecovery != this.autoSaveDelayForRecovery) {
-      float oldAutoSaveDelayForRecovery = this.autoSaveDelayForRecovery;
-      this.autoSaveDelayForRecovery = autoSaveDelayForRecovery;
-      this.propertyChangeSupport.firePropertyChange(Property.AUTO_SAVE_DELAY_FOR_RECOVERY.name(), 
-          oldAutoSaveDelayForRecovery, autoSaveDelayForRecovery);
-    }
-  }
-
-  /**
-   * Returns the edited auto recovery save delay.
-   */
-  public int getAutoSaveDelayForRecovery() {
-    return this.autoSaveDelayForRecovery;
-  }
-
-  /**
-   * Sets whether auto recovery save is enabled or not.
-   */
-  public void setAutoSaveForRecoveryEnabled(boolean autoSaveForRecoveryEnabled) {
-    if (autoSaveForRecoveryEnabled != this.autoSaveForRecoveryEnabled) {
-      this.autoSaveForRecoveryEnabled = autoSaveForRecoveryEnabled;
-      this.propertyChangeSupport.firePropertyChange(Property.AUTO_SAVE_FOR_RECOVERY_ENABLED.name(), 
-          !autoSaveForRecoveryEnabled, autoSaveForRecoveryEnabled);
-    }
-  }
-
-  /**
-   * Returns <code>true</code> if auto recovery save is enabled.
-   */
-  public boolean isAutoSaveForRecoveryEnabled() {
-    return this.autoSaveForRecoveryEnabled;
-  }
-
-  /**
-   * Returns <code>true</code> if language libraries can be imported.
-   */
-  public boolean mayImportLanguageLibrary() {
-    return this.homeController != null;
-  }
-  
-  /**
-   * Imports a language library chosen by the user.
-   */
-  public void importLanguageLibrary() {
-    if (this.homeController != null) {
-      this.homeController.importLanguageLibrary();
-    }
-  }
-
-  /**
    * Controls the modification of user preferences.
    */
   public void modifyUserPreferences() {
     this.preferences.setLanguage(getLanguage());
     this.preferences.setUnit(getUnit());
-    this.preferences.setFurnitureCatalogViewedInTree(isFurnitureCatalogViewedInTree());
-    this.preferences.setNavigationPanelVisible(isNavigationPanelVisible());
     this.preferences.setMagnetismEnabled(isMagnetismEnabled());
     this.preferences.setRulersVisible(isRulersVisible());
     this.preferences.setGridVisible(isGridVisible());
-    this.preferences.setFurnitureViewedFromTop(isFurnitureViewedFromTop());
-    this.preferences.setFloorColoredOrTextured(isRoomFloorColoredOrTextured());
-    this.preferences.setWallPattern(getWallPattern());
     this.preferences.setNewWallThickness(getNewWallThickness());
     this.preferences.setNewWallHeight(getNewWallHeight());
-    this.preferences.setNewFloorThickness(getNewFloorThickness());
-    this.preferences.setAutoSaveDelayForRecovery(isAutoSaveForRecoveryEnabled()
-        ? getAutoSaveDelayForRecovery() : 0);
   }
 
   /**

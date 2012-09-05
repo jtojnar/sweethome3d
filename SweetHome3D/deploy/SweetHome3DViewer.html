@@ -1,7 +1,7 @@
 <!--
    SweetHome3DViewer.html 31 Mar 2009
    
-   Sweet Home 3D, Copyright (c) 2009 Emmanuel PUYBARET / eTeks <info@eteks.com>
+   Copyright (c) 2009 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -20,38 +20,14 @@
 <script language="JavaScript" src="http://java.com/js/deployJava.js">
 </script>
 <script>
-  var javaMinimumVersion = "1.6.0_10"; // The first version with Java Plugin 2
-  var jars = "lib/SweetHome3DViewer.jar,lib/Loader3DS1_2u.jar,lib/batik-svgpathparser-1.7.jar";
-  // Append Java 3D Jars depending on the platform
-  if (navigator.platform.match("Win.*")) {
-    if (navigator.platform.match(".*64")) {
-      jars += ",lib/windows/x64/java3d.jar";
-    } else {
-      jars += ",lib/windows/i386/java3d.jar";
-    } 
-  } else if (navigator.platform.match("Mac.*")) {
-    javaMinimumVersion = "1.5";
-    jars += ",lib/macosx/java3d.jar";
-  } else if (navigator.platform.match("Linux.*")) {
-    javaMinimumVersion = "1.6"; // OpenJDK doesn't give its subversion 
-    if (navigator.platform.match(".*64")) {
-      jars += ",lib/linux/x64/java3d.jar";
-    } else {
-      jars += ",lib/linux/i386/java3d.jar";
-    } 
-  } else {
-    jars += ",lib/java3d.jar";
-  }
-
-  var attributes = {codebase:".",
-                    code:"com.eteks.sweethome3d.applet.SweetHome3DViewer",
-                    archive:jars,
-                    width:"100%", height:"95%"};
-  var parameters = {java_arguments:"-Xmx512m",
-                    navigationPanel:"true",
-                    homeURL:"default.sh3d"};
+   var attributes = {codebase:".",
+                     code:"com.eteks.sweethome3d.applet.SweetHome3DViewer",
+                     archive:"lib/SweetHome3DViewer.jar,lib/Loader3DS1_2u.jar,lib/java3d.jar",
+                     width:"100%", height:"95%"};
+   var parameters = {jnlp_href:"SweetHome3DViewer.jnlp"};
+   var minimumVersion = "1.6.0_10"; // The first version with Java Plugin 2
    
-  deployJava.setInstallerType("kernel");
-  deployJava.setAdditionalPackages("javax.swing,javax.imageio");
-  deployJava.runApplet(attributes, parameters, javaMinimumVersion);
+   deployJava.setInstallerType("kernel");
+   deployJava.setAdditionalPackages("javax.swing,javax.imageio");
+   deployJava.runApplet(attributes, parameters, minimumVersion);
 </script>

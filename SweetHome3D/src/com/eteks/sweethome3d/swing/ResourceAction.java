@@ -1,7 +1,7 @@
 /*
  * ResourceAction.java 8 juil. 2006
  *
- * Sweet Home 3D, Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,8 +39,7 @@ import com.eteks.sweethome3d.tools.OperatingSystem;
  */
 public class ResourceAction extends AbstractAction {
   public static final String POPUP = "Popup";
-  public static final String TOGGLE_BUTTON_MODEL = "ToggleButtonModel";
-  
+    
   /**
    * Creates a disabled action with properties retrieved from a resource bundle 
    * in which key starts with <code>actionPrefix</code>.
@@ -110,33 +109,37 @@ public class ResourceAction extends AbstractAction {
                                     Class<?> resourceClass, 
                                     String actionPrefix) {
     String propertyPrefix = actionPrefix + ".";
-    putValue(NAME, getOptionalString(preferences, resourceClass, propertyPrefix + NAME, true));
+    try {
+      putValue(NAME, SwingTools.getLocalizedLabelText(preferences, resourceClass, propertyPrefix + NAME));
+    } catch (IllegalArgumentException ex) {
+      // Ignore unknown resource
+    }
     putValue(DEFAULT, getValue(NAME));
-    putValue(POPUP, getOptionalString(preferences, resourceClass, propertyPrefix + POPUP, true));
+    putValue(POPUP, getOptionalString(preferences, resourceClass, propertyPrefix + POPUP));
     
     putValue(SHORT_DESCRIPTION, 
-        getOptionalString(preferences, resourceClass, propertyPrefix + SHORT_DESCRIPTION, false));
+        getOptionalString(preferences, resourceClass, propertyPrefix + SHORT_DESCRIPTION));
     putValue(LONG_DESCRIPTION, 
-        getOptionalString(preferences, resourceClass, propertyPrefix + LONG_DESCRIPTION, false));
+        getOptionalString(preferences, resourceClass, propertyPrefix + LONG_DESCRIPTION));
     
-    String smallIcon = getOptionalString(preferences, resourceClass, propertyPrefix + SMALL_ICON, false);
+    String smallIcon = getOptionalString(preferences, resourceClass, propertyPrefix + SMALL_ICON);
     if (smallIcon != null) {
-      putValue(SMALL_ICON, new ImageIcon(resourceClass.getResource(smallIcon)));
+      putValue(SMALL_ICON, new ImageIcon(getClass().getResource(smallIcon)));
     }
 
     String propertyKey = propertyPrefix + ACCELERATOR_KEY;
     // Search first if there's a key for this OS
     String acceleratorKey = getOptionalString(preferences, 
-        resourceClass, propertyKey + "." + System.getProperty("os.name"), false);
+        resourceClass, propertyKey + "." + System.getProperty("os.name"));
     if (acceleratorKey == null) {
       // Then search default value
-      acceleratorKey = getOptionalString(preferences, resourceClass, propertyKey, false);
+      acceleratorKey = getOptionalString(preferences, resourceClass, propertyKey);
     }
     if (acceleratorKey !=  null) {
       putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(acceleratorKey));
     }
     
-    String mnemonicKey = getOptionalString(preferences, resourceClass, propertyPrefix + MNEMONIC_KEY, false);
+    String mnemonicKey = getOptionalString(preferences, resourceClass, propertyPrefix + MNEMONIC_KEY);
     if (mnemonicKey != null) {
       putValue(MNEMONIC_KEY, Integer.valueOf(KeyStroke.getKeyStroke(mnemonicKey).getKeyCode()));
     }
@@ -148,17 +151,9 @@ public class ResourceAction extends AbstractAction {
    */
   private String getOptionalString(UserPreferences preferences, 
                                    Class<?> resourceClass, 
-                                   String propertyKey,
-                                   boolean label) {
+                                   String propertyKey) {
     try {
-      String localizedText = label 
-          ? SwingTools.getLocalizedLabelText(preferences, resourceClass, propertyKey)
-          : preferences.getLocalizedString(resourceClass, propertyKey);
-      if (localizedText != null && localizedText.length() > 0) {
-        return localizedText;
-      } else {
-        return null;
-      }
+      return preferences.getLocalizedString(resourceClass, propertyKey);
     } catch (IllegalArgumentException ex) {
       return null;
     }

@@ -29,8 +29,8 @@ import junit.framework.TestCase;
 
 import com.eteks.sweethome3d.io.DefaultFurnitureCatalog;
 import com.eteks.sweethome3d.io.HomeFileRecorder;
-import com.eteks.sweethome3d.model.Content;
 import com.eteks.sweethome3d.model.FurnitureCatalog;
+import com.eteks.sweethome3d.model.Content;
 import com.eteks.sweethome3d.model.Home;
 import com.eteks.sweethome3d.model.HomePieceOfFurniture;
 import com.eteks.sweethome3d.model.HomeRecorder;
@@ -38,7 +38,7 @@ import com.eteks.sweethome3d.model.RecorderException;
 import com.eteks.sweethome3d.model.Wall;
 
 /**
- * Tests {@link HomeFileRecorder} class.
+ * Tests FileHome class.
  * @author Emmanuel Puybaret
  */
 public class HomeFileRecorderTest extends TestCase {
@@ -46,7 +46,7 @@ public class HomeFileRecorderTest extends TestCase {
     // 1. Create an empty home
     Home home1 = new Home();
     // Add to home a wall and a piece of furniture
-    Wall wall = new Wall(0, 10, 100, 80, 10, home1.getWallHeight());
+    Wall wall = new Wall(0, 10, 100, 80, 10);
     home1.addWall(wall);
     FurnitureCatalog catalog = new DefaultFurnitureCatalog();
     HomePieceOfFurniture piece = new HomePieceOfFurniture(

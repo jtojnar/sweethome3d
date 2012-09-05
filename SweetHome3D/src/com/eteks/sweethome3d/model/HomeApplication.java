@@ -1,7 +1,7 @@
 /*
  * HomeApplication.java 1 sept. 2006
  *
- * Sweet Home 3D, Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,15 +45,6 @@ public abstract class HomeApplication {
   public void removeHomesListener(CollectionListener<Home> listener) {
     this.homesChangeSupport.removeCollectionListener(listener);
   } 
-  
-  /**
-   * Returns a new home.
-   * @return a new home with wall heights equal to the one in user preferences.
-   * @since 2.2
-   */
-  public Home createHome() {
-    return new Home(getUserPreferences().getNewWallHeight());
-  }
 
   /**
    * Returns an unmodifiable collection of the homes of this application.
@@ -73,7 +64,7 @@ public abstract class HomeApplication {
   public void addHome(Home home) {
     this.homes = new ArrayList<Home>(this.homes);
     this.homes.add(home);
-    this.homesChangeSupport.fireCollectionChanged(home, this.homes.size() - 1, CollectionEvent.Type.ADD);
+    this.homesChangeSupport.fireCollectionChanged(home, CollectionEvent.Type.ADD);
   }
 
   /**
@@ -85,12 +76,9 @@ public abstract class HomeApplication {
    * equal to {@link CollectionEvent.Type#DELETE DELETE}.
    */
   public void deleteHome(Home home) {
-    int index = this.homes.indexOf(home);
-    if (index != -1) {
-      this.homes = new ArrayList<Home>(this.homes);
-      this.homes.remove(index);
-      this.homesChangeSupport.fireCollectionChanged(home, index, CollectionEvent.Type.DELETE);
-    }
+    this.homes = new ArrayList<Home>(this.homes);
+    this.homes.remove(home);
+    this.homesChangeSupport.fireCollectionChanged(home, CollectionEvent.Type.DELETE);
   }
 
   /**

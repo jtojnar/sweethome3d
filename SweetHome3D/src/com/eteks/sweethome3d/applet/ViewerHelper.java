@@ -1,7 +1,7 @@
 /*
  * ViewerHelper.java 31 mars 2009
  *
- * Sweet Home 3D, Copyright (c) 2009 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2009 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,7 +44,6 @@ import javax.swing.UIManager;
 
 import com.eteks.sweethome3d.io.DefaultHomeInputStream;
 import com.eteks.sweethome3d.j3d.Component3DManager;
-import com.eteks.sweethome3d.j3d.ModelManager;
 import com.eteks.sweethome3d.j3d.TextureManager;
 import com.eteks.sweethome3d.model.BackgroundImage;
 import com.eteks.sweethome3d.model.CatalogPieceOfFurniture;
@@ -56,9 +55,7 @@ import com.eteks.sweethome3d.model.RecorderException;
 import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.swing.HomeComponent3D;
 import com.eteks.sweethome3d.swing.ThreadedTaskPanel;
-import com.eteks.sweethome3d.tools.OperatingSystem;
 import com.eteks.sweethome3d.viewcontroller.BackgroundImageWizardController;
-import com.eteks.sweethome3d.viewcontroller.CompassController;
 import com.eteks.sweethome3d.viewcontroller.DialogView;
 import com.eteks.sweethome3d.viewcontroller.FurnitureCatalogController;
 import com.eteks.sweethome3d.viewcontroller.FurnitureController;
@@ -73,11 +70,7 @@ import com.eteks.sweethome3d.viewcontroller.ImportedFurnitureWizardController;
 import com.eteks.sweethome3d.viewcontroller.ImportedFurnitureWizardStepsView;
 import com.eteks.sweethome3d.viewcontroller.ImportedTextureWizardController;
 import com.eteks.sweethome3d.viewcontroller.LabelController;
-import com.eteks.sweethome3d.viewcontroller.LevelController;
-import com.eteks.sweethome3d.viewcontroller.ObserverCameraController;
-import com.eteks.sweethome3d.viewcontroller.VideoController;
 import com.eteks.sweethome3d.viewcontroller.PageSetupController;
-import com.eteks.sweethome3d.viewcontroller.PhotoController;
 import com.eteks.sweethome3d.viewcontroller.PlanController;
 import com.eteks.sweethome3d.viewcontroller.PlanView;
 import com.eteks.sweethome3d.viewcontroller.PrintPreviewController;
@@ -100,21 +93,10 @@ import com.eteks.sweethome3d.viewcontroller.WizardController;
 public final class ViewerHelper {
   private static final String HOME_URL_PARAMETER     = "homeURL";
   private static final String IGNORE_CACHE_PARAMETER = "ignoreCache";
-  private static final String NAVIGATION_PANEL       = "navigationPanel";
   
   public ViewerHelper(final JApplet applet) {
     // Create default user preferences with no catalog
     final UserPreferences preferences = new UserPreferences() {
-        @Override
-        public void addLanguageLibrary(String languageLibraryName) throws RecorderException {
-          throw new UnsupportedOperationException();
-        }
-  
-        @Override
-        public boolean languageLibraryExists(String languageLibraryName) throws RecorderException {
-          throw new UnsupportedOperationException();
-        }
-
         @Override
         public void addFurnitureLibrary(String furnitureLibraryName) throws RecorderException {
           throw new UnsupportedOperationException();
@@ -126,23 +108,8 @@ public final class ViewerHelper {
         }
   
         @Override
-        public boolean texturesLibraryExists(String name) throws RecorderException {
-          throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void addTexturesLibrary(String name) throws RecorderException {
-          throw new UnsupportedOperationException();
-        }
-
-        @Override
         public void write() throws RecorderException {
           throw new UnsupportedOperationException();
-        }
-        
-        @Override
-        public boolean isNavigationPanelVisible() {
-          return "true".equalsIgnoreCase(applet.getParameter(NAVIGATION_PANEL));
         }
       };
     
@@ -168,10 +135,6 @@ public final class ViewerHelper {
 
         public DialogView createHome3DAttributesView(UserPreferences preferences,
                                                      Home3DAttributesController home3DAttributesController) {
-          throw new UnsupportedOperationException();
-        }
-
-        public DialogView createLevelView(UserPreferences preferences, LevelController levelController) {
           throw new UnsupportedOperationException();
         }
 
@@ -215,15 +178,6 @@ public final class ViewerHelper {
         }
 
         public DialogView createRoomView(UserPreferences preferences, RoomController roomController) {
-          throw new UnsupportedOperationException();
-        }
-
-        public DialogView createCompassView(UserPreferences preferences, CompassController compassController) {
-          throw new UnsupportedOperationException();
-        }
-
-        public DialogView createObserverCameraView(UserPreferences preferences,
-                                                   ObserverCameraController home3dAttributesController) {
           throw new UnsupportedOperationException();
         }
 
@@ -280,22 +234,8 @@ public final class ViewerHelper {
         public DialogView createWizardView(UserPreferences preferences, WizardController wizardController) {
           throw new UnsupportedOperationException();
         }
-
-        public DialogView createPhotoView(Home home, UserPreferences preferences, PhotoController photoController) {
-          throw new UnsupportedOperationException();
-        }
-
-        public DialogView createVideoView(Home home, UserPreferences preferences, VideoController videoController) {
-          throw new UnsupportedOperationException();
-        }
       };
-
-    // Force offscreen in 3D view under Plugin 2 and Mac OS X
-    System.setProperty("com.eteks.sweethome3d.j3d.useOffScreen3DView", 
-        String.valueOf(OperatingSystem.isMacOSX()            
-            && applet.getAppletContext() != null
-            && applet.getAppletContext().getClass().getName().startsWith("sun.plugin2.applet.Plugin2Manager")));
-
+  
     initLookAndFeel();
 
     addComponent3DRenderingErrorObserver(applet.getRootPane(), preferences);
@@ -316,7 +256,7 @@ public final class ViewerHelper {
             public Void call() throws RecorderException {
               // Read home with application recorder
               Home openedHome = readHome(homeUrl, ignoreCache);
-              displayHome(applet.getRootPane(), openedHome, preferences, viewFactory);
+              displayHome(applet.getRootPane(), openedHome, viewFactory);
               return null;
             }
           };
@@ -352,7 +292,6 @@ public final class ViewerHelper {
     System.gc();
     // Stop managers threads
     TextureManager.getInstance().clear();
-    ModelManager.getInstance().clear();
   }
   
   private void initLookAndFeel() {
@@ -435,12 +374,11 @@ public final class ViewerHelper {
    * Displays the given <code>home</code> in the main pane of <code>rootPane</code>. 
    */
   private void displayHome(final JRootPane rootPane, final Home home, 
-                           final UserPreferences preferences, 
                            final ViewFactory viewFactory) {
     EventQueue.invokeLater(new Runnable() {
         public void run() {
           HomeController3D controller = 
-              new HomeController3D(home, preferences, viewFactory, null, null);
+              new HomeController3D(home, null, viewFactory, null, null);
           rootPane.setContentPane((JComponent)controller.getView());
           rootPane.revalidate();
         }

@@ -1,7 +1,7 @@
 /*
  * PlanTransferHandler.java 12 sept. 2006
  *
- * Sweet Home 3D, Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -220,7 +220,7 @@ public class PlanTransferHandler extends LocatedTransferHandler {
     if (isDrop()) {
       Point2D dropLocation = getDropModelLocation(destination);
       if (destination instanceof View) {
-        this.homeController.drop(transferedItems, this.homeController.getPlanController().getView(), 
+        this.homeController.drop(transferedItems, (View)destination, 
             (float)dropLocation.getX(), (float)dropLocation.getY());
       } else {
         this.homeController.drop(transferedItems,  

@@ -1,7 +1,7 @@
 /*
  * FileUserPreferences.java 18 sept 2006
  *
- * Sweet Home 3D, Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,37 +31,28 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
+import java.util.ResourceBundle;
 import java.util.Set;
-import java.util.TreeSet;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.prefs.AbstractPreferences;
+import java.util.Map.Entry;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
+import com.apple.eio.FileManager;
 import com.eteks.sweethome3d.model.CatalogDoorOrWindow;
 import com.eteks.sweethome3d.model.CatalogPieceOfFurniture;
 import com.eteks.sweethome3d.model.CatalogTexture;
 import com.eteks.sweethome3d.model.Content;
 import com.eteks.sweethome3d.model.FurnitureCatalog;
 import com.eteks.sweethome3d.model.FurnitureCategory;
+import com.eteks.sweethome3d.model.IllegalHomonymException;
 import com.eteks.sweethome3d.model.LengthUnit;
-import com.eteks.sweethome3d.model.PatternsCatalog;
 import com.eteks.sweethome3d.model.RecorderException;
 import com.eteks.sweethome3d.model.Sash;
 import com.eteks.sweethome3d.model.TexturesCatalog;
@@ -78,64 +69,49 @@ import com.eteks.sweethome3d.tools.URLContent;
  * @author Emmanuel Puybaret
  */
 public class FileUserPreferences extends UserPreferences {
-  private static final String LANGUAGE                              = "language";
-  private static final String UNIT                                  = "unit";
-  private static final String FURNITURE_CATALOG_VIEWED_IN_TREE      = "furnitureCatalogViewedInTree";
-  private static final String NAVIGATION_PANEL_VISIBLE              = "navigationPanelVisible";
-  private static final String MAGNETISM_ENABLED                     = "magnetismEnabled";
-  private static final String RULERS_VISIBLE                        = "rulersVisible";
-  private static final String GRID_VISIBLE                          = "gridVisible";
-  private static final String FURNITURE_VIEWED_FROM_TOP             = "furnitureViewedFromTop";
-  private static final String ROOM_FLOOR_COLORED_OR_TEXTURED        = "roomFloorColoredOrTextured";
-  private static final String WALL_PATTERN                          = "wallPattern";
-  private static final String NEW_WALL_HEIGHT                       = "newHomeWallHeight";
-  private static final String NEW_WALL_THICKNESS                    = "newWallThickness";
-  private static final String NEW_FLOOR_THICKNESS                   = "newFloorThickness";
-  private static final String AUTO_SAVE_DELAY_FOR_RECOVERY          = "autoSaveDelayForRecovery";
-  private static final String AUTO_COMPLETION_PROPERTY              = "autoCompletionProperty#";
-  private static final String AUTO_COMPLETION_STRINGS               = "autoCompletionStrings#";
-  private static final String RECENT_HOMES                          = "recentHomes#";
-  private static final String IGNORED_ACTION_TIP                    = "ignoredActionTip#";  
+  private static final String LANGUAGE                    = "language";
+  private static final String UNIT                        = "unit";
+  private static final String MAGNETISM_ENABLED           = "magnetismEnabled";
+  private static final String RULERS_VISIBLE              = "rulersVisible";
+  private static final String GRID_VISIBLE                = "gridVisible";
+  private static final String NEW_WALL_HEIGHT             = "newHomeWallHeight";
+  private static final String NEW_WALL_THICKNESS          = "newWallThickness";
+  private static final String RECENT_HOMES                = "recentHomes#";
+  private static final String IGNORED_ACTION_TIP          = "ignoredActionTip#";
 
-  private static final String FURNITURE_NAME                        = "furnitureName#";
-  private static final String FURNITURE_CATEGORY                    = "furnitureCategory#";
-  private static final String FURNITURE_ICON                        = "furnitureIcon#";
-  private static final String FURNITURE_MODEL                       = "furnitureModel#";
-  private static final String FURNITURE_WIDTH                       = "furnitureWidth#";
-  private static final String FURNITURE_DEPTH                       = "furnitureDepth#";
-  private static final String FURNITURE_HEIGHT                      = "furnitureHeight#";
-  private static final String FURNITURE_MOVABLE                     = "furnitureMovable#";
-  private static final String FURNITURE_DOOR_OR_WINDOW              = "furnitureDoorOrWindow#";
-  private static final String FURNITURE_ELEVATION                   = "furnitureElevation#";
-  private static final String FURNITURE_COLOR                       = "furnitureColor#";
-  private static final String FURNITURE_MODEL_ROTATION              = "furnitureModelRotation#";
-  private static final String FURNITURE_STAIRCASE_CUT_OUT_SHAPE           = "furnitureStaircaseCutOutShape#"; 
-  private static final String FURNITURE_BACK_FACE_SHOWN             = "furnitureBackFaceShown#";
-  private static final String FURNITURE_ICON_YAW                    = "furnitureIconYaw#";
-  private static final String FURNITURE_PROPORTIONAL                = "furnitureProportional#";
+  private static final String FURNITURE_NAME              = "furnitureName#";
+  private static final String FURNITURE_CATEGORY          = "furnitureCategory#";
+  private static final String FURNITURE_ICON              = "furnitureIcon#";
+  private static final String FURNITURE_MODEL             = "furnitureModel#";
+  private static final String FURNITURE_WIDTH             = "furnitureWidth#";
+  private static final String FURNITURE_DEPTH             = "furnitureDepth#";
+  private static final String FURNITURE_HEIGHT            = "furnitureHeight#";
+  private static final String FURNITURE_MOVABLE           = "furnitureMovable#";
+  private static final String FURNITURE_DOOR_OR_WINDOW    = "furnitureDoorOrWindow#";
+  private static final String FURNITURE_ELEVATION         = "furnitureElevation#";
+  private static final String FURNITURE_COLOR             = "furnitureColor#";
+  private static final String FURNITURE_MODEL_ROTATION    = "furnitureModelRotation#";
+  private static final String FURNITURE_BACK_FACE_SHOWN   = "furnitureBackFaceShown#";
+  private static final String FURNITURE_ICON_YAW          = "furnitureIconYaw#";
+  private static final String FURNITURE_PROPORTIONAL      = "furnitureProportional#";
 
-  private static final String TEXTURE_NAME                          = "textureName#";
-  private static final String TEXTURE_CATEGORY                      = "textureCategory#";
-  private static final String TEXTURE_IMAGE                         = "textureImage#";
-  private static final String TEXTURE_WIDTH                         = "textureWidth#";
-  private static final String TEXTURE_HEIGHT                        = "textureHeight#";
+  private static final String TEXTURE_NAME                = "textureName#";
+  private static final String TEXTURE_CATEGORY            = "textureCategory#";
+  private static final String TEXTURE_IMAGE               = "textureImage#";
+  private static final String TEXTURE_WIDTH               = "textureWidth#";
+  private static final String TEXTURE_HEIGHT              = "textureHeight#";
 
-  private static final String FURNITURE_CONTENT_PREFIX              = "Furniture-3-";
-  private static final String TEXTURE_CONTENT_PREFIX                = "Texture-3-";
-
-  private static final String LANGUAGE_LIBRARIES_PLUGIN_SUB_FOLDER  = "languages";
-  private static final String FURNITURE_LIBRARIES_PLUGIN_SUB_FOLDER = "furniture";
-  private static final String TEXTURES_LIBRARIES_PLUGIN_SUB_FOLDER  = "textures";
+  private static final String FURNITURE_CONTENT_PREFIX    = "Content";
+  private static final String TEXTURE_CONTENT_PREFIX      = "TextureContent";
+  
+  private static final String PLUGIN_FURNITURE_LIBRARIES_SUB_FOLDER = "furniture";
 
   private static final Content DUMMY_CONTENT;
   
+  private static final String EDITOR_SUB_FOLDER; 
+  private static final String APPLICATION_SUB_FOLDER; 
+  
   private final Map<String, Boolean> ignoredActionTips = new HashMap<String, Boolean>();
-  private List<ClassLoader>          resourceClassLoaders;
-  private final File                 preferencesFolder;
-  private final File []              applicationFolders;
-  private Preferences                preferences;
-  private Executor                   catalogsLoader;
-  private Executor                   updater;
   
   static {
     Content dummyURLContent = null;
@@ -144,134 +120,55 @@ public class FileUserPreferences extends UserPreferences {
     } catch (MalformedURLException ex) {
     }
     DUMMY_CONTENT = dummyURLContent;
+
+    // Retrieve sub folders where is stored application data
+    ResourceBundle resource = ResourceBundle.getBundle(FileUserPreferences.class.getName());
+    if (OperatingSystem.isMacOSX()) {
+      EDITOR_SUB_FOLDER = resource.getString("editorSubFolder.Mac OS X");
+      APPLICATION_SUB_FOLDER = resource.getString("applicationSubFolder.Mac OS X");
+    } else if (OperatingSystem.isWindows()) {
+      EDITOR_SUB_FOLDER = resource.getString("editorSubFolder.Windows");
+      APPLICATION_SUB_FOLDER = resource.getString("applicationSubFolder.Windows");
+    } else {
+      EDITOR_SUB_FOLDER = resource.getString("editorSubFolder");
+      APPLICATION_SUB_FOLDER = resource.getString("applicationSubFolder");
+    }
   }
  
   /**
-   * Creates user preferences read from user preferences in file system, 
-   * and from resource files.
+   * Creates user preferences read either from user preferences in file system, 
+   * or from resource files.
    */
   public FileUserPreferences() {
-    this(null, null);
-  }
+    final Preferences preferences = getPreferences();
+    setLanguage(preferences.get(LANGUAGE, getLanguage()));    
 
-  /**
-   * Creates user preferences stored in the folders given in parameter. 
-   * @param preferencesFolder the folder where preferences files are stored
-   *    or <code>null</code> if this folder is the default one.
-   * @param applicationFolders the folders where application private files are stored
-   *    or <code>null</code> if it's the default one. As the first application folder
-   *    is used as the folder where plug-ins files are imported by the user, it should
-   *    have write access otherwise the user won't be able to import them.
-   */
-  public FileUserPreferences(File preferencesFolder,
-                             File [] applicationFolders) {
-    this(preferencesFolder, applicationFolders, null);
-  }
-  
-  /**
-   * Creates user preferences stored in the folders given in parameter. 
-   * @param preferencesFolder the folder where preferences files are stored
-   *    or <code>null</code> if this folder is the default one.
-   * @param applicationFolders  the folders where application private files are stored
-   *    or <code>null</code> if it's the default one. As the first application folder
-   *    is used as the folder where plug-ins files are imported by the user, it should
-   *    have write access otherwise the user won't be able to import them.
-   * @param updater  an executor that will be used to update user preferences for lengthy 
-   *    operations. If <code>null</code>, then these operations and 
-   *    updates will be executed in the current thread.
-   */
-  public FileUserPreferences(File preferencesFolder,
-                             File [] applicationFolders,
-                             Executor updater) {
-    this.preferencesFolder = preferencesFolder;
-    this.applicationFolders = applicationFolders;
-    Executor defaultExecutor = new Executor() {
-        public void execute(Runnable command) {
-          command.run();
-        }
-      };
-    if (updater == null) {
-      this.catalogsLoader =
-      this.updater = defaultExecutor;
-    } else {
-      this.catalogsLoader = Executors.newSingleThreadExecutor();
-      this.updater = updater;
-    }
-    
-    updateSupportedLanguages();
-
-    final Preferences preferences;
-    // From version 3.0 use portable preferences
-    PortablePreferences portablePreferences = new PortablePreferences();    
-    // If portable preferences storage doesn't exist and default preferences folder is used
-    if (!portablePreferences.exist()
-        && preferencesFolder == null) {
-      // Retrieve preferences from pre version 3.0
-      preferences = getPreferences();
-    } else {
-      preferences = portablePreferences;
-    }
-    
-    String language = preferences.get(LANGUAGE, getLanguage());
-    // Check language is still supported
-    if (!Arrays.asList(getSupportedLanguages()).contains(language)) {
-      language = Locale.ENGLISH.getLanguage();  
-    }
-    setLanguage(language);    
-
-    setFurnitureCatalog(new FurnitureCatalog());
     // Fill default furniture catalog 
-    updateFurnitureDefaultCatalog(defaultExecutor, defaultExecutor);
+    setFurnitureCatalog(new DefaultFurnitureCatalog(getPluginFurnitureLibrariesFolder()));
     // Read additional furniture
-    readModifiableFurnitureCatalog(preferences);
+    readFurnitureCatalog(preferences);
     
-    setTexturesCatalog(new TexturesCatalog());
     // Fill default textures catalog 
-    updateTexturesDefaultCatalog(defaultExecutor, defaultExecutor);
+    setTexturesCatalog(new DefaultTexturesCatalog());
     // Read additional textures
-    readModifiableTexturesCatalog(preferences);
+    readTexturesCatalog(preferences);
     
-    DefaultUserPreferences defaultPreferences = new DefaultUserPreferences(false, this);
+    DefaultUserPreferences defaultPreferences = new DefaultUserPreferences();
     
-    // Fill default patterns catalog 
-    PatternsCatalog patternsCatalog = defaultPreferences.getPatternsCatalog();
-    setPatternsCatalog(patternsCatalog);
-
     // Read other preferences 
-    setUnit(LengthUnit.valueOf(preferences.get(UNIT, 
-        defaultPreferences.getLengthUnit().name())));
-    setFurnitureCatalogViewedInTree(preferences.getBoolean(FURNITURE_CATALOG_VIEWED_IN_TREE, 
-        defaultPreferences.isFurnitureCatalogViewedInTree()));
-    setNavigationPanelVisible(preferences.getBoolean(NAVIGATION_PANEL_VISIBLE, 
-        defaultPreferences.isNavigationPanelVisible()));
+    LengthUnit unit = LengthUnit.valueOf(preferences.get(UNIT, defaultPreferences.getLengthUnit().name()));
+    setUnit(unit);
     setMagnetismEnabled(preferences.getBoolean(MAGNETISM_ENABLED, true));
-    setRulersVisible(preferences.getBoolean(RULERS_VISIBLE, 
-        defaultPreferences.isRulersVisible()));
-    setGridVisible(preferences.getBoolean(GRID_VISIBLE, 
-        defaultPreferences.isGridVisible()));
-    setFurnitureViewedFromTop(preferences.getBoolean(FURNITURE_VIEWED_FROM_TOP, 
-        defaultPreferences.isFurnitureViewedFromTop()));
-    setFloorColoredOrTextured(preferences.getBoolean(ROOM_FLOOR_COLORED_OR_TEXTURED, 
-        defaultPreferences.isRoomFloorColoredOrTextured()));
-    try {
-      setWallPattern(patternsCatalog.getPattern(preferences.get(WALL_PATTERN, 
-          defaultPreferences.getWallPattern().getName())));
-    } catch (IllegalArgumentException ex) {
-      // Ensure wall pattern always exists even if new patterns are added in future versions
-      setWallPattern(defaultPreferences.getWallPattern());
-    }
+    setRulersVisible(preferences.getBoolean(RULERS_VISIBLE, true));
+    setGridVisible(preferences.getBoolean(GRID_VISIBLE, true));
     setNewWallThickness(preferences.getFloat(NEW_WALL_THICKNESS, 
-        defaultPreferences.getNewWallThickness()));
+            defaultPreferences.getNewWallThickness()));
     setNewWallHeight(preferences.getFloat(NEW_WALL_HEIGHT,
-        defaultPreferences.getNewWallHeight()));    
-    setNewFloorThickness(preferences.getFloat(NEW_FLOOR_THICKNESS, 
-        defaultPreferences.getNewFloorThickness()));
-    setAutoSaveDelayForRecovery(preferences.getInt(AUTO_SAVE_DELAY_FOR_RECOVERY,
-        defaultPreferences.getAutoSaveDelayForRecovery()));
+            defaultPreferences.getNewWallHeight()));    
     setCurrency(defaultPreferences.getCurrency());    
     // Read recent homes list
     List<String> recentHomes = new ArrayList<String>();
-    for (int i = 1; i <= getRecentHomesMaxCount(); i++) {
+    for (int i = 1; i <= 4; i++) {
       String recentHome = preferences.get(RECENT_HOMES + i, null);
       if (recentHome != null) {
         recentHomes.add(recentHome);
@@ -287,134 +184,20 @@ public class FileUserPreferences extends UserPreferences {
         this.ignoredActionTips.put(ignoredActionTip, true);
       }
     }
-    // Get default auto completion strings
-    for (String property : defaultPreferences.getAutoCompletedProperties()) {
-      setAutoCompletionStrings(property, defaultPreferences.getAutoCompletionStrings(property));
-    }
-    // Read auto completion strings list
-    for (int i = 1; ; i++) {
-      String autoCompletionProperty = preferences.get(AUTO_COMPLETION_PROPERTY + i, null);
-      String autoCompletionStrings = preferences.get(AUTO_COMPLETION_STRINGS + i, null);
-      if (autoCompletionProperty != null && autoCompletionStrings != null) {
-        setAutoCompletionStrings(autoCompletionProperty, Arrays.asList(autoCompletionStrings.split(",")));
-      } else {
-        break;
-      }
-    }
     
     addPropertyChangeListener(Property.LANGUAGE, new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent ev) {
-          // Update catalogs with new default locale
-          updateFurnitureDefaultCatalog(catalogsLoader, FileUserPreferences.this.updater);
-          updateTexturesDefaultCatalog(catalogsLoader, FileUserPreferences.this.updater);
-          updateAutoCompletionStrings();
+        public void propertyChange(PropertyChangeEvent evt) {
+          updateDefaultCatalogs();
         }
       });
-    
-    if (preferences != portablePreferences) {
-      // Switch to portable preferences now that all preferences are read
-      this.preferences = portablePreferences;
-    } else {
-      this.preferences = preferences;
-    }
-  }
-  
-  /**
-   * Updates the default supported languages with languages available in plugin folder. 
-   */
-  private void updateSupportedLanguages() {
-    List<ClassLoader> resourceClassLoaders = new ArrayList<ClassLoader>();
-    String [] defaultSupportedLanguages = getDefaultSupportedLanguages();
-    Set<String> supportedLanguages = new TreeSet<String>(Arrays.asList(defaultSupportedLanguages));
-   
-    File [] languageLibrariesPluginFolders = getLanguageLibrariesPluginFolders();
-    if (languageLibrariesPluginFolders != null) {
-      for (File languageLibrariesPluginFolder : languageLibrariesPluginFolders) {
-        // Try to load sh3l files from language plugin folder
-        File [] pluginLanguageLibraryFiles = languageLibrariesPluginFolder.listFiles(new FileFilter () {
-          public boolean accept(File pathname) {
-            return pathname.isFile();
-          }
-        });
-        
-        if (pluginLanguageLibraryFiles != null) {
-          // Treat language files in reverse order so file named with a date or a version 
-          // will be taken into account from most recent to least recent
-          Arrays.sort(pluginLanguageLibraryFiles, Collections.reverseOrder());
-          for (File pluginLanguageLibraryFile : pluginLanguageLibraryFiles) {
-            try {
-              Set<String> languages = getLanguages(pluginLanguageLibraryFile);
-              if (!languages.isEmpty()) {
-                supportedLanguages.addAll(languages);
-                URL pluginFurnitureCatalogUrl = pluginLanguageLibraryFile.toURI().toURL();
-                resourceClassLoaders.add(new URLClassLoader(new URL [] {pluginFurnitureCatalogUrl}));
-              }
-            } catch (IOException ex) {
-              // Ignore malformed files
-            }
-          }
-        }
-      }
-    }
-    
-    // Give less priority to default class loader
-    resourceClassLoaders.addAll(super.getResourceClassLoaders());
-    this.resourceClassLoaders = Collections.unmodifiableList(resourceClassLoaders);
-    if (defaultSupportedLanguages.length < supportedLanguages.size()) {
-      setSupportedLanguages(supportedLanguages.toArray(new String [supportedLanguages.size()]));
-    }
   }
 
   /**
-   * Returns the languages included in the given language library file.
+   * Reloads furniture and textures default catalogs.
    */
-  private Set<String> getLanguages(File languageLibraryFile) throws IOException {
-    Set<String> languages = new LinkedHashSet<String>();
-    ZipInputStream zipIn = null;
-    try {
-      // Search if zip file contains some *_xx.properties or *_xx_xx.properties files
-      zipIn = new ZipInputStream(new FileInputStream(languageLibraryFile));
-      for (ZipEntry entry; (entry = zipIn.getNextEntry()) != null; ) {
-        String zipEntryName = entry.getName();
-        int underscoreIndex = zipEntryName.indexOf('_');
-        if (underscoreIndex != -1) {
-          int extensionIndex = zipEntryName.lastIndexOf(".properties");
-          if (extensionIndex != -1 && underscoreIndex < extensionIndex - 2) {
-            String language = zipEntryName.substring(underscoreIndex + 1, extensionIndex);
-            int countrySeparator = language.indexOf('_');
-            if (countrySeparator == 2
-                && language.length() == 5) {
-              languages.add(language);
-            } else if (language.length() == 2) {
-              languages.add(language);
-            }
-          }
-        }
-      }
-      return languages;
-    } finally {
-      if (zipIn != null) {
-        zipIn.close();
-      }
-    }
-  }
-  
-  /**
-   * Returns the default class loader of user preferences and the class loaders that
-   * give access to resources in language libraries plugin folder. 
-   */
-  @Override
-  public List<ClassLoader> getResourceClassLoaders() {
-    return this.resourceClassLoaders;
-  }
-  
-  /**
-   * Reloads furniture default catalogs.
-   */
-  private void updateFurnitureDefaultCatalog(Executor furnitureCatalogLoader, 
-                                             final Executor updater) {
+  private void updateDefaultCatalogs() {
     // Delete default pieces of current furniture catalog          
-    final FurnitureCatalog furnitureCatalog = getFurnitureCatalog();
+    FurnitureCatalog furnitureCatalog = getFurnitureCatalog();
     for (FurnitureCategory category : furnitureCatalog.getCategories()) {
       for (CatalogPieceOfFurniture piece : category.getFurniture()) {
         if (!piece.isModifiable()) {
@@ -422,32 +205,22 @@ public class FileUserPreferences extends UserPreferences {
         }
       }
     }
-    // Read default furniture catalog
-    furnitureCatalogLoader.execute(new Runnable() {
-        public void run() {
-          // Fill default furniture catalog 
-          DefaultFurnitureCatalog defaultFurnitureCatalog = new DefaultFurnitureCatalog(
-              FileUserPreferences.this, getFurnitureLibrariesPluginFolders());
-          for (final FurnitureCategory category : defaultFurnitureCatalog.getCategories()) {
-            for (final CatalogPieceOfFurniture piece : category.getFurniture()) {
-              updater.execute(new Runnable() {
-                  public void run() {
-                    furnitureCatalog.add(category, piece);
-                  }
-                });
-            }
-          }
+    // Read again default furniture and textures catalogs with new default locale
+    // Add default pieces that don't have homonym among user catalog
+    FurnitureCatalog defaultFurnitureCatalog = 
+        new DefaultFurnitureCatalog(getPluginFurnitureLibrariesFolder());
+    for (FurnitureCategory category : defaultFurnitureCatalog.getCategories()) {
+      for (CatalogPieceOfFurniture piece : category.getFurniture()) {
+        try {
+          furnitureCatalog.add(category, piece);
+        } catch (IllegalHomonymException ex) {
+          // Ignore pieces that have the same name as an existing piece
         }
-      });
-  }
-
-  /**
-   * Reloads textures default catalog.
-   */
-  private void updateTexturesDefaultCatalog(Executor texturesCatalogLoader, 
-                                            final Executor updater) {
+      }
+    }
+    
     // Delete default textures of current textures catalog          
-    final TexturesCatalog texturesCatalog = getTexturesCatalog();
+    TexturesCatalog texturesCatalog = getTexturesCatalog();
     for (TexturesCategory category : texturesCatalog.getCategories()) {
       for (CatalogTexture texture : category.getTextures()) {
         if (!texture.isModifiable()) {
@@ -455,40 +228,23 @@ public class FileUserPreferences extends UserPreferences {
         }
       }
     }
-    // Read default textures catalog
-    texturesCatalogLoader.execute(new Runnable() {
-        public void run() {
-          TexturesCatalog defaultTexturesCatalog = new DefaultTexturesCatalog(
-              FileUserPreferences.this, getTexturesLibrariesPluginFolders());
-          for (final TexturesCategory category : defaultTexturesCatalog.getCategories()) {
-            for (final CatalogTexture texture : category.getTextures()) {
-              updater.execute(new Runnable() {
-                  public void run() {
-                    texturesCatalog.add(category, texture);
-                  }
-                });
-            }
-          }
+    // Add default textures that don't have homonym among user catalog
+    TexturesCatalog defaultTexturesCatalog = new DefaultTexturesCatalog();
+    for (TexturesCategory category : defaultTexturesCatalog.getCategories()) {
+      for (CatalogTexture texture : category.getTextures()) {
+        try {
+          texturesCatalog.add(category, texture);
+        } catch (IllegalHomonymException ex) {
+          // Ignore textures that have the same name as an existing piece
         }
-      });
-  }
-
-  /**
-   * Adds to auto completion strings the default strings of the new chosen language.
-   */
-  private void updateAutoCompletionStrings() {
-    DefaultUserPreferences defaultPreferences = new DefaultUserPreferences(false, this);
-    for (String property : defaultPreferences.getAutoCompletedProperties()) {
-      for (String autoCompletionString : defaultPreferences.getAutoCompletionStrings(property)) {
-        addAutoCompletionString(property, autoCompletionString);
       }
     }
   }
 
   /**
-   * Read modifiable furniture catalog from preferences.
+   * Read furniture catalog from preferences.
    */
-  private void readModifiableFurnitureCatalog(Preferences preferences) {
+  private void readFurnitureCatalog(Preferences preferences) {
     for (int i = 1; ; i++) {
       String name = preferences.get(FURNITURE_NAME + i, null);
       if (name == null) {
@@ -508,13 +264,12 @@ public class FileUserPreferences extends UserPreferences {
       Integer color = colorString != null 
           ? Integer.valueOf(colorString) : null; 
       float [][] modelRotation = getModelRotation(preferences, FURNITURE_MODEL_ROTATION + i);
-      String staircaseCutOutShape = preferences.get(FURNITURE_STAIRCASE_CUT_OUT_SHAPE + i, null);
       boolean backFaceShown = preferences.getBoolean(FURNITURE_BACK_FACE_SHOWN + i, false);
       float iconYaw = preferences.getFloat(FURNITURE_ICON_YAW + i, 0);
       boolean proportional = preferences.getBoolean(FURNITURE_PROPORTIONAL + i, true);
 
-      final FurnitureCategory pieceCategory = new FurnitureCategory(category);
-      final CatalogPieceOfFurniture piece;
+      FurnitureCategory pieceCategory = new FurnitureCategory(category);
+      CatalogPieceOfFurniture piece;
       if (doorOrWindow) {
         piece = new CatalogDoorOrWindow(name, icon, model,
             width, depth, height, elevation, movable, 1, 0, new Sash [0],
@@ -522,9 +277,21 @@ public class FileUserPreferences extends UserPreferences {
       } else {
         piece = new CatalogPieceOfFurniture(name, icon, model,
             width, depth, height, elevation, movable, 
-            staircaseCutOutShape, color, modelRotation, backFaceShown, iconYaw, proportional);
+            color, modelRotation, backFaceShown, iconYaw, proportional);
       }
-      getFurnitureCatalog().add(pieceCategory, piece);
+      try {        
+        getFurnitureCatalog().add(pieceCategory, piece);
+      } catch (IllegalHomonymException ex) {
+        // If a piece with same name and category already exists in furniture catalog
+        // replace the existing piece by the new one
+        List<FurnitureCategory> categories = getFurnitureCatalog().getCategories();
+        int categoryIndex = Collections.binarySearch(categories, pieceCategory);
+        List<CatalogPieceOfFurniture> furniture = categories.get(categoryIndex).getFurniture();
+        int existingPieceIndex = Collections.binarySearch(furniture, piece);        
+        getFurnitureCatalog().delete(furniture.get(existingPieceIndex));
+        
+        getFurnitureCatalog().add(pieceCategory, piece);
+      }
     }
   }  
 
@@ -564,14 +331,8 @@ public class FileUserPreferences extends UserPreferences {
     String content = preferences.get(key, null);
     if (content != null) {
       try {
-        String preferencesFolderUrl = getPreferencesFolder().toURI().toURL().toString();
-        if (content.startsWith(preferencesFolderUrl)
-            || content.startsWith("jar:" + preferencesFolderUrl)) {
-          return new URLContent(new URL(content));
-        } else {
-          return new URLContent(new URL(content.replace("file:", preferencesFolderUrl)));
-        }
-      } catch (IOException ex) {
+        return new URLContent(new URL(content));
+      } catch (MalformedURLException ex) {
         // Return DUMMY_CONTENT for incorrect URL
       } 
     }
@@ -579,9 +340,9 @@ public class FileUserPreferences extends UserPreferences {
   }
   
   /**
-   * Read modifiable textures catalog from preferences.
+   * Read textures catalog from preferences.
    */
-  private void readModifiableTexturesCatalog(Preferences preferences) {
+  private void readTexturesCatalog(Preferences preferences) {
     for (int i = 1; ; i++) {
       String name = preferences.get(TEXTURE_NAME + i, null);
       if (name == null) {
@@ -593,9 +354,21 @@ public class FileUserPreferences extends UserPreferences {
       float width = preferences.getFloat(TEXTURE_WIDTH + i, 0.1f);
       float height = preferences.getFloat(TEXTURE_HEIGHT + i, 0.1f);
 
-      final TexturesCategory textureCategory = new TexturesCategory(category);
-      final CatalogTexture texture = new CatalogTexture(name, image, width, height, true);
-      getTexturesCatalog().add(textureCategory, texture);
+      TexturesCategory textureCategory = new TexturesCategory(category);
+      CatalogTexture texture = new CatalogTexture(name, image, width, height, true);
+      try {        
+        getTexturesCatalog().add(textureCategory, texture);
+      } catch (IllegalHomonymException ex) {
+        // If a texture with same name and category already exists in textures catalog
+        // replace the existing texture by the new one
+        List<TexturesCategory> categories = getTexturesCatalog().getCategories();
+        int categoryIndex = Collections.binarySearch(categories, textureCategory);
+        List<CatalogTexture> textures = categories.get(categoryIndex).getTextures();
+        int existingTextureIndex = Collections.binarySearch(textures, texture);        
+        getTexturesCatalog().delete(textures.get(existingTextureIndex));
+        
+        getTexturesCatalog().add(textureCategory, texture);
+      }
     }
   }  
 
@@ -605,31 +378,25 @@ public class FileUserPreferences extends UserPreferences {
   @Override
   public void write() throws RecorderException {
     Preferences preferences = getPreferences();
-    writeModifiableFurnitureCatalog(preferences);
-    writeModifiableTexturesCatalog(preferences);
+
+    writeFurnitureCatalog(preferences);
+    writeTexturesCatalog(preferences);
 
     // Write other preferences 
     preferences.put(LANGUAGE, getLanguage());
     preferences.put(UNIT, getLengthUnit().name());   
-    preferences.putBoolean(FURNITURE_CATALOG_VIEWED_IN_TREE, isFurnitureCatalogViewedInTree());
-    preferences.putBoolean(NAVIGATION_PANEL_VISIBLE, isNavigationPanelVisible());
     preferences.putBoolean(MAGNETISM_ENABLED, isMagnetismEnabled());
     preferences.putBoolean(RULERS_VISIBLE, isRulersVisible());
     preferences.putBoolean(GRID_VISIBLE, isGridVisible());
-    preferences.putBoolean(FURNITURE_VIEWED_FROM_TOP, isFurnitureViewedFromTop());
-    preferences.putBoolean(ROOM_FLOOR_COLORED_OR_TEXTURED, isRoomFloorColoredOrTextured());
-    preferences.put(WALL_PATTERN, getWallPattern().getName());
     preferences.putFloat(NEW_WALL_THICKNESS, getNewWallThickness());   
     preferences.putFloat(NEW_WALL_HEIGHT, getNewWallHeight());
-    preferences.putFloat(NEW_FLOOR_THICKNESS, getNewFloorThickness());   
-    preferences.putInt(AUTO_SAVE_DELAY_FOR_RECOVERY, getAutoSaveDelayForRecovery());
     // Write recent homes list
     int i = 1;
-    for (Iterator<String> it = getRecentHomes().iterator(); it.hasNext() && i <= getRecentHomesMaxCount(); i ++) {
+    for (Iterator<String> it = getRecentHomes().iterator(); it.hasNext() && i <= 4; i ++) {
       preferences.put(RECENT_HOMES + i, it.next());
     }
     // Remove obsolete keys
-    for ( ; i <= getRecentHomesMaxCount(); i++) {
+    for ( ; i <= 4; i++) {
       preferences.remove(RECENT_HOMES + i);
     }
     // Write ignored action tips
@@ -645,41 +412,19 @@ public class FileUserPreferences extends UserPreferences {
     for ( ; i <= this.ignoredActionTips.size(); i++) {
       preferences.remove(IGNORED_ACTION_TIP + i);
     }
-    // Write auto completion strings lists
-    i = 1;
-    for (String property : getAutoCompletedProperties()) {
-      StringBuilder autoCompletionStrings = new StringBuilder();
-      Iterator<String> it = getAutoCompletionStrings(property).iterator();
-      for (int j = 0; j < 1000 && it.hasNext(); j++) {
-        String autoCompletionString = it.next();
-        // As strings are comma separated, accept only the ones without a comma 
-        if (autoCompletionString.indexOf(',') < 0) {
-          if (autoCompletionStrings.length() > 0) {
-            autoCompletionStrings.append(",");
-          } 
-          autoCompletionStrings.append(autoCompletionString);
-        }
-      }
-      preferences.put(AUTO_COMPLETION_PROPERTY + i, property);
-      preferences.put(AUTO_COMPLETION_STRINGS + i++, autoCompletionStrings.toString());
-    }
-    for ( ; preferences.get(AUTO_COMPLETION_PROPERTY + i, null) != null; i++) {
-      preferences.remove(AUTO_COMPLETION_PROPERTY + i);
-      preferences.remove(AUTO_COMPLETION_STRINGS + i);
-    }
     
     try {
       // Write preferences 
-      preferences.flush();
+      preferences.sync();
     } catch (BackingStoreException ex) {
       throw new RecorderException("Couldn't write preferences", ex);
     }
   }
 
   /**
-   * Writes modifiable furniture in <code>preferences</code>.
+   * Writes furniture catalog in <code>preferences</code>.
    */
-  private void writeModifiableFurnitureCatalog(Preferences preferences) throws RecorderException {
+  private void writeFurnitureCatalog(Preferences preferences) throws RecorderException {
     final Set<URL> furnitureContentURLs = new HashSet<URL>();
     int i = 1;
     for (FurnitureCategory category : getFurnitureCatalog().getCategories()) {
@@ -704,12 +449,9 @@ public class FileUserPreferences extends UserPreferences {
           }
           float [][] modelRotation = piece.getModelRotation();
           preferences.put(FURNITURE_MODEL_ROTATION + i, 
-              floatToString(modelRotation[0][0]) + " " + floatToString(modelRotation[0][1]) + " " + floatToString(modelRotation[0][2]) + " "
-              + floatToString(modelRotation[1][0]) + " " + floatToString(modelRotation[1][1]) + " " + floatToString(modelRotation[1][2]) + " "
-              + floatToString(modelRotation[2][0]) + " " + floatToString(modelRotation[2][1]) + " " + floatToString(modelRotation[2][2]));
-          if (piece.getStaircaseCutOutShape() != null) {
-            preferences.put(FURNITURE_STAIRCASE_CUT_OUT_SHAPE + i, piece.getStaircaseCutOutShape());
-          }
+              modelRotation[0][0] + " " + modelRotation[0][1] + " " + modelRotation[0][2] + " "
+              + modelRotation[1][0] + " " + modelRotation[1][1] + " " + modelRotation[1][2] + " "
+              + modelRotation[2][0] + " " + modelRotation[2][1] + " " + modelRotation[2][2]);
           preferences.putBoolean(FURNITURE_BACK_FACE_SHOWN + i, piece.isBackFaceShown());
           preferences.putFloat(FURNITURE_ICON_YAW + i, piece.getIconYaw());
           preferences.putBoolean(FURNITURE_PROPORTIONAL + i, piece.isProportional());
@@ -731,7 +473,6 @@ public class FileUserPreferences extends UserPreferences {
       preferences.remove(FURNITURE_ELEVATION + i);
       preferences.remove(FURNITURE_COLOR + i);
       preferences.remove(FURNITURE_MODEL_ROTATION + i);
-      preferences.remove(FURNITURE_STAIRCASE_CUT_OUT_SHAPE + i);
       preferences.remove(FURNITURE_BACK_FACE_SHOWN + i);
       preferences.remove(FURNITURE_ICON_YAW + i);
       preferences.remove(FURNITURE_PROPORTIONAL + i);
@@ -740,24 +481,9 @@ public class FileUserPreferences extends UserPreferences {
   }
 
   /**
-   * Returns the string value of the given float, except for -1.0, 1.0 or 0.0 where -1, 1 and 0 is returned.
+   * Writes textures catalog in <code>preferences</code>.
    */
-  private String floatToString(float f) {
-    if (Math.abs(f) < 1E-6) {
-      return "0";
-    } else if (Math.abs(f - 1f) < 1E-6) {
-      return "1";
-    } else if (Math.abs(f + 1f) < 1E-6) {
-      return "-1";
-    } else {
-      return String.valueOf(f);
-    }
-  }
-    
-  /**
-   * Writes modifiable textures catalog in <code>preferences</code>.
-   */
-  private void writeModifiableTexturesCatalog(Preferences preferences) throws RecorderException {
+  private void writeTexturesCatalog(Preferences preferences) throws RecorderException {
     final Set<URL> texturesContentURLs = new HashSet<URL>();
     int i = 1;
     for (TexturesCategory category : getTexturesCatalog().getCategories()) {
@@ -797,24 +523,19 @@ public class FileUserPreferences extends UserPreferences {
         try {
           // If content is a JAR entry copy the content of its URL and rebuild a new URL content from 
           // this copy and the entry name
-          copiedContent = copyToPreferencesURLContent(new URLContent(urlContent.getJAREntryURL()), contentPrefix);
+          copiedContent = copyToApplicationURLContent(new URLContent(urlContent.getJAREntryURL()), contentPrefix);
           copiedContent = new URLContent(new URL("jar:" + copiedContent.getURL() + "!/" + urlContent.getJAREntryName()));
         } catch (MalformedURLException ex) {
           // Shouldn't happen
           throw new RecorderException("Can't build URL", ex);
         }
       } else {
-        copiedContent = copyToPreferencesURLContent(urlContent, contentPrefix);
+        copiedContent = copyToApplicationURLContent(urlContent, contentPrefix);
       }
       putContent(preferences, key, copiedContent, contentPrefix, furnitureContentURLs);
     } else if (content instanceof URLContent) {
       URLContent urlContent = (URLContent)content;
-      try {
-        preferences.put(key, urlContent.getURL().toString()
-            .replace(getPreferencesFolder().toURI().toURL().toString(), "file:"));
-      } catch (IOException ex) {
-        throw new RecorderException("Can't save content", ex);
-      }
+      preferences.put(key, urlContent.getURL().toString());
       // Add to furnitureContentURLs the URL to the application file
       if (urlContent.isJAREntry()) {
         furnitureContentURLs.add(urlContent.getJAREntryURL());
@@ -822,29 +543,29 @@ public class FileUserPreferences extends UserPreferences {
         furnitureContentURLs.add(urlContent.getURL());
       }
     } else {
-      putContent(preferences, key, copyToPreferencesURLContent(content, contentPrefix), 
+      putContent(preferences, key, copyToApplicationURLContent(content, contentPrefix), 
           contentPrefix, furnitureContentURLs);
     }
   }
 
   /**
    * Returns a content object that references a copy of <code>content</code> in 
-   * user preferences folder.
+   * user application folder.
    */
-  private URLContent copyToPreferencesURLContent(Content content, 
+  private URLContent copyToApplicationURLContent(Content content, 
                                                  String contentPrefix) throws RecorderException {
     InputStream tempIn = null;
     OutputStream tempOut = null;
     try {
-      File preferencesFile = createPreferencesFile(contentPrefix);
+      File applicationFile = createApplicationFile(contentPrefix);
       tempIn = content.openStream();
-      tempOut = new FileOutputStream(preferencesFile);
-      byte [] buffer = new byte [8192];
+      tempOut = new FileOutputStream(applicationFile);
+      byte [] buffer = new byte [8096];
       int size; 
       while ((size = tempIn.read(buffer)) != -1) {
         tempOut.write(buffer, 0, size);
       }
-      return new URLContent(preferencesFile.toURI().toURL());
+      return new URLContent(applicationFile.toURI().toURL());
     } catch (IOException ex) {
       throw new RecorderException("Can't save content", ex);
     } finally {
@@ -862,109 +583,50 @@ public class FileUserPreferences extends UserPreferences {
   }
 
   /**
-   * Returns the folder where language libraries files must be placed 
+   * Returns a new file in user application folder.
+   */
+  private File createApplicationFile(String filePrefix) throws IOException {
+    File applicationFolder = getApplicationFolder();
+    // Create application folder if it doesn't exist
+    if (!applicationFolder.exists()
+        && !applicationFolder.mkdirs()) {
+      throw new IOException("Couldn't create " + applicationFolder);
+    }
+    // Return a new file in application folder
+    return File.createTempFile(filePrefix, ".pref", applicationFolder);
+  }
+
+  /**
+   * Returns the folder where plugin furniture libraries files must be placed 
    * or <code>null</code> if that folder can't be retrieved.
    */
-  private File [] getLanguageLibrariesPluginFolders() {
+  private File getPluginFurnitureLibrariesFolder() {
     try {
-      return getApplicationSubfolders(LANGUAGE_LIBRARIES_PLUGIN_SUB_FOLDER);
+      return new File(getApplicationFolder(), PLUGIN_FURNITURE_LIBRARIES_SUB_FOLDER);
     } catch (IOException ex) {
       return null;
     }
   }
 
   /**
-   * Returns the folder where furniture catalog files must be placed 
-   * or <code>null</code> if that folder can't be retrieved.
-   */
-  private File [] getFurnitureLibrariesPluginFolders() {
-    try {
-      return getApplicationSubfolders(FURNITURE_LIBRARIES_PLUGIN_SUB_FOLDER);
-    } catch (IOException ex) {
-      return null;
-    }
-  }
-
-  /**
-   * Returns the folder where texture catalog files must be placed 
-   * or <code>null</code> if that folder can't be retrieved.
-   */
-  private File [] getTexturesLibrariesPluginFolders() {
-    try {
-      return getApplicationSubfolders(TEXTURES_LIBRARIES_PLUGIN_SUB_FOLDER);
-    } catch (IOException ex) {
-      return null;
-    }
-  }
-
-  /**
-   * Returns the first Sweet Home 3D application folder. 
+   * Returns Sweet Home 3D application folder. 
    */
   public File getApplicationFolder() throws IOException {
-    File [] applicationFolders = getApplicationFolders();
-    if (applicationFolders.length == 0) {
-      throw new IOException("No application folder defined");
-    } else {
-      return applicationFolders [0];
-    }
-  }
-
-  /**
-   * Returns Sweet Home 3D application folders. 
-   */
-  public File [] getApplicationFolders() throws IOException {
-    if (this.applicationFolders != null) {
-      return this.applicationFolders;
+    File userApplicationFolder; 
+    if (OperatingSystem.isMacOSX()) {
+      userApplicationFolder = new File(MacOSXFileManager.getApplicationSupportFolder());
+    } else if (OperatingSystem.isWindows()) {
+      userApplicationFolder = new File(System.getProperty("user.home"), "Application Data");
+      // If user Application Data directory doesn't exist, use user home
+      if (!userApplicationFolder.exists()) {
+        userApplicationFolder = new File(System.getProperty("user.home"));
+      }
     } else { 
-      return new File [] {OperatingSystem.getDefaultApplicationFolder()};
+      // Unix
+      userApplicationFolder = new File(System.getProperty("user.home"));
     }
-  }
-
-  /**
-   * Returns subfolders of Sweet Home 3D application folders of a given name. 
-   */
-  public File [] getApplicationSubfolders(String subfolder) throws IOException {
-    File [] applicationFolders = getApplicationFolders();
-    File [] applicationSubfolders = new File [applicationFolders.length];
-    for (int i = 0; i < applicationFolders.length; i++) {
-      applicationSubfolders [i] = new File(applicationFolders [i], subfolder);
-    }
-    return applicationSubfolders;
-  }
-
-  /**
-   * Returns a new file in user preferences folder.
-   */
-  private File createPreferencesFile(String filePrefix) throws IOException {
-    checkPreferencesFolder();
-    // Return a new file in preferences folder
-    return File.createTempFile(filePrefix, ".pref", getPreferencesFolder());
-  }
-  
-  /**
-   * Creates preferences folder and its sub folders if it doesn't exist.
-   */
-  private void checkPreferencesFolder() throws IOException {
-    File preferencesFolder = getPreferencesFolder();
-    // Create preferences folder if it doesn't exist
-    if (!preferencesFolder.exists()
-        && !preferencesFolder.mkdirs()) {
-      throw new IOException("Couldn't create " + preferencesFolder);
-    }
-    checkPreferencesSubFolder(getLanguageLibrariesPluginFolders());
-    checkPreferencesSubFolder(getFurnitureLibrariesPluginFolders());
-    checkPreferencesSubFolder(getTexturesLibrariesPluginFolders());
-  }
-
-  /**
-   * Creates the first folder in the given folders.
-   */
-  private void checkPreferencesSubFolder(File [] librariesPluginFolders) {
-    if (librariesPluginFolders != null
-        && librariesPluginFolders.length > 0
-        && !librariesPluginFolders [0].exists()) {
-      librariesPluginFolders [0].mkdirs();
-    }
+    return new File(userApplicationFolder, 
+        EDITOR_SUB_FOLDER + File.separator + APPLICATION_SUB_FOLDER);
   }
 
   /**
@@ -976,7 +638,7 @@ public class FileUserPreferences extends UserPreferences {
     // Search obsolete contents
     File applicationFolder;
     try {
-      applicationFolder = getPreferencesFolder();
+      applicationFolder = getApplicationFolder();
     } catch (IOException ex) {
       throw new RecorderException("Can't access to application folder");
     }
@@ -993,36 +655,34 @@ public class FileUserPreferences extends UserPreferences {
           }
         });
     if (obsoleteContentFiles != null) {
-      // Delete obsolete contents at program exit to ensure removed contents 
-      // can still be saved in homes that reference them
+      // Remove obsolete contents
       for (File file : obsoleteContentFiles) {
-        file.deleteOnExit();
+        if (!file.delete()) {
+          throw new RecorderException("Couldn't delete file " + file);
+        }
       }
     }
   }
   
   /**
-   * Returns the folder where files depending on preferences are stored. 
+   * File manager class that accesses to Mac OS X specifics.
+   * Do not invoke methods of this class without checking first if 
+   * <code>os.name</code> System property is <code>Mac OS X</code>.
+   * This class requires some classes of <code>com.apple.eio</code> package  
+   * to compile.
    */
-  private File getPreferencesFolder() throws IOException {
-    if (this.preferencesFolder != null) {
-      return this.preferencesFolder;
-    } else {
-      return OperatingSystem.getDefaultApplicationFolder();
+  private static class MacOSXFileManager {
+    public static String getApplicationSupportFolder() throws IOException {
+      // Find application support folder (0x61737570) for user domain (-32763)
+      return FileManager.findFolder((short)-32763, 0x61737570);
     }
   }
-
+  
   /**
-   * Returns default Java preferences for current system user.
-   * Caution : This method is called once in constructor so overriding implementations
-   * shouldn't be based on the state of their fields.
+   * Returns Java preferences for current system user.
    */
   protected Preferences getPreferences() {
-    if (this.preferences != null) {
-      return this.preferences;
-    } else {
-      return Preferences.userNodeForPackage(FileUserPreferences.class);
-    }
+    return Preferences.userNodeForPackage(FileUserPreferences.class);
   }
 
   /**
@@ -1055,256 +715,60 @@ public class FileUserPreferences extends UserPreferences {
     }
     super.resetIgnoredActionTips();
   }
-  
-  /**
-   * Returns <code>true</code> if the given language library exists in the first 
-   * language libraries folder.
-   */
-  public boolean languageLibraryExists(String name) throws RecorderException {
-    File [] languageLibrariesPluginFolders = getLanguageLibrariesPluginFolders();
-    if (languageLibrariesPluginFolders == null
-        || languageLibrariesPluginFolders.length == 0) {
-      throw new RecorderException("Can't access to language libraries plugin folder");
-    } else {
-      String libraryFileName = new File(name).getName();
-      return new File(languageLibrariesPluginFolders [0], libraryFileName).exists();
-    }
-  }
-  
-  /**
-   * Adds <code>languageLibraryName</code> to the first language libraries folder
-   * to make the language library it contains available to supported languages.
-   */
-  public void addLanguageLibrary(String languageLibraryName) throws RecorderException {
-    try {
-      File [] languageLibrariesPluginFolders = getLanguageLibrariesPluginFolders();
-      if (languageLibrariesPluginFolders == null
-          || languageLibrariesPluginFolders.length == 0) {
-        throw new RecorderException("Can't access to language libraries plugin folder");
-      }
-      File languageLibraryFile = new File(languageLibraryName);
-      copyToLibraryFolder(languageLibraryFile, languageLibrariesPluginFolders [0]);
-      updateSupportedLanguages();
-    } catch (IOException ex) {
-      throw new RecorderException(
-          "Can't write " + languageLibraryName +  " in language libraries plugin folder", ex);
-    }
-  }
 
   /**
-   * Returns <code>true</code> if the given furniture library file exists in the first 
-   * furniture libraries folder.
+   * Returns <code>true</code> if the given furniture library file exists in plugin directory.
    * @param name the name of the resource to check
    */
   @Override
   public boolean furnitureLibraryExists(String name) throws RecorderException {
-    File [] furnitureLibrariesPluginFolders = getFurnitureLibrariesPluginFolders();
-    if (furnitureLibrariesPluginFolders == null
-        || furnitureLibrariesPluginFolders.length == 0) {
+    File furnitureLibrariesPluginFolder = getPluginFurnitureLibrariesFolder();
+    if (furnitureLibrariesPluginFolder == null) {
       throw new RecorderException("Can't access to furniture libraries plugin folder");
     } else {
       String libraryFileName = new File(name).getName();
-      return new File(furnitureLibrariesPluginFolders [0], libraryFileName).exists();
+      return new File(furnitureLibrariesPluginFolder, libraryFileName).exists();
     }
   }
 
   /**
-   * Adds the file <code>furnitureLibraryName</code> to the first furniture libraries folder 
+   * Adds the file <code>furnitureLibraryName</code> to plugin furniture libraries folder 
    * to make the furniture library available to catalog.
    */
   @Override
   public void addFurnitureLibrary(String furnitureLibraryName) throws RecorderException {
     try {
-      File [] furnitureLibrariesPluginFolders = getFurnitureLibrariesPluginFolders();
-      if (furnitureLibrariesPluginFolders == null
-          || furnitureLibrariesPluginFolders.length == 0) {
+      File furnitureLibrariesPluginFolder = getPluginFurnitureLibrariesFolder();
+      if (furnitureLibrariesPluginFolder == null) {
         throw new RecorderException("Can't access to furniture libraries plugin folder");
       }
-      copyToLibraryFolder(new File(furnitureLibraryName), furnitureLibrariesPluginFolders [0]);
-      updateFurnitureDefaultCatalog(this.catalogsLoader, this.updater);
+      String libraryFileName = new File(furnitureLibraryName).getName();
+      File destinationFile = new File(furnitureLibrariesPluginFolder, libraryFileName);
+
+      // Copy furnitureCatalogFile to furniture plugin folder
+      InputStream tempIn = null;
+      OutputStream tempOut = null;
+      try {
+        tempIn = new BufferedInputStream(new FileInputStream(furnitureLibraryName));
+        furnitureLibrariesPluginFolder.mkdirs();
+        tempOut = new FileOutputStream(destinationFile);          
+        byte [] buffer = new byte [8096];
+        int size; 
+        while ((size = tempIn.read(buffer)) != -1) {
+          tempOut.write(buffer, 0, size);
+        }
+      } finally {
+        if (tempIn != null) {
+          tempIn.close();
+        }
+        if (tempOut != null) {
+          tempOut.close();
+        }
+      }
+      updateDefaultCatalogs();
     } catch (IOException ex) {
       throw new RecorderException(
           "Can't write " + furnitureLibraryName +  " in furniture libraries plugin folder", ex);
-    }
-  }
-
-  /**
-   * Returns <code>true</code> if the given textures library file exists in the first textures libraries folder.
-   * @param name the name of the resource to check
-   */
-  @Override
-  public boolean texturesLibraryExists(String name) throws RecorderException {
-    File [] texturesLibrariesPluginFolders = getTexturesLibrariesPluginFolders();
-    if (texturesLibrariesPluginFolders == null
-        || texturesLibrariesPluginFolders.length == 0) {
-      throw new RecorderException("Can't access to textures libraries plugin folder");
-    } else {
-      String libraryFileName = new File(name).getName();
-      return new File(texturesLibrariesPluginFolders [0], libraryFileName).exists();
-    }
-  }
-
-  /**
-   * Adds the file <code>texturesLibraryName</code> to the first textures libraries folder 
-   * to make the textures library available to catalog.
-   */
-  @Override
-  public void addTexturesLibrary(String texturesLibraryName) throws RecorderException {
-    try {
-      File [] texturesLibrariesPluginFolders = getTexturesLibrariesPluginFolders();
-      if (texturesLibrariesPluginFolders == null
-          || texturesLibrariesPluginFolders.length == 0) {
-        throw new RecorderException("Can't access to textures libraries plugin folder");
-      }
-      copyToLibraryFolder(new File(texturesLibraryName), texturesLibrariesPluginFolders [0]);
-      updateTexturesDefaultCatalog(this.catalogsLoader, this.updater);
-    } catch (IOException ex) {
-      throw new RecorderException(
-          "Can't write " + texturesLibraryName +  " in textures libraries plugin folder", ex);
-    }
-  }
-
-  /**
-   * Copies a library file to a folder.
-   */
-  private void copyToLibraryFolder(File libraryFile, File folder) throws IOException {
-    String libraryFileName = libraryFile.getName();
-    File destinationFile = new File(folder, libraryFileName);
-    if (destinationFile.exists()) {
-      // Delete file to reinitialize handlers
-      destinationFile.delete();
-    }    
-    InputStream tempIn = null;
-    OutputStream tempOut = null;
-    try {
-      tempIn = new BufferedInputStream(new FileInputStream(libraryFile));
-      // Create folder if it doesn't exist
-      folder.mkdirs();
-      tempOut = new FileOutputStream(destinationFile);          
-      byte [] buffer = new byte [8192];
-      int size; 
-      while ((size = tempIn.read(buffer)) != -1) {
-        tempOut.write(buffer, 0, size);
-      }
-    } finally {
-      if (tempIn != null) {
-        tempIn.close();
-      }
-      if (tempOut != null) {
-        tempOut.close();
-      }
-    }
-  }
-  
-  /**
-   * Preferences based on the <code>preferences.xml</code> file
-   * stored in a preferences folder.  
-   * @author Emmanuel Puybaret
-   */
-  private class PortablePreferences extends AbstractPreferences {
-    private static final String PREFERENCES_FILE = "preferences.xml"; 
-    
-    private Properties  preferencesProperties;
-    private boolean     exist;
-    
-    private PortablePreferences() {
-      super(null, "");
-      this.preferencesProperties = new Properties();
-      this.exist = readPreferences();
-    }
-    
-    public boolean exist() {
-      return this.exist;
-    }
-
-    @Override
-    protected void syncSpi() throws BackingStoreException {
-      this.preferencesProperties.clear();
-      this.exist = readPreferences();
-    }
-
-    @Override
-    protected void removeSpi(String key) {
-      this.preferencesProperties.remove(key);
-    }
-
-    @Override
-    protected void putSpi(String key, String value) {
-      this.preferencesProperties.put(key, value);
-    }
-
-    @Override
-    protected String [] keysSpi() throws BackingStoreException {
-      return this.preferencesProperties.keySet().toArray(new String [0]);
-    }
-
-    @Override
-    protected String getSpi(String key) {
-      return (String)this.preferencesProperties.get(key);
-    }
-
-    @Override
-    protected void flushSpi() throws BackingStoreException {
-      try {
-        writePreferences();
-      } catch (IOException ex) {
-        throw new BackingStoreException(ex);
-      }
-    }
-
-    @Override
-    protected void removeNodeSpi() throws BackingStoreException {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    protected String [] childrenNamesSpi() throws BackingStoreException {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    protected AbstractPreferences childSpi(String name) {
-      throw new UnsupportedOperationException();
-    }
-
-    /**
-     * Reads user preferences.
-     */
-    private boolean readPreferences() {
-      InputStream in = null;
-      try {
-        in = new FileInputStream(new File(getPreferencesFolder(), PREFERENCES_FILE));
-        this.preferencesProperties.loadFromXML(in);
-        return true;
-      } catch (IOException ex) {
-        // Preferences don't exist
-        return false;
-      } finally {
-        try {
-          if (in != null) {
-            in.close();
-          }
-        } catch (IOException ex) {
-          // Let default preferences unchanged
-        }
-      }
-    }
-    
-    /**
-     * Writes user preferences.
-     */
-    private void writePreferences() throws IOException {
-      OutputStream out = null;
-      try {
-        checkPreferencesFolder();
-        out = new FileOutputStream(new File(getPreferencesFolder(), PREFERENCES_FILE));
-        this.preferencesProperties.storeToXML(out, "Portable user preferences 3.0");
-      } finally {
-        if (out != null) {
-          out.close();
-          this.exist = true;
-        }
-      }
     }
   }
 }

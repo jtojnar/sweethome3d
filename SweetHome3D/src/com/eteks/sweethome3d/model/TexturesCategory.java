@@ -1,7 +1,7 @@
 /*
  * TexturesCategory.java 5 oct. 2007
  * 
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -56,14 +56,14 @@ public class TexturesCategory implements Comparable<TexturesCategory> {
    * @return an unmodifiable list of furniture.
    */
   public List<CatalogTexture> getTextures() {
-    checkTexturesSorted();
+    checkFurnitureSorted();
     return Collections.unmodifiableList(this.textures);
   }
 
   /**
    * Checks textures are sorted.
    */
-  private void checkTexturesSorted() {
+  private void checkFurnitureSorted() {
     if (!this.sorted) {
       Collections.sort(this.textures);
       this.sorted = true;
@@ -81,24 +81,21 @@ public class TexturesCategory implements Comparable<TexturesCategory> {
    * Returns the texture at a given <code>index</code>.
    */
   public CatalogTexture getTexture(int index) {
-    checkTexturesSorted();
+    checkFurnitureSorted();
     return this.textures.get(index);
-  }
-
-  /**
-   * Returns the index of the given <code>texture</code>.
-   * @since 3.6
-   */
-  public int getIndexOfTexture(CatalogTexture texture) {
-    checkTexturesSorted();
-    return this.textures.indexOf(texture);
   }
 
   /**
    * Adds a texture to this category.
    * @param texture the texture to add.
+   * @throws IllegalHomonymException if a texture with same name as the one in
+   *           parameter already exists in this category.
    */
   void add(CatalogTexture texture) {
+    if (this.textures.contains(texture)) {
+      throw new IllegalHomonymException(
+          texture.getName() + " already in category " + this.name);
+    }
     texture.setCategory(this);
     this.textures.add(texture);    
     this.sorted = false;

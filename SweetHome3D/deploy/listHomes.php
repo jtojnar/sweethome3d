@@ -2,7 +2,7 @@
   /*
    * listHomes.php 13 Oct 2008
    *
-   * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+   * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
    *
    * This program is free software; you can redistribute it and/or modify
    * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
    
   // Returns the list of available homes without their extension 
   // in homes directory 
-  $homesDir = ".";
+  $homesDir = "../persistent/homes";
   $handler = opendir($homesDir);
   
   while ($file = readdir($handler)) {

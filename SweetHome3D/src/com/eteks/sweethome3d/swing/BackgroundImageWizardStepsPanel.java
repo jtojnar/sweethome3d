@@ -1,7 +1,7 @@
 /*
  * BackgroundImageWizardStepsPanel.java 8 juin 07
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,6 +56,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -63,7 +64,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
 import javax.swing.TransferHandler;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
@@ -145,7 +145,7 @@ public class BackgroundImageWizardStepsPanel extends JPanel implements View {
         }
       });
     this.imageChoiceErrorLabel = new JLabel(preferences.getLocalizedString(
-        BackgroundImageWizardStepsPanel.class, "imageChoiceErrorLabel.text"));
+        BackgroundImageWizardStepsPanel.class, "imageChoiceErrolLabel.text"));
     // Make imageChoiceErrorLabel visible only if an error occurred during image content loading
     this.imageChoiceErrorLabel.setVisible(false);
     this.imageChoicePreviewComponent = new ScaledImageComponent();
@@ -161,38 +161,28 @@ public class BackgroundImageWizardStepsPanel extends JPanel implements View {
           boolean success = true;
           try {
             List<File> files = (List<File>)transferedFiles.getTransferData(DataFlavor.javaFileListFlavor);
-            final String imageName = files.get(0).getAbsolutePath();
-            EventQueue.invokeLater(new Runnable() {
-                public void run() {
-                  updateController(imageName, preferences, controller.getContentManager());
-                }
-              });
+            updateController(files.get(0).getAbsolutePath(), preferences, controller.getContentManager());
           } catch (UnsupportedFlavorException ex) {
             success = false;
           } catch (IOException ex) {
             success = false;
           }
           if (!success) {
-            EventQueue.invokeLater(new Runnable() {
-                public void run() {
-                  JOptionPane.showMessageDialog(SwingUtilities.getRootPane(BackgroundImageWizardStepsPanel.this), 
-                      preferences.getLocalizedString(BackgroundImageWizardStepsPanel.class, "imageChoiceError"));
-                }
-              });
+            JOptionPane.showMessageDialog(BackgroundImageWizardStepsPanel.this, 
+                preferences.getLocalizedString(BackgroundImageWizardStepsPanel.class, "imageChoiceError"));
           }
           return success;
         }
       });
-    this.imageChoicePreviewComponent.setBorder(SwingTools.getDropableComponentBorder());
+    this.imageChoicePreviewComponent.setBorder(BorderFactory.createLoweredBevelBorder());
     
     // Image scale panel components
     this.scaleLabel = new JLabel(preferences.getLocalizedString(
         BackgroundImageWizardStepsPanel.class, "scaleLabel.text"));
     this.scaleDistanceLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences,
         BackgroundImageWizardStepsPanel.class, "scaleDistanceLabel.text", unitName));
-    final float maximumLength = preferences.getLengthUnit().getMaximumLength();
     final NullableSpinner.NullableSpinnerLengthModel scaleDistanceSpinnerModel = 
-        new NullableSpinner.NullableSpinnerLengthModel(preferences, preferences.getLengthUnit().getMinimumLength(), maximumLength);
+        new NullableSpinner.NullableSpinnerLengthModel(preferences, 0.99f, 1000000f);
     this.scaleDistanceSpinner = new NullableSpinner(scaleDistanceSpinnerModel);
     this.scaleDistanceSpinner.getModel().addChangeListener(new ChangeListener () {
         public void stateChanged(ChangeEvent ev) {
@@ -219,10 +209,10 @@ public class BackgroundImageWizardStepsPanel extends JPanel implements View {
     this.yOriginLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences,
             BackgroundImageWizardStepsPanel.class, "yOriginLabel.text", unitName)); 
     final NullableSpinner.NullableSpinnerLengthModel xOriginSpinnerModel = 
-        new NullableSpinner.NullableSpinnerLengthModel(preferences, 0f, maximumLength);
+        new NullableSpinner.NullableSpinnerLengthModel(preferences, 0f, 1000000f);
     this.xOriginSpinner = new NullableSpinner(xOriginSpinnerModel);
     final NullableSpinner.NullableSpinnerLengthModel yOriginSpinnerModel = 
-        new NullableSpinner.NullableSpinnerLengthModel(preferences, 0f, maximumLength);
+        new NullableSpinner.NullableSpinnerLengthModel(preferences, 0f, 1000000f);
     this.yOriginSpinner = new NullableSpinner(yOriginSpinnerModel);
     ChangeListener originSpinnersListener = new ChangeListener () {
         public void stateChanged(ChangeEvent ev) {
@@ -420,7 +410,7 @@ public class BackgroundImageWizardStepsPanel extends JPanel implements View {
           if (imageContent == null) {
             EventQueue.invokeLater(new Runnable() {
                 public void run() {
-                  JOptionPane.showMessageDialog(SwingUtilities.getRootPane(BackgroundImageWizardStepsPanel.this), 
+                  JOptionPane.showMessageDialog(BackgroundImageWizardStepsPanel.this, 
                       preferences.getLocalizedString(BackgroundImageWizardStepsPanel.class, 
                           "imageChoiceError", imageName));
                 }
@@ -455,7 +445,7 @@ public class BackgroundImageWizardStepsPanel extends JPanel implements View {
                 } else if (isShowing()){
                   controller.setImage(null);
                   setImageChoiceTexts(preferences);
-                  JOptionPane.showMessageDialog(SwingUtilities.getRootPane(BackgroundImageWizardStepsPanel.this), 
+                  JOptionPane.showMessageDialog(BackgroundImageWizardStepsPanel.this, 
                       preferences.getLocalizedString(BackgroundImageWizardStepsPanel.class, 
                           "imageChoiceFormatError"));
                 }
@@ -543,22 +533,6 @@ public class BackgroundImageWizardStepsPanel extends JPanel implements View {
                                        ContentManager contentManager) {
     return contentManager.showOpenDialog(this,preferences.getLocalizedString(
        BackgroundImageWizardStepsPanel.class, "imageChoiceDialog.title"), ContentManager.ContentType.IMAGE);
-  }
-
-  /**
-   * Returns the selection color used in preview components.
-   */
-  private static Color getSelectionColor() {
-    Color selectionColor = OperatingSystem.isMacOSXLeopardOrSuperior() 
-        ? UIManager.getColor("List.selectionBackground") 
-        : UIManager.getColor("textHighlight");
-    float [] hsb = new float [3];
-    Color.RGBtoHSB(selectionColor.getRed(), selectionColor.getGreen(), selectionColor.getBlue(), hsb);
-    if (hsb [1] < 0.4f) {
-      // If color is too gray, return a default blue color
-      selectionColor = new Color(40, 89, 208);
-    }
-    return selectionColor;
   }
 
   /**
@@ -689,7 +663,11 @@ public class BackgroundImageWizardStepsPanel extends JPanel implements View {
         // Paint image with a 0.5 alpha
         paintImage(g2D, AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));        
 
-        g2D.setPaint(getSelectionColor());
+        Color scaleDistanceLineColor = OperatingSystem.isMacOSXLeopardOrSuperior() 
+            ? UIManager.getColor("List.selectionBackground") 
+            : UIManager.getColor("textHighlight");
+     
+        g2D.setPaint(scaleDistanceLineColor);
         
         AffineTransform oldTransform = g2D.getTransform();
         Stroke oldStroke = g2D.getStroke();
@@ -807,7 +785,10 @@ public class BackgroundImageWizardStepsPanel extends JPanel implements View {
         // Paint image with a 0.5 alpha 
         paintImage(g, AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));        
         
-        g2D.setPaint(getSelectionColor());
+        Color scaleDistanceLineColor = OperatingSystem.isMacOSXLeopardOrSuperior() 
+            ? UIManager.getColor("List.selectionBackground") 
+            : UIManager.getColor("textHighlight");;
+        g2D.setPaint(scaleDistanceLineColor);
         
         AffineTransform oldTransform = g2D.getTransform();
         Stroke oldStroke = g2D.getStroke();

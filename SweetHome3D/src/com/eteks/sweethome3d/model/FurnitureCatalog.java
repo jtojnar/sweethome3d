@@ -1,8 +1,9 @@
 /*
  * FurnitureCatalog.java 7 avr. 2006
  * 
- * Sweet Home 3D, Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>
- *  
+ * Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights
+ * Reserved.
+ * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation; either version 2 of the License, or (at your option) any later
@@ -27,7 +28,7 @@ import java.util.List;
  * Furniture catalog.
  * @author Emmanuel Puybaret
  */
-public class FurnitureCatalog {
+public abstract class FurnitureCatalog {
   private List<FurnitureCategory>       categories = new ArrayList<FurnitureCategory>();
   private boolean                       sorted;
   private final CollectionChangeSupport<CatalogPieceOfFurniture> furnitureChangeSupport = 
@@ -115,9 +116,9 @@ public class FurnitureCatalog {
     }    
     // Add current piece of furniture to category list
     category.add(piece);
-
+    
     this.furnitureChangeSupport.fireCollectionChanged(piece, 
-        category.getIndexOfPieceOfFurniture(piece), CollectionEvent.Type.ADD);
+        Collections.binarySearch(category.getFurniture(), piece), CollectionEvent.Type.ADD);
   }
 
   /**
@@ -132,7 +133,7 @@ public class FurnitureCatalog {
     FurnitureCategory category = piece.getCategory();
     // Remove piece from its category
     if (category != null) {
-      int pieceIndex = category.getIndexOfPieceOfFurniture(piece);
+      int pieceIndex = Collections.binarySearch(category.getFurniture(), piece);
       if (pieceIndex >= 0) {
         category.delete(piece);
         

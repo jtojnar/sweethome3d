@@ -1,7 +1,7 @@
 /*
  * HomeController3D.java 21 juin 07
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,8 +24,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.undo.UndoableEditSupport;
@@ -33,11 +31,8 @@ import javax.swing.undo.UndoableEditSupport;
 import com.eteks.sweethome3d.model.Camera;
 import com.eteks.sweethome3d.model.CollectionEvent;
 import com.eteks.sweethome3d.model.CollectionListener;
-import com.eteks.sweethome3d.model.Elevatable;
 import com.eteks.sweethome3d.model.Home;
-import com.eteks.sweethome3d.model.HomeEnvironment;
 import com.eteks.sweethome3d.model.HomePieceOfFurniture;
-import com.eteks.sweethome3d.model.Level;
 import com.eteks.sweethome3d.model.ObserverCamera;
 import com.eteks.sweethome3d.model.Room;
 import com.eteks.sweethome3d.model.Selectable;
@@ -65,7 +60,7 @@ public class HomeController3D implements Controller {
    * Creates the controller of home 3D view.
    * @param home the home edited by this controller and its view
    */
-  public HomeController3D(final Home home, 
+  public HomeController3D(Home home, 
                           UserPreferences preferences,
                           ViewFactory viewFactory, 
                           ContentManager contentManager, 
@@ -82,76 +77,6 @@ public class HomeController3D implements Controller {
     setCameraState(home.getCamera() == home.getTopCamera() 
         ? this.topCameraState
         : this.observerCameraState);
-    addModelListeners(home);
-  }
-
-  /**
-   * Add listeners to model to update camera position accordingly.
-   */
-  private void addModelListeners(final Home home) {
-    home.addPropertyChangeListener(Home.Property.CAMERA, new PropertyChangeListener() {      
-        public void propertyChange(PropertyChangeEvent ev) {
-          setCameraState(home.getCamera() == home.getTopCamera() 
-              ? topCameraState
-              : observerCameraState);
-        }
-      });
-    // Add listeners to adjust observer camera elevation when the elevation of the selected level  
-    // or the level selection change
-    final PropertyChangeListener levelElevationChangeListener = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent ev) {
-          if (Level.Property.ELEVATION.name().equals(ev.getPropertyName()) 
-              && home.getEnvironment().isObserverCameraElevationAdjusted()) {
-            home.getObserverCamera().setZ(Math.max(getObserverCameraMinimumElevation(home), 
-                home.getObserverCamera().getZ() + (Float)ev.getNewValue() - (Float)ev.getOldValue()));
-          }
-        }
-      };
-    Level selectedLevel = home.getSelectedLevel();
-    if (selectedLevel != null) {
-      selectedLevel.addPropertyChangeListener(levelElevationChangeListener);
-    }
-    this.home.addPropertyChangeListener(Home.Property.SELECTED_LEVEL, new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent ev) {
-          Level oldSelectedLevel = (Level)ev.getOldValue();
-          Level selectedLevel = home.getSelectedLevel();
-          if (home.getEnvironment().isObserverCameraElevationAdjusted()) {
-            home.getObserverCamera().setZ(Math.max(getObserverCameraMinimumElevation(home), 
-                home.getObserverCamera().getZ() 
-                + (selectedLevel == null ? 0 : selectedLevel.getElevation()) 
-                - (oldSelectedLevel == null ? 0 : oldSelectedLevel.getElevation())));
-          }
-          if (oldSelectedLevel != null) {
-            oldSelectedLevel.removePropertyChangeListener(levelElevationChangeListener);
-          }
-          if (selectedLevel != null) {
-            selectedLevel.addPropertyChangeListener(levelElevationChangeListener);
-          }
-        }
-      });     
-    // Add a listener to home to update visible levels according to selected level
-    PropertyChangeListener selectedLevelListener = new PropertyChangeListener() {
-         public void propertyChange(PropertyChangeEvent ev) {
-           List<Level> levels = home.getLevels();
-           Level selectedLevel = home.getSelectedLevel();
-           boolean visible = true;
-           for (int i = 0; i < levels.size(); i++) {
-             levels.get(i).setVisible(visible);
-             if (levels.get(i) == selectedLevel
-                 && !home.getEnvironment().isAllLevelsVisible()) {
-               visible = false;
-             }
-           }
-         }
-       };
-     this.home.addPropertyChangeListener(Home.Property.SELECTED_LEVEL, selectedLevelListener);     
-     this.home.getEnvironment().addPropertyChangeListener(HomeEnvironment.Property.ALL_LEVELS_VISIBLE, selectedLevelListener);
-  }
-
-  private float getObserverCameraMinimumElevation(final Home home) {
-    List<Level> levels = home.getLevels();
-    float minimumElevation = levels.size() == 0  ? 10  : 10 + levels.get(0).getElevation();
-    return minimumElevation;
   }
 
   /**
@@ -170,6 +95,7 @@ public class HomeController3D implements Controller {
    */
   public void viewFromTop() {
     this.home.setCamera(this.home.getTopCamera());
+    setCameraState(getTopCameraState());              
   }
   
   /**
@@ -177,69 +103,7 @@ public class HomeController3D implements Controller {
    */
   public void viewFromObserver() {
     this.home.setCamera(this.home.getObserverCamera());
-  }
-  
-  /**
-   * Stores a clone of the current camera in home under the given <code>name</code>.
-   */
-  public void storeCamera(String name) {
-    Camera camera = this.home.getCamera().clone();
-    camera.setName(name);
-    List<Camera> homeStoredCameras = this.home.getStoredCameras();
-    ArrayList<Camera> storedCameras = new ArrayList<Camera>(homeStoredCameras.size() + 1);
-    storedCameras.addAll(homeStoredCameras);
-    // Don't keep two cameras with the same name or the same location
-    for (Iterator<Camera> it = storedCameras.iterator(); it.hasNext(); ) {
-      Camera storedCamera = it.next();
-      if (name.equals(storedCamera.getName())
-          || (camera.getX() == storedCamera.getX()
-              && camera.getY() == storedCamera.getY()
-              && camera.getZ() == storedCamera.getZ()
-              && camera.getPitch() == storedCamera.getPitch()
-              && camera.getYaw() == storedCamera.getYaw()
-              && camera.getFieldOfView() == storedCamera.getFieldOfView()
-              && camera.getTime() == storedCamera.getTime()
-              && camera.getLens() == storedCamera.getLens())) {
-        it.remove();
-      }
-    }
-    storedCameras.add(0, camera);
-    // Ensure home stored cameras don't contain more than 20 cameras
-    while (storedCameras.size() > 20) {
-      storedCameras.remove(storedCameras.size() - 1);
-    }
-    this.home.setStoredCameras(storedCameras);
-  }
-  
-  /**
-   * Switches to observer or top camera and move camera to the values as the current camera.
-   */
-  public void goToCamera(Camera camera) {
-    if (camera instanceof ObserverCamera) {
-      viewFromObserver();
-    } else {
-      viewFromTop();
-    }
-    this.cameraState.goToCamera(camera);
-    // Reorder cameras
-    ArrayList<Camera> storedCameras = new ArrayList<Camera>(this.home.getStoredCameras());
-    storedCameras.remove(camera);
-    storedCameras.add(0, camera);
-    this.home.setStoredCameras(storedCameras);
-  }
-  
-  /**
-   * Makes all levels visible.
-   */
-  public void displayAllLevels() {
-    this.home.getEnvironment().setAllLevelsVisible(true);
-  }
-  
-  /**
-   * Makes the selected level and below visible.
-   */
-  public void displaySelectedLevel() {
-    this.home.getEnvironment().setAllLevelsVisible(false);
+    setCameraState(getObserverCameraState());
   }
   
   /**
@@ -266,13 +130,6 @@ public class HomeController3D implements Controller {
    */
   public void moveCamera(float delta) {
     this.cameraState.moveCamera(delta);
-  }
-
-  /**
-   * Elevates home camera of <code>delta</code>.
-   */
-  public void elevateCamera(float delta) {
-    this.cameraState.elevateCamera(delta);
   }
 
   /**
@@ -316,16 +173,10 @@ public class HomeController3D implements Controller {
     public void moveCamera(float delta) {
     }
 
-    public void elevateCamera(float delta) {     
-    }
-    
     public void rotateCameraYaw(float delta) {
     }
 
     public void rotateCameraPitch(float delta) {
-    }
-
-    public void goToCamera(Camera camera) {
     }
   }
   
@@ -335,34 +186,16 @@ public class HomeController3D implements Controller {
    * Top camera controller state. 
    */
   private class TopCameraState extends CameraControllerState {
-    private final Rectangle2D MIN_BOUNDS = new Rectangle2D.Float(0, 0, 1000, 1000);
+    private final float MIN_SIZE = 1000;
     
-    private Camera      topCamera;
+    private Camera topCamera;
     private Rectangle2D homeBounds;
-    private float       minDistanceToHomeCenter;
-    private PropertyChangeListener levelVisibilityChangeListener = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent ev) {
-          if (Level.Property.VISIBLE.name().equals(ev.getPropertyName())) {
-            updateCameraFromHomeBounds();
-          }
-        }
-      };
-    private CollectionListener<Level> levelsListener = new CollectionListener<Level>() {
-        public void collectionChanged(CollectionEvent<Level> ev) {
-          if (ev.getType() == CollectionEvent.Type.ADD) {
-            ev.getItem().addPropertyChangeListener(levelVisibilityChangeListener);
-          } else if (ev.getType() == CollectionEvent.Type.DELETE) {
-            ev.getItem().removePropertyChangeListener(levelVisibilityChangeListener);
-          } 
-          updateCameraFromHomeBounds();
-        }
-      };
     private PropertyChangeListener objectChangeListener = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent ev) {
+        public void propertyChange(PropertyChangeEvent evt) {
           updateCameraFromHomeBounds();
         }
       };
-    private CollectionListener<Wall> wallsListener = new CollectionListener<Wall>() {
+    private CollectionListener<Wall> wallListener = new CollectionListener<Wall>() {
         public void collectionChanged(CollectionEvent<Wall> ev) {
           if (ev.getType() == CollectionEvent.Type.ADD) {
             ev.getItem().addPropertyChangeListener(objectChangeListener);
@@ -393,18 +226,18 @@ public class HomeController3D implements Controller {
         }
       };
 
+    public TopCameraState() {
+      this.homeBounds = getHomeBounds();
+    }
+      
     @Override
     public void enter() {
       this.topCamera = home.getCamera();
       updateCameraFromHomeBounds();
-      for (Level level : home.getLevels()) {
-        level.addPropertyChangeListener(this.levelVisibilityChangeListener);
-      }
-      home.addLevelsListener(this.levelsListener);
       for (Wall wall : home.getWalls()) {
         wall.addPropertyChangeListener(this.objectChangeListener);
       }
-      home.addWallsListener(this.wallsListener);
+      home.addWallsListener(this.wallListener);
       for (HomePieceOfFurniture piece : home.getFurniture()) {
         piece.addPropertyChangeListener(this.objectChangeListener);
       }
@@ -419,75 +252,52 @@ public class HomeController3D implements Controller {
      * Updates camera location from home bounds.
      */
     private void updateCameraFromHomeBounds() {
-      if (this.homeBounds == null) {
-        this.homeBounds = getHomeBounds();
-      }
-      float distanceToCenter = (float)Math.sqrt(Math.pow(this.homeBounds.getCenterX() - this.topCamera.getX(), 2) 
-          + Math.pow(this.homeBounds.getCenterY() - this.topCamera.getY(), 2) 
-          + Math.pow(this.topCamera.getZ(), 2));
-      this.homeBounds = getHomeBounds();
-      this.minDistanceToHomeCenter = getMinDistanceToHomeCenter(this.homeBounds);
-      placeCameraAt(distanceToCenter);
+      Rectangle2D newHomeBounds = getHomeBounds();
+      float deltaZ = (float)(Math.max(this.homeBounds.getWidth(), this.homeBounds.getHeight())  
+          - Math.max(newHomeBounds.getWidth(), newHomeBounds.getHeight()));
+      this.homeBounds = newHomeBounds;
+      moveCamera(deltaZ);
     }
 
     /**
-     * Returns home bounds that includes walls, furniture and rooms.
+     * Returns home bounds that includes walls and furniture.
      */
     private Rectangle2D getHomeBounds() {
       // Compute plan bounds to include rooms, walls and furniture
       Rectangle2D homeBounds = null;
-      boolean containsVisibleWalls = false;
       for (Wall wall : home.getWalls()) {
-        if (isItemAtAVisibleLevel(wall)) {
-          containsVisibleWalls = true;
-          for (float [] point : wall.getPoints()) {
-            homeBounds = updateHomeBounds(homeBounds, point [0], point [1]);
-          }
-        }
+        homeBounds = updateHomeBounds(homeBounds, wall.getXStart(), wall.getYStart());
+        homeBounds.add(wall.getXEnd(), wall.getYEnd());
       }
       for (HomePieceOfFurniture piece : home.getFurniture()) {
-        if (piece.isVisible() && isItemAtAVisibleLevel(piece)) {
+        if (piece.isVisible()) {
           for (float [] point : piece.getPoints()) {
             homeBounds = updateHomeBounds(homeBounds, point [0], point [1]);
           }
         }
       }
       for (Room room : home.getRooms()) {
-        if (isItemAtAVisibleLevel(room)) {
-          for (float [] point : room.getPoints()) {
-            homeBounds = updateHomeBounds(homeBounds, point [0], point [1]);
-          }
+        for (float [] point : room.getPoints()) {
+          homeBounds = updateHomeBounds(homeBounds, point [0], point [1]);
         }
       }
 
       if (homeBounds != null) {
-        if (!containsVisibleWalls) {
-          // If home contains only rooms and furniture don't fix minimum size
-          return homeBounds;
-        } else {
-          // Ensure plan bounds are always minimum 10 meters wide centered in middle of 3D view
-          return new Rectangle2D.Float(
-              (float)(MIN_BOUNDS.getWidth() < homeBounds.getWidth() 
-                          ? homeBounds.getMinX()
-                          : homeBounds.getCenterX() - MIN_BOUNDS.getWidth() / 2), 
-              (float)(MIN_BOUNDS.getHeight() < homeBounds.getHeight() 
-                          ? homeBounds.getMinY()
-                          : homeBounds.getCenterY() - MIN_BOUNDS.getHeight() / 2), 
-              (float)Math.max(MIN_BOUNDS.getWidth(), homeBounds.getWidth()), 
-              (float)Math.max(MIN_BOUNDS.getHeight(), homeBounds.getHeight()));
-        }
+        // Ensure plan bounds are always minimum 10 meters wide centered in middle of 3D view
+        return new Rectangle2D.Float(
+            (float)(MIN_SIZE < homeBounds.getWidth() 
+                        ? homeBounds.getMinX()
+                        : homeBounds.getCenterX() - MIN_SIZE / 2), 
+            (float)(MIN_SIZE < homeBounds.getHeight() 
+                        ? homeBounds.getMinY()
+                        : homeBounds.getCenterY() - MIN_SIZE / 2), 
+            (float)Math.max(MIN_SIZE, homeBounds.getWidth()), 
+            (float)Math.max(MIN_SIZE, homeBounds.getHeight()));
       } else {
-        return MIN_BOUNDS;
+        return new Rectangle2D.Float(0, 0, MIN_SIZE, MIN_SIZE);
       }
     }
 
-    /**
-     * Returns <code>true</code> if the given <code>item</code> is at a visible level.
-     */
-    private boolean isItemAtAVisibleLevel(Elevatable item) {
-      return item.getLevel() == null || item.getLevel().isVisible();
-    }
-    
     /**
      * Adds the point at the given coordinates to <code>homeBounds</code>.
      */
@@ -501,66 +311,20 @@ public class HomeController3D implements Controller {
       return homeBounds;
     }
 
-    /**
-     * Returns the minimum distance of the camera to home center.
-     */
-    private float getMinDistanceToHomeCenter(Rectangle2D homeBounds) {
-      float maxHeight = 0;
-      Collection<Wall> walls = home.getWalls();
-      if (walls.isEmpty()) {
-        // If home contains no wall, search the max height of the highest piece
-        for (HomePieceOfFurniture piece : home.getFurniture()) {
-          if (piece.isVisible()) {
-            maxHeight = Math.max(maxHeight, piece.getGroundElevation() + piece.getHeight());
-          }
-        }
-      } else {
-         // Search the max height of the highest wall
-        for (Wall wall : walls) {
-          Float height = wall.getHeight();
-          Level wallLevel = wall.getLevel();
-          float levelElevation = wallLevel == null 
-              ? 0
-              : wallLevel.getElevation(); 
-          if (height != null) {
-            maxHeight = Math.max(maxHeight, levelElevation + height);
-          }
-          Float heightAtEnd = wall.getHeightAtEnd();
-          if (heightAtEnd != null) {
-            maxHeight = Math.max(maxHeight, levelElevation + heightAtEnd);
-          }
-        }
-      }
-      if (maxHeight > 0) {
-        maxHeight = Math.max(10, maxHeight);
-      } else {
-        maxHeight = home.getWallHeight();        
-      }
-      double halfDiagonal = Math.sqrt(homeBounds.getWidth() * homeBounds.getWidth() + homeBounds.getHeight() * homeBounds.getHeight()) / 2;
-      return (float)Math.sqrt(maxHeight * maxHeight + halfDiagonal * halfDiagonal) * 1.1f;
-    }
-    
     @Override
     public void moveCamera(float delta) {
       // Use a 5 times bigger delta for top camera move
       delta *= 5;
-      float newDistanceToCenter = (float)Math.sqrt(Math.pow(this.homeBounds.getCenterX() - this.topCamera.getX(), 2) 
-          + Math.pow(this.homeBounds.getCenterY() - this.topCamera.getY(), 2) 
-          + Math.pow(this.topCamera.getZ(), 2)) - delta;
-      placeCameraAt(newDistanceToCenter);
-    }
-
-    public void placeCameraAt(float distanceToCenter) {
-      // Check camera is always outside the sphere centered in home center and with a radius equal to minimum distance   
-      distanceToCenter = Math.max(distanceToCenter, this.minDistanceToHomeCenter);
-      // Check camera isn't too far
-      distanceToCenter = Math.min(distanceToCenter, 5 * this.minDistanceToHomeCenter);
-      double distanceToCenterAtGroundLevel = distanceToCenter * Math.cos(this.topCamera.getPitch());
+      float newZ = this.topCamera.getZ() - (float)Math.sin(this.topCamera.getPitch()) * delta;
+      // Check new elevation is between home wall height and a half, and 3 times its largest dimension  
+      newZ = Math.max(newZ, home.getWallHeight() * 1.5f);
+      newZ = Math.min(newZ, (float)(Math.max(this.homeBounds.getWidth(), this.homeBounds.getHeight()) * 3 * Math.sin(this.topCamera.getPitch())));
+      double distanceToCenterAtGroundLevel = newZ / Math.tan(this.topCamera.getPitch());
       this.topCamera.setX((float)this.homeBounds.getCenterX() + (float)(Math.sin(this.topCamera.getYaw()) 
           * distanceToCenterAtGroundLevel));
       this.topCamera.setY((float)this.homeBounds.getCenterY() - (float)(Math.cos(this.topCamera.getYaw()) 
           * distanceToCenterAtGroundLevel));
-      this.topCamera.setZ((float)Math.sin(this.topCamera.getPitch()) * distanceToCenter);
+      this.topCamera.setZ(newZ);
     }
 
     @Override
@@ -575,9 +339,9 @@ public class HomeController3D implements Controller {
     
     @Override
     public void rotateCameraPitch(float delta) {
-      float newPitch = this.topCamera.getPitch() + delta;
-      // Check new pitch is between PI / 2 and PI / 16  
-      newPitch = Math.max(newPitch, (float)Math.PI / 16);
+      float newPitch = this.topCamera.getPitch() - delta;
+      // Check new pitch is between PI / 2 and PI / 8  
+      newPitch = Math.max(newPitch, (float)Math.PI / 8);
       newPitch = Math.min(newPitch, (float)Math.PI / 2);
       // Compute new z to keep the same distance to view center
       double cameraToBoundsCenterDistance = Math.sqrt(Math.pow(this.topCamera.getX() - this.homeBounds.getCenterX(), 2)
@@ -595,20 +359,12 @@ public class HomeController3D implements Controller {
     }
     
     @Override
-    public void goToCamera(Camera camera) {
-      this.topCamera.setCamera(camera);
-      this.topCamera.setTime(camera.getTime());
-      this.topCamera.setLens(camera.getLens());
-      updateCameraFromHomeBounds();
-    }
-    
-    @Override
     public void exit() {
       this.topCamera = null;
       for (Wall wall : home.getWalls()) {
         wall.removePropertyChangeListener(this.objectChangeListener);
       }
-      home.removeWallsListener(wallsListener);
+      home.removeWallsListener(wallListener);
       for (HomePieceOfFurniture piece : home.getFurniture()) {
         piece.removePropertyChangeListener(this.objectChangeListener);
       }
@@ -617,10 +373,6 @@ public class HomeController3D implements Controller {
         room.removePropertyChangeListener(this.objectChangeListener);
       }
       home.removeRoomsListener(this.roomsListener);
-      for (Level room : home.getLevels()) {
-        room.removePropertyChangeListener(this.levelVisibilityChangeListener);
-      }
-      home.removeLevelsListener(this.levelsListener);
     }
   }
   
@@ -629,31 +381,10 @@ public class HomeController3D implements Controller {
    */
   private class ObserverCameraState extends CameraControllerState {
     private ObserverCamera observerCamera;
-    private PropertyChangeListener levelElevationChangeListener = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent ev) {
-          if (Level.Property.ELEVATION.name().equals(ev.getPropertyName())) {
-            updateCameraMinimumElevation();
-          }
-        }
-      };
-    private CollectionListener<Level> levelsListener = new CollectionListener<Level>() {
-        public void collectionChanged(CollectionEvent<Level> ev) {
-          if (ev.getType() == CollectionEvent.Type.ADD) {
-            ev.getItem().addPropertyChangeListener(levelElevationChangeListener);
-          } else if (ev.getType() == CollectionEvent.Type.DELETE) {
-            ev.getItem().removePropertyChangeListener(levelElevationChangeListener);
-          } 
-          updateCameraMinimumElevation();
-        }
-      };
 
     @Override
     public void enter() {
       this.observerCamera = (ObserverCamera)home.getCamera();
-      for (Level level : home.getLevels()) {
-        level.addPropertyChangeListener(this.levelElevationChangeListener);
-      }
-      home.addLevelsListener(this.levelsListener);
       // Select observer camera for user feedback
       home.setSelectedItems(Arrays.asList(new Selectable [] {this.observerCamera}));
     }
@@ -665,29 +396,7 @@ public class HomeController3D implements Controller {
       // Select observer camera for user feedback
       home.setSelectedItems(Arrays.asList(new Selectable [] {this.observerCamera}));
     }
-    
-    @Override
-    public void elevateCamera(float delta) {
-      float newElevation = this.observerCamera.getZ() + delta; 
-      newElevation = Math.min(Math.max(newElevation, getMinimumElevation()), preferences.getLengthUnit().getMaximumElevation());
-      this.observerCamera.setZ(newElevation);
-      // Select observer camera for user feedback
-      home.setSelectedItems(Arrays.asList(new Selectable [] {this.observerCamera}));
-    }
 
-    private void updateCameraMinimumElevation() {
-      observerCamera.setZ(Math.max(observerCamera.getZ(), getMinimumElevation()));
-    }
-
-    public float getMinimumElevation() {
-      List<Level> levels = home.getLevels();
-      if (levels.size() > 0) {
-        return 10 + levels.get(0).getElevation();
-      } else {
-        return 10;
-      }
-    }
-    
     @Override
     public void rotateCameraYaw(float delta) {
       this.observerCamera.setYaw(this.observerCamera.getYaw() + delta); 
@@ -707,13 +416,6 @@ public class HomeController3D implements Controller {
     }
     
     @Override
-    public void goToCamera(Camera camera) {
-      this.observerCamera.setCamera(camera);
-      this.observerCamera.setTime(camera.getTime());
-      this.observerCamera.setLens(camera.getLens());
-    }
-    
-    @Override
     public void exit() {
       // Remove observer camera from selection
       List<Selectable> selectedItems = home.getSelectedItems();
@@ -722,10 +424,6 @@ public class HomeController3D implements Controller {
         selectedItems.remove(this.observerCamera);
         home.setSelectedItems(selectedItems);
       }
-      for (Level room : home.getLevels()) {
-        room.removePropertyChangeListener(this.levelElevationChangeListener);
-      }
-      home.removeLevelsListener(this.levelsListener);
       this.observerCamera = null;
     }
   }

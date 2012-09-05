@@ -187,8 +187,8 @@ public class ImportedTextureWizardTest extends ComponentTestFixture {
     // Retrieve ImportedFurnitureWizardStepsPanel components
     ImportedTextureWizardStepsPanel panel = (ImportedTextureWizardStepsPanel)TestUtilities.findComponent(
         textureWizardDialog, ImportedTextureWizardStepsPanel.class);
-    final JButton imageChoiceOrChangeButton = (JButton)TestUtilities.getField(panel, "imageChoiceOrChangeButton");
-    final JTextField nameTextField = (JTextField)TestUtilities.getField(panel, "nameTextField");
+    JButton imageChoiceOrChangeButton = (JButton)TestUtilities.getField(panel, "imageChoiceOrChangeButton");
+    JTextField nameTextField = (JTextField)TestUtilities.getField(panel, "nameTextField");
     JComboBox categoryComboBox = (JComboBox)TestUtilities.getField(panel, "categoryComboBox");
     JSpinner widthSpinner = (JSpinner)TestUtilities.getField(panel, "widthSpinner");
     JSpinner heightSpinner = (JSpinner)TestUtilities.getField(panel, "heightSpinner");
@@ -203,23 +203,16 @@ public class ImportedTextureWizardTest extends ComponentTestFixture {
     
     // 4. Choose tested image 
     String imageChoiceOrChangeButtonText = imageChoiceOrChangeButton.getText();
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          imageChoiceOrChangeButton.doClick();
-        }
-      });
-    // Wait 200 ms to let time to Java to load the image
+    imageChoiceOrChangeButton.doClick();
+    // Wait 200 s to let time to Java to load the image
     Thread.sleep(200);
     // Check choice button text changed
     assertFalse("Choice button text didn't change", 
         imageChoiceOrChangeButtonText.equals(imageChoiceOrChangeButton.getText()));
     // Click on next button
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          nextFinishOptionButton.doClick();
-        }
-      });
+    nextFinishOptionButton.doClick();
     // Check current step is attributes
+    tester.waitForIdle();
     assertStepShowing(panel, false, true);
 
     // 5. Check default furniture name is the presentation name proposed by content manager
@@ -235,12 +228,8 @@ public class ImportedTextureWizardTest extends ComponentTestFixture {
     assertEquals("Wrong default category", userCategoryName, 
         ((TexturesCategory)categoryComboBox.getSelectedItem()).getName());
     // Rename texture  
-    final String textureTestName = "#@" + System.currentTimeMillis() + "@#";
-    tester.invokeAndWait(new Runnable() {
-      public void run() {
-        nameTextField.setText(textureTestName);    
-      }
-    });
+    String textureTestName = "#@" + System.currentTimeMillis() + "@#";
+    nameTextField.setText(textureTestName);    
     // Check next button is enabled again
     assertTrue("Next button isn't enabled", nextFinishOptionButton.isEnabled());
 
@@ -309,14 +298,12 @@ public class ImportedTextureWizardTest extends ComponentTestFixture {
     // Retrieve ImportedFurnitureWizardStepsPanel components
     panel = (ImportedTextureWizardStepsPanel)TestUtilities.findComponent(
         textureWizardDialog, ImportedTextureWizardStepsPanel.class);
+    imageChoiceOrChangeButton = (JButton)TestUtilities.getField(panel, "imageChoiceOrChangeButton");
     widthSpinner = (JSpinner)TestUtilities.getField(panel, "widthSpinner");
     final JButton nextFinishOptionButton2 = (JButton)TestUtilities.getField(
         TestUtilities.findComponent(textureWizardDialog, WizardPane.class), "nextFinishOptionButton");
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          nextFinishOptionButton2.doClick();
-        }
-      });
+    tester.waitForIdle();
+    nextFinishOptionButton2.doClick();
     
     // Change width
     widthSpinner.setValue((Float)widthSpinner.getValue() * 2);
@@ -327,7 +314,6 @@ public class ImportedTextureWizardTest extends ComponentTestFixture {
           nextFinishOptionButton2.doClick(); 
         }
       });
-    tester.waitForIdle();
     assertFalse("Import texture wizard still showing", textureWizardDialog.isShowing());
     // Check the list of available textures has the same texture count 
     // and a new selected texture 
@@ -370,13 +356,11 @@ public class ImportedTextureWizardTest extends ComponentTestFixture {
                 TextureChoiceComponent.class, "deleteTextureButton.text"));
           }
         });
-    tester.invokeAndWait(new Runnable() { 
-        public void run() {
-          // Display confirm dialog box later in Event Dispatch Thread to avoid blocking test thread
-          deleteButton.doClick();        
-        }
-      });
-    tester.waitForIdle();
+    tester.invokeLater(new Runnable() { 
+      public void run() {
+        // Display confirm dialog box later in Event Dispatch Thread to avoid blocking test thread
+        deleteButton.doClick();        }
+    });
     // Wait for confirm dialog to be shown
     final String confirmDeleteSelectedCatalogTextureDialogTitle = preferences.getLocalizedString(
         TextureChoiceComponent.class, "confirmDeleteSelectedCatalogTexture.title");

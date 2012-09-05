@@ -1,7 +1,7 @@
 /*
  * URLContent.java 25 avr. 2006
  *
- * Sweet Home 3D, Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -80,9 +80,7 @@ public class URLContent implements Content {
   }
 
   /**
-   * Returns the name of a JAR entry. 
-   * If the JAR entry in the URL given at creation time was encoded in application/x-www-form-urlencoded format,
-   * this method will return it unchanged and not decoded.
+   * Returns the name of a JAR entry.
    * @throws IllegalStateException if the URL of this content 
    *                    doesn't reference an entry in a JAR URL.
    */
@@ -92,27 +90,5 @@ public class URLContent implements Content {
     }
     String file = this.url.getFile();
     return file.substring(file.indexOf('!') + 2);
-  }
-  
-  /**
-   * Returns <code>true</code> if the object in parameter is an URL content
-   * that references the same URL as this object.
-   */
-  @Override
-  public boolean equals(Object obj) {
-    if (obj == this) {
-      return true;
-    } else if (obj instanceof URLContent) {
-      URLContent urlContent = (URLContent)obj;
-      return urlContent.url == this.url
-          || urlContent.url.equals(this.url);
-    } else {
-      return false;
-    }
-  }
-  
-  @Override
-  public int hashCode() {
-    return this.url.hashCode();
   }
 }

@@ -1,7 +1,7 @@
 /*
  * TexturesCatalog.java 5 oct. 2006
  * 
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -27,7 +27,7 @@ import java.util.List;
  * Textures catalog.
  * @author Emmanuel Puybaret
  */
-public class TexturesCatalog {
+public abstract class TexturesCatalog {
   private List<TexturesCategory>  categories = new ArrayList<TexturesCategory>();
   private boolean                 sorted;
   private final CollectionChangeSupport<CatalogTexture> texturesChangeSupport = 
@@ -116,7 +116,7 @@ public class TexturesCatalog {
     category.add(texture);
     
     this.texturesChangeSupport.fireCollectionChanged(texture, 
-        category.getIndexOfTexture(texture), CollectionEvent.Type.ADD);
+        Collections.binarySearch(category.getTextures(), texture), CollectionEvent.Type.ADD);
   }
 
   /**
@@ -130,8 +130,8 @@ public class TexturesCatalog {
     TexturesCategory category = texture.getCategory();
     // Remove texture from its category
     if (category != null) {
-      int textureIndex = category.getIndexOfTexture(texture);
-      if (textureIndex >= 0) {
+      int pieceIndex = Collections.binarySearch(category.getTextures(), texture);
+      if (pieceIndex >= 0) {
         category.delete(texture);
         
         if (category.getTexturesCount() == 0) {
@@ -140,7 +140,7 @@ public class TexturesCatalog {
           this.categories.remove(category);
         }
         
-        this.texturesChangeSupport.fireCollectionChanged(texture, textureIndex, CollectionEvent.Type.DELETE);
+        this.texturesChangeSupport.fireCollectionChanged(texture, pieceIndex, CollectionEvent.Type.DELETE);
         return;
       }
     }

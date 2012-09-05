@@ -1,7 +1,7 @@
 /*
  * ColorButton.java 29 mai 07
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,22 +23,19 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
-import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Enumeration;
 import java.util.Locale;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
-import javax.swing.AbstractAction;
 import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JColorChooser;
-import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
-import javax.swing.JSpinner;
-import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
-import javax.swing.text.JTextComponent;
+import javax.swing.UIManager;
 
 /**
  * Button displaying a color as an icon.
@@ -88,17 +85,22 @@ public class ColorButton extends JButton {
         // Create color chooser instance each time default locale changed 
         if (colorChooser == null
             || !Locale.getDefault().equals(colorChooserLocale)) {
+          try {
+            // Read Swing localized properties because Swing doesn't update its internal strings automatically
+            // when default Locale is updated (see bug http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4884480)
+            ResourceBundle resource = 
+                ResourceBundle.getBundle("com.sun.swing.internal.plaf.basic.resources.basic");
+            // Update UIManager properties
+            for (Enumeration iter = resource.getKeys(); iter.hasMoreElements(); ) {
+              String property = (String)iter.nextElement();
+              UIManager.put(property, resource.getString(property));
+            }      
+          } catch (MissingResourceException ex) {
+            // Let labels unchanged
+          }
+          
           colorChooser = new JColorChooser();
-          // Add auto selection to color chooser panels text fields
-          addAutoSelectionOnTextFields(colorChooser);
-          // Add Esc key management
-          colorChooser.getActionMap().put("close", new AbstractAction() {
-              public void actionPerformed(ActionEvent ev) {
-                ((Window)SwingUtilities.getRoot(colorChooser)).dispose();
-              }
-            });
-          colorChooser.getInputMap(JColorChooser.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ESCAPE"), "close");
-          colorChooserLocale = Locale.getDefault();          
+          colorChooserLocale = Locale.getDefault();
         }
         // Update edited color in furniture color chooser
         colorChooser.setColor(color != null 
@@ -111,25 +113,8 @@ public class ColorButton extends JButton {
                 // Change button color when user click on ok button
                 setColor(colorChooser.getColor().getRGB());
               }
-            }, null);        
+            }, null);
         colorDialog.setVisible(true);
-      }
-
-      private void addAutoSelectionOnTextFields(JComponent component) {
-        if (component instanceof JTextComponent) {
-          SwingTools.addAutoSelectionOnFocusGain((JTextComponent)component);
-        } else if (component instanceof JSpinner) {
-          JComponent editor = ((JSpinner)component).getEditor();
-          if (editor instanceof JSpinner.DefaultEditor) {
-            SwingTools.addAutoSelectionOnFocusGain(((JSpinner.DefaultEditor)editor).getTextField());
-          }
-        }
-        for (int i = 0, n = component.getComponentCount(); i < n; i++) {
-          Component childComponent = component.getComponent(i);
-          if (childComponent instanceof JComponent) {
-            addAutoSelectionOnTextFields((JComponent)childComponent);
-          }
-        }
       }
     });
   }

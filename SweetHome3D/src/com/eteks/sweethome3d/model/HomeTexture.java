@@ -1,7 +1,7 @@
 /*
  * HomeTexture.java 5 oct. 07
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,6 @@ public class HomeTexture implements TextureImage, Serializable {
   private final Content image;
   private final float width;
   private final float height;
-  private final boolean leftToRightOriented; 
   
   /**
    * Creates a home texture from an existing one.
@@ -43,9 +42,6 @@ public class HomeTexture implements TextureImage, Serializable {
     this.image = texture.getImage();
     this.width = texture.getWidth();
     this.height = texture.getHeight();
-    // Texture is left to right oriented when applied on objects seen from front
-    // added to homes with a version 3.4 and higher
-    this.leftToRightOriented = true; 
   }
   
   /**
@@ -74,44 +70,5 @@ public class HomeTexture implements TextureImage, Serializable {
    */
   public float getHeight() {
     return this.height;
-  }
-
-  /**
-   * Returns <code>true</code> if the objects using this texture should take into account 
-   * the orientation of the texture.
-   * @since 3.4
-   */
-  public boolean isLeftToRightOriented() {
-    return this.leftToRightOriented;
-  }
-  
-  /**
-   * Returns <code>true</code> if the object in parameter is equal to this texture.
-   */
-  @Override
-  public boolean equals(Object obj) {
-    if (obj == this) {
-      return true;
-    } else if (obj instanceof HomeTexture) {
-      HomeTexture texture = (HomeTexture)obj;
-      return texture.name.equals(this.name)
-          && texture.image.equals(this.image)
-          && texture.width == this.width
-          && texture.height == this.height
-          && texture.leftToRightOriented == this.leftToRightOriented;
-    } else {
-      return false;
-    }
-  }
-  
-  /**
-   * Returns a hash code for this texture.
-   */
-  @Override
-  public int hashCode() {
-    return this.name.hashCode()
-        + this.image.hashCode()
-        + Float.floatToIntBits(this.width)
-        + Float.floatToIntBits(this.height);
   }
 }

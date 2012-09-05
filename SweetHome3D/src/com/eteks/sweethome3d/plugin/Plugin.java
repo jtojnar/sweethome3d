@@ -1,7 +1,7 @@
 /*
  * Plugin.java 25 oct. 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ import javax.swing.undo.UndoableEditSupport;
 
 import com.eteks.sweethome3d.model.Home;
 import com.eteks.sweethome3d.model.UserPreferences;
-import com.eteks.sweethome3d.viewcontroller.HomeController;
 
 /**
  * The super class of a plug-in.
@@ -73,7 +72,6 @@ public abstract class Plugin {
   private String              provider;
   private UserPreferences     userPreferences;
   private Home                home;
-  private HomeController      homeController;
   private UndoableEditSupport undoableEditSupport;
 
   /**
@@ -186,22 +184,6 @@ public abstract class Plugin {
    */
   public final Home getHome() {
     return this.home;
-  }
-
-  /**
-   * Sets the controller of the home.
-   * @since 3.5
-   */
-  final void setHomeController(HomeController homeController) {
-    this.homeController = homeController;
-  }
-
-  /**
-   * Returns the controller of the home of this plug-in.
-   * @since 3.5
-   */
-  public HomeController getHomeController() {
-    return this.homeController;
   }
   
   /**

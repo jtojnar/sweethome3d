@@ -1,7 +1,7 @@
 /*
  * Label.java 28 nov. 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,23 +30,19 @@ import java.io.Serializable;
  * A free label.
  * @author Emmanuel Puybaret
  */
-public class Label implements Selectable, Serializable, Elevatable {
+public class Label implements Selectable, Serializable {
   private static final long serialVersionUID = 1L;
   
-  private static final double TWICE_PI = 2 * Math.PI;
-
   /**
    * The properties of a label that may change. <code>PropertyChangeListener</code>s added 
    * to a label will be notified under a property name equal to the string value of one these properties.
    */
-  public enum Property {TEXT, X, Y, STYLE, ANGLE, LEVEL};
+  public enum Property {TEXT, X, Y, STYLE};
   
   private String    text;
   private float     x;
   private float     y;
   private TextStyle style;
-  private float     angle;
-  private Level     level;
   
   private transient PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
@@ -157,58 +153,6 @@ public class Label implements Selectable, Serializable, Elevatable {
   }
 
   /**
-   * Returns the angle in radians used to display this label.
-   * @since 3.6 
-   */
-  public float getAngle() {
-    return this.angle;
-  }
-
-  /**
-   * Sets the angle in radians used to display this label. Once this piece is updated, 
-   * listeners added to this piece will receive a change notification.
-   * @since 3.6 
-   */
-  public void setAngle(float angle) {
-    // Ensure angle is always positive and between 0 and 2 PI
-    angle = (float)((angle % TWICE_PI + TWICE_PI) % TWICE_PI);
-    if (angle != this.angle) {
-      float oldAngle = this.angle;
-      this.angle = angle;
-      this.propertyChangeSupport.firePropertyChange(Property.ANGLE.name(), oldAngle, angle);
-    }
-  }
-  
-  /**
-   * Returns the level which this label belongs to. 
-   * @since 3.4
-   */
-  public Level getLevel() {
-    return this.level;
-  }
-
-  /**
-   * Sets the level of this label. Once this label is updated, 
-   * listeners added to this label will receive a change notification.
-   * @since 3.4
-   */
-  public void setLevel(Level level) {
-    if (level != this.level) {
-      Level oldLevel = this.level;
-      this.level = level;
-      this.propertyChangeSupport.firePropertyChange(Property.LEVEL.name(), oldLevel, level);
-    }
-  }
-
-  /**
-   * Returns <code>true</code> if this label is at the given level.
-   * @since 3.4
-   */
-  public boolean isAtLevel(Level level) {
-    return this.level == level;
-  }
-  
-  /**
    * Returns the point of this label.
    * @return an array of the (x,y) coordinates of this label.
    */
@@ -252,7 +196,6 @@ public class Label implements Selectable, Serializable, Elevatable {
     try {
       Label clone = (Label)super.clone();
       clone.propertyChangeSupport = new PropertyChangeSupport(clone);
-      clone.level = null;
       return clone;
     } catch (CloneNotSupportedException ex) {
       throw new IllegalStateException("Super class isn't cloneable"); 

@@ -1,7 +1,7 @@
 /*
  * WallPanel.java 29 mai 07
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,27 +19,24 @@
  */
 package com.eteks.sweethome3d.swing;
 
-import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
+import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JComponent;
-import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
-import javax.swing.JSeparator;
 import javax.swing.JSpinner;
 import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.border.Border;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -64,20 +61,16 @@ public class WallPanel extends JPanel implements DialogView {
   private JSpinner       xEndSpinner;
   private JLabel         yEndLabel;
   private JSpinner       yEndSpinner;
-  private JLabel         distanceToEndPointLabel;
-  private JSpinner       distanceToEndPointSpinner;
+  private JLabel         lengthLabel;
+  private JSpinner       lengthSpinner;
   private JRadioButton   leftSideColorRadioButton;
   private ColorButton    leftSideColorButton;
   private JRadioButton   leftSideTextureRadioButton;
   private JComponent     leftSideTextureComponent;
-  private JRadioButton   leftSideMattRadioButton;
-  private JRadioButton   leftSideShinyRadioButton;
   private JRadioButton   rightSideColorRadioButton;
   private ColorButton    rightSideColorButton;
   private JRadioButton   rightSideTextureRadioButton;
   private JComponent     rightSideTextureComponent;
-  private JRadioButton   rightSideMattRadioButton;
-  private JRadioButton   rightSideShinyRadioButton;
   private JRadioButton   rectangularWallRadioButton;
   private JLabel         rectangularWallHeightLabel;
   private JSpinner       rectangularWallHeightSpinner;
@@ -88,8 +81,6 @@ public class WallPanel extends JPanel implements DialogView {
   private JSpinner       slopingWallHeightAtEndSpinner;
   private JLabel         thicknessLabel;
   private JSpinner       thicknessSpinner;
-  private JLabel         arcExtentLabel;
-  private JSpinner       arcExtentSpinner;
   private JLabel         wallOrientationLabel;
   private String         dialogTitle;
 
@@ -119,9 +110,8 @@ public class WallPanel extends JPanel implements DialogView {
     // Create X start label and its spinner bound to X_START controller property
     this.xStartLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
         WallPanel.class, "xLabel.text", unitName));
-    final float maximumLength = preferences.getLengthUnit().getMaximumLength();
     final NullableSpinner.NullableSpinnerLengthModel xStartSpinnerModel = 
-        new NullableSpinner.NullableSpinnerLengthModel(preferences, -maximumLength, maximumLength);
+        new NullableSpinner.NullableSpinnerLengthModel(preferences, -100000f, 100000f);
     this.xStartSpinner = new NullableSpinner(xStartSpinnerModel);
     xStartSpinnerModel.setNullable(controller.getXStart() == null);
     xStartSpinnerModel.setLength(controller.getXStart());
@@ -144,7 +134,7 @@ public class WallPanel extends JPanel implements DialogView {
     this.yStartLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
         WallPanel.class, "yLabel.text", unitName));
     final NullableSpinner.NullableSpinnerLengthModel yStartSpinnerModel = 
-        new NullableSpinner.NullableSpinnerLengthModel(preferences, -maximumLength, maximumLength);
+        new NullableSpinner.NullableSpinnerLengthModel(preferences, -100000f, 100000f);
     this.yStartSpinner = new NullableSpinner(yStartSpinnerModel);
     yStartSpinnerModel.setNullable(controller.getYStart() == null);
     yStartSpinnerModel.setLength(controller.getYStart());
@@ -167,7 +157,7 @@ public class WallPanel extends JPanel implements DialogView {
     this.xEndLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
         WallPanel.class, "xLabel.text", unitName));
     final NullableSpinner.NullableSpinnerLengthModel xEndSpinnerModel = 
-        new NullableSpinner.NullableSpinnerLengthModel(preferences, -maximumLength, maximumLength);
+        new NullableSpinner.NullableSpinnerLengthModel(preferences, -100000f, 100000f);
     this.xEndSpinner = new NullableSpinner(xEndSpinnerModel);
     xEndSpinnerModel.setNullable(controller.getXEnd() == null);
     xEndSpinnerModel.setLength(controller.getXEnd());
@@ -190,7 +180,7 @@ public class WallPanel extends JPanel implements DialogView {
     this.yEndLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
         WallPanel.class, "yLabel.text", unitName));
     final NullableSpinner.NullableSpinnerLengthModel yEndSpinnerModel = 
-        new NullableSpinner.NullableSpinnerLengthModel(preferences, -maximumLength, maximumLength);
+        new NullableSpinner.NullableSpinnerLengthModel(preferences, -100000f, 100000f);
     this.yEndSpinner = new NullableSpinner(yEndSpinnerModel);
     yEndSpinnerModel.setNullable(controller.getYEnd() == null);
     yEndSpinnerModel.setLength(controller.getYEnd());
@@ -209,30 +199,29 @@ public class WallPanel extends JPanel implements DialogView {
         }
       });
 
-    // Create distance to end point label and its spinner bound to DISTANCE_TO_END_POINT controller property
-    this.distanceToEndPointLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
-        WallPanel.class, "distanceToEndPointLabel.text", unitName));
-    float minimumLength = preferences.getLengthUnit().getMinimumLength();
-    final NullableSpinner.NullableSpinnerLengthModel distanceToEndPointSpinnerModel = 
-        new NullableSpinner.NullableSpinnerLengthModel(preferences, minimumLength, 2 * maximumLength * (float)Math.sqrt(2));
-    this.distanceToEndPointSpinner = new NullableSpinner(distanceToEndPointSpinnerModel);
-    distanceToEndPointSpinnerModel.setNullable(controller.getLength() == null);
-    distanceToEndPointSpinnerModel.setLength(controller.getLength());
-    final PropertyChangeListener distanceToEndPointChangeListener = new PropertyChangeListener() {
+    // Create length label and its spinner bound to LENGTH controller property
+    this.lengthLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
+        WallPanel.class, "lengthLabel.text", unitName));
+    final NullableSpinner.NullableSpinnerLengthModel lengthSpinnerModel = 
+        new NullableSpinner.NullableSpinnerLengthModel(preferences, 0.09999f, 100000f);
+    this.lengthSpinner = new NullableSpinner(lengthSpinnerModel);
+    lengthSpinnerModel.setNullable(controller.getLength() == null);
+    lengthSpinnerModel.setLength(controller.getLength());
+    final PropertyChangeListener lengthChangeListener = new PropertyChangeListener() {
         public void propertyChange(PropertyChangeEvent ev) {
-          distanceToEndPointSpinnerModel.setNullable(ev.getNewValue() == null);
-          distanceToEndPointSpinnerModel.setLength((Float)ev.getNewValue());
+          lengthSpinnerModel.setNullable(ev.getNewValue() == null);
+          lengthSpinnerModel.setLength((Float)ev.getNewValue());
         }
       };
-    controller.addPropertyChangeListener(WallController.Property.DISTANCE_TO_END_POINT, 
-        distanceToEndPointChangeListener);
-    distanceToEndPointSpinnerModel.addChangeListener(new ChangeListener() {
+    controller.addPropertyChangeListener(WallController.Property.LENGTH, 
+        lengthChangeListener);
+    lengthSpinnerModel.addChangeListener(new ChangeListener() {
         public void stateChanged(ChangeEvent ev) {
-          controller.removePropertyChangeListener(WallController.Property.DISTANCE_TO_END_POINT, 
-              distanceToEndPointChangeListener);
-          controller.setLength(distanceToEndPointSpinnerModel.getLength());
-          controller.addPropertyChangeListener(WallController.Property.DISTANCE_TO_END_POINT, 
-              distanceToEndPointChangeListener);
+          controller.removePropertyChangeListener(WallController.Property.LENGTH, 
+              lengthChangeListener);
+          controller.setLength(lengthSpinnerModel.getLength());
+          controller.addPropertyChangeListener(WallController.Property.LENGTH, 
+              lengthChangeListener);
         }
       });
 
@@ -249,7 +238,7 @@ public class WallPanel extends JPanel implements DialogView {
     controller.addPropertyChangeListener(WallController.Property.LEFT_SIDE_PAINT, 
         new PropertyChangeListener() {
           public void propertyChange(PropertyChangeEvent ev) {
-            updateLeftSideColorRadioButtons(controller);
+            updateLeftSideRadioButtons(controller);
           }
         });
     
@@ -261,7 +250,6 @@ public class WallPanel extends JPanel implements DialogView {
         new PropertyChangeListener() {
           public void propertyChange(PropertyChangeEvent ev) {
             controller.setLeftSideColor(leftSideColorButton.getColor());
-            controller.setLeftSidePaint(WallController.WallPaint.COLORED);
           }
         });
     controller.addPropertyChangeListener(WallController.Property.LEFT_SIDE_COLOR, 
@@ -282,46 +270,11 @@ public class WallPanel extends JPanel implements DialogView {
       });
     
     this.leftSideTextureComponent = (JComponent)controller.getLeftSideTextureController().getView();
-
-    ButtonGroup leftSideColorButtonGroup = new ButtonGroup();
-    leftSideColorButtonGroup.add(this.leftSideColorRadioButton);
-    leftSideColorButtonGroup.add(this.leftSideTextureRadioButton);
-    updateLeftSideColorRadioButtons(controller);    
-
-    // Left side shininess radio buttons bound to LEFT_SIDE_SHININESS controller property
-    this.leftSideMattRadioButton = new JRadioButton(SwingTools.getLocalizedLabelText(preferences, 
-        WallPanel.class, "leftSideMattRadioButton.text"));
-    this.leftSideMattRadioButton.addChangeListener(new ChangeListener() {
-        public void stateChanged(ChangeEvent ev) {
-          if (leftSideMattRadioButton.isSelected()) {
-            controller.setLeftSideShininess(0f);
-          }
-        }
-      });
-    PropertyChangeListener leftSideShininessListener = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent ev) {
-          updateLeftSideShininessRadioButtons(controller);
-        }
-      };
-    controller.addPropertyChangeListener(WallController.Property.LEFT_SIDE_SHININESS, 
-        leftSideShininessListener);
-
-    this.leftSideShinyRadioButton = new JRadioButton(SwingTools.getLocalizedLabelText(preferences, 
-        WallPanel.class, "leftSideShinyRadioButton.text"));
-    this.leftSideShinyRadioButton.addChangeListener(new ChangeListener() {
-        public void stateChanged(ChangeEvent ev) {
-          if (leftSideShinyRadioButton.isSelected()) {
-            controller.setLeftSideShininess(0.25f);
-          }
-        }
-      });
-    controller.addPropertyChangeListener(WallController.Property.LEFT_SIDE_SHININESS, 
-        leftSideShininessListener);
     
-    ButtonGroup leftSideShininessButtonGroup = new ButtonGroup();
-    leftSideShininessButtonGroup.add(this.leftSideMattRadioButton);
-    leftSideShininessButtonGroup.add(this.leftSideShinyRadioButton);
-    updateLeftSideShininessRadioButtons(controller);
+    ButtonGroup leftSideButtonGroup = new ButtonGroup();
+    leftSideButtonGroup.add(this.leftSideColorRadioButton);
+    leftSideButtonGroup.add(this.leftSideTextureRadioButton);
+    updateLeftSideRadioButtons(controller);
     
     // Right side color and texture buttons bound to right side controller properties
     this.rightSideColorRadioButton = new JRadioButton(SwingTools.getLocalizedLabelText(preferences, 
@@ -336,7 +289,7 @@ public class WallPanel extends JPanel implements DialogView {
     controller.addPropertyChangeListener(WallController.Property.RIGHT_SIDE_PAINT, 
         new PropertyChangeListener() {
           public void propertyChange(PropertyChangeEvent ev) {
-            updateRightSideColorRadioButtons(controller);
+            updateRightSideRadioButtons(controller);
           }
         });
 
@@ -348,7 +301,6 @@ public class WallPanel extends JPanel implements DialogView {
         new PropertyChangeListener() {
           public void propertyChange(PropertyChangeEvent ev) {
             controller.setRightSideColor(rightSideColorButton.getColor());
-            controller.setRightSidePaint(WallController.WallPaint.COLORED);
           }
         });
     controller.addPropertyChangeListener(WallController.Property.RIGHT_SIDE_COLOR, 
@@ -370,46 +322,11 @@ public class WallPanel extends JPanel implements DialogView {
   
     this.rightSideTextureComponent = (JComponent)controller.getRightSideTextureController().getView();
 
-    ButtonGroup rightSideColorButtonGroup = new ButtonGroup();
-    rightSideColorButtonGroup.add(this.rightSideColorRadioButton);
-    rightSideColorButtonGroup.add(this.rightSideTextureRadioButton);
-    updateRightSideColorRadioButtons(controller);
+    ButtonGroup rightSideButtonGroup = new ButtonGroup();
+    rightSideButtonGroup.add(this.rightSideColorRadioButton);
+    rightSideButtonGroup.add(this.rightSideTextureRadioButton);
+    updateRightSideRadioButtons(controller);
 
-    // Right side shininess radio buttons bound to LEFT_SIDE_SHININESS controller property
-    this.rightSideMattRadioButton = new JRadioButton(SwingTools.getLocalizedLabelText(preferences, 
-        WallPanel.class, "rightSideMattRadioButton.text"));
-    this.rightSideMattRadioButton.addChangeListener(new ChangeListener() {
-        public void stateChanged(ChangeEvent ev) {
-          if (rightSideMattRadioButton.isSelected()) {
-            controller.setRightSideShininess(0f);
-          }
-        }
-      });
-    PropertyChangeListener rightSideShininessListener = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent ev) {
-          updateRightSideShininessRadioButtons(controller);
-        }
-      };
-    controller.addPropertyChangeListener(WallController.Property.RIGHT_SIDE_SHININESS, 
-        rightSideShininessListener);
-
-    this.rightSideShinyRadioButton = new JRadioButton(SwingTools.getLocalizedLabelText(preferences, 
-        WallPanel.class, "rightSideShinyRadioButton.text"));
-    this.rightSideShinyRadioButton.addChangeListener(new ChangeListener() {
-        public void stateChanged(ChangeEvent ev) {
-          if (rightSideShinyRadioButton.isSelected()) {
-            controller.setRightSideShininess(0.25f);
-          }
-        }
-      });
-    controller.addPropertyChangeListener(WallController.Property.RIGHT_SIDE_SHININESS, 
-        rightSideShininessListener);
-    
-    ButtonGroup rightSideShininessButtonGroup = new ButtonGroup();
-    rightSideShininessButtonGroup.add(this.rightSideMattRadioButton);
-    rightSideShininessButtonGroup.add(this.rightSideShinyRadioButton);
-    updateRightSideShininessRadioButtons(controller);
-    
     this.rectangularWallRadioButton = new JRadioButton(SwingTools.getLocalizedLabelText(preferences, 
         WallPanel.class, "rectangularWallRadioButton.text"));
     this.rectangularWallRadioButton.addChangeListener(new ChangeListener() {
@@ -430,7 +347,7 @@ public class WallPanel extends JPanel implements DialogView {
     this.rectangularWallHeightLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
             WallPanel.class, "rectangularWallHeightLabel.text", unitName));
     final NullableSpinner.NullableSpinnerLengthModel rectangularWallHeightSpinnerModel = 
-        new NullableSpinner.NullableSpinnerLengthModel(preferences, minimumLength, maximumLength);
+        new NullableSpinner.NullableSpinnerLengthModel(preferences, 0.09999f, 2000f);
     this.rectangularWallHeightSpinner = new NullableSpinner(rectangularWallHeightSpinnerModel);
     rectangularWallHeightSpinnerModel.setNullable(controller.getRectangularWallHeight() == null);
     rectangularWallHeightSpinnerModel.setLength(controller.getRectangularWallHeight());
@@ -470,7 +387,7 @@ public class WallPanel extends JPanel implements DialogView {
     this.slopingWallHeightAtStartLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
         WallPanel.class, "slopingWallHeightAtStartLabel.text"));
     final NullableSpinner.NullableSpinnerLengthModel slopingWallHeightAtStartSpinnerModel = 
-        new NullableSpinner.NullableSpinnerLengthModel(preferences, minimumLength, maximumLength);
+        new NullableSpinner.NullableSpinnerLengthModel(preferences, 0.09999f, 2000f);
     this.slopingWallHeightAtStartSpinner = new NullableSpinner(slopingWallHeightAtStartSpinnerModel);
     slopingWallHeightAtStartSpinnerModel.setNullable(controller.getSlopingWallHeightAtStart() == null);
     slopingWallHeightAtStartSpinnerModel.setLength(controller.getSlopingWallHeightAtStart());
@@ -496,7 +413,7 @@ public class WallPanel extends JPanel implements DialogView {
     this.slopingWallHeightAtEndLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
         WallPanel.class, "slopingWallHeightAtEndLabel.text"));
     final NullableSpinner.NullableSpinnerLengthModel slopingWallHeightAtEndSpinnerModel = 
-        new NullableSpinner.NullableSpinnerLengthModel(preferences, minimumLength, maximumLength);
+        new NullableSpinner.NullableSpinnerLengthModel(preferences, 0.09999f, 2000f);
     this.slopingWallHeightAtEndSpinner = new NullableSpinner(slopingWallHeightAtEndSpinnerModel);
     slopingWallHeightAtEndSpinnerModel.setNullable(controller.getSlopingWallHeightAtEnd() == null);
     slopingWallHeightAtEndSpinnerModel.setLength(controller.getSlopingWallHeightAtEnd());
@@ -522,7 +439,7 @@ public class WallPanel extends JPanel implements DialogView {
     this.thicknessLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
         WallPanel.class, "thicknessLabel.text", unitName));
     final NullableSpinner.NullableSpinnerLengthModel thicknessSpinnerModel = 
-        new NullableSpinner.NullableSpinnerLengthModel(preferences, minimumLength, maximumLength / 10);
+        new NullableSpinner.NullableSpinnerLengthModel(preferences, 0.09999f, 1000f);
     this.thicknessSpinner = new NullableSpinner(thicknessSpinnerModel);
     thicknessSpinnerModel.setNullable(controller.getThickness() == null);
     thicknessSpinnerModel.setLength(controller.getThickness());
@@ -544,32 +461,6 @@ public class WallPanel extends JPanel implements DialogView {
         }
       });
     
-    // Create arc extent label and its spinner bound to ARC_EXTENT_IN_DEGREES controller property
-    this.arcExtentLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
-        WallPanel.class, "arcExtentLabel.text", unitName));
-    final NullableSpinner.NullableSpinnerNumberModel arcExtentSpinnerModel = 
-        new NullableSpinner.NullableSpinnerNumberModel(new Float(0), new Float(-270), new Float(270), new Float(5));
-    this.arcExtentSpinner = new NullableSpinner(arcExtentSpinnerModel);
-    arcExtentSpinnerModel.setNullable(controller.getArcExtentInDegrees() == null);
-    arcExtentSpinnerModel.setValue(controller.getArcExtentInDegrees());
-    final PropertyChangeListener arcExtentChangeListener = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent ev) {
-          arcExtentSpinnerModel.setNullable(ev.getNewValue() == null);
-          arcExtentSpinnerModel.setValue(((Number)ev.getNewValue()).floatValue());
-        }
-      };
-    controller.addPropertyChangeListener(WallController.Property.ARC_EXTENT_IN_DEGREES, 
-        arcExtentChangeListener);
-    arcExtentSpinnerModel.addChangeListener(new ChangeListener() {
-        public void stateChanged(ChangeEvent ev) {
-          controller.removePropertyChangeListener(WallController.Property.ARC_EXTENT_IN_DEGREES, 
-              arcExtentChangeListener);
-          controller.setArcExtentInDegrees(((Number)arcExtentSpinnerModel.getValue()).floatValue());
-          controller.addPropertyChangeListener(WallController.Property.ARC_EXTENT_IN_DEGREES, 
-              arcExtentChangeListener);
-        }
-      });
-    
     // wallOrientationLabel shows an HTML explanation of wall orientation with an image URL in resource
     this.wallOrientationLabel = new JLabel(preferences.getLocalizedString(
             WallPanel.class, "wallOrientationLabel.text", 
@@ -582,9 +473,9 @@ public class WallPanel extends JPanel implements DialogView {
   }
 
   /**
-   * Updates left side color radio buttons. 
+   * Updates left side radio buttons. 
    */
-  private void updateLeftSideColorRadioButtons(WallController controller) {
+  private void updateLeftSideRadioButtons(WallController controller) {
     if (controller.getLeftSidePaint() == WallController.WallPaint.COLORED) {
       this.leftSideColorRadioButton.setSelected(true);
     } else if (controller.getLeftSidePaint() == WallController.WallPaint.TEXTURED) {
@@ -595,41 +486,15 @@ public class WallPanel extends JPanel implements DialogView {
   }
 
   /**
-   * Updates left side shininess radio buttons. 
+   * Updates right side radio buttons. 
    */
-  private void updateLeftSideShininessRadioButtons(WallController controller) {
-    if (controller.getLeftSideShininess() == null) {
-      SwingTools.deselectAllRadioButtons(this.leftSideMattRadioButton, this.leftSideShinyRadioButton);
-    } else if (controller.getLeftSideShininess() == 0) {
-      this.leftSideMattRadioButton.setSelected(true);
-    } else { // null
-      this.leftSideShinyRadioButton.setSelected(true);
-    }
-  }
-
-  /**
-   * Updates right side color radio buttons. 
-   */
-  private void updateRightSideColorRadioButtons(WallController controller) {
+  private void updateRightSideRadioButtons(WallController controller) {
     if (controller.getRightSidePaint() == WallController.WallPaint.COLORED) {
       this.rightSideColorRadioButton.setSelected(true);
     } else if (controller.getRightSidePaint() == WallController.WallPaint.TEXTURED) {
       this.rightSideTextureRadioButton.setSelected(true);
     } else { // null
       SwingTools.deselectAllRadioButtons(this.rightSideColorRadioButton, this.rightSideTextureRadioButton);
-    }
-  }
-
-  /**
-   * Updates right side shininess radio buttons. 
-   */
-  private void updateRightSideShininessRadioButtons(WallController controller) {
-    if (controller.getRightSideShininess() == null) {
-      SwingTools.deselectAllRadioButtons(this.rightSideMattRadioButton, this.rightSideShinyRadioButton);
-    } else if (controller.getRightSideShininess() == 0) {
-      this.rightSideMattRadioButton.setSelected(true);
-    } else { // null
-      this.rightSideShinyRadioButton.setSelected(true);
     }
   }
 
@@ -663,26 +528,18 @@ public class WallPanel extends JPanel implements DialogView {
       this.yEndLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(
           preferences.getLocalizedString(WallPanel.class, "yLabel.mnemonic")).getKeyCode());
       this.yEndLabel.setLabelFor(this.yEndSpinner);
-      this.distanceToEndPointLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(
-          preferences.getLocalizedString(WallPanel.class, "distanceToEndPointLabel.mnemonic")).getKeyCode());
-      this.distanceToEndPointLabel.setLabelFor(this.distanceToEndPointSpinner);
+      this.lengthLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(
+          preferences.getLocalizedString(WallPanel.class, "lengthLabel.mnemonic")).getKeyCode());
+      this.lengthLabel.setLabelFor(this.lengthSpinner);
 
       this.leftSideColorRadioButton.setMnemonic(KeyStroke.getKeyStroke(
           preferences.getLocalizedString(WallPanel.class, "leftSideColorRadioButton.mnemonic")).getKeyCode());
       this.leftSideTextureRadioButton.setMnemonic(KeyStroke.getKeyStroke(
           preferences.getLocalizedString(WallPanel.class, "leftSideTextureRadioButton.mnemonic")).getKeyCode());
-      this.leftSideMattRadioButton.setMnemonic(KeyStroke.getKeyStroke(
-          preferences.getLocalizedString(WallPanel.class, "leftSideMattRadioButton.mnemonic")).getKeyCode());
-      this.leftSideShinyRadioButton.setMnemonic(KeyStroke.getKeyStroke(
-          preferences.getLocalizedString(WallPanel.class, "leftSideShinyRadioButton.mnemonic")).getKeyCode());
       this.rightSideColorRadioButton.setMnemonic(KeyStroke.getKeyStroke(
           preferences.getLocalizedString(WallPanel.class, "rightSideColorRadioButton.mnemonic")).getKeyCode());
       this.rightSideTextureRadioButton.setMnemonic(KeyStroke.getKeyStroke(
           preferences.getLocalizedString(WallPanel.class, "rightSideTextureRadioButton.mnemonic")).getKeyCode());
-      this.rightSideMattRadioButton.setMnemonic(KeyStroke.getKeyStroke(
-          preferences.getLocalizedString(WallPanel.class, "rightSideMattRadioButton.mnemonic")).getKeyCode());
-      this.rightSideShinyRadioButton.setMnemonic(KeyStroke.getKeyStroke(
-          preferences.getLocalizedString(WallPanel.class, "rightSideShinyRadioButton.mnemonic")).getKeyCode());
       
       this.rectangularWallRadioButton.setMnemonic(KeyStroke.getKeyStroke(
           preferences.getLocalizedString(WallPanel.class, "rectangularWallRadioButton.mnemonic")).getKeyCode());
@@ -701,9 +558,6 @@ public class WallPanel extends JPanel implements DialogView {
       this.thicknessLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(
           preferences.getLocalizedString(WallPanel.class, "thicknessLabel.mnemonic")).getKeyCode());
       this.thicknessLabel.setLabelFor(this.thicknessSpinner);
-      this.arcExtentLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(
-          preferences.getLocalizedString(WallPanel.class, "arcExtentLabel.mnemonic")).getKeyCode());
-      this.arcExtentLabel.setLabelFor(this.arcExtentSpinner);
     }
   }
   
@@ -735,11 +589,11 @@ public class WallPanel extends JPanel implements DialogView {
         preferences.getLocalizedString(WallPanel.class, "endPointPanel.title"),
         new JComponent [] {this.xEndLabel, this.xEndSpinner, 
                            this.yEndLabel, this.yEndSpinner}, true);
-    // Add distance label and spinner at the end of second row of endPointPanel
-    endPointPanel.add(this.distanceToEndPointLabel, new GridBagConstraints(
+    // Add length label and spinner at the end of second row of endPointPanel
+    endPointPanel.add(this.lengthLabel, new GridBagConstraints(
         0, 1, 3, 1, 1, 0, GridBagConstraints.LINE_END, 
         GridBagConstraints.NONE, new Insets(5, 0, 0, 5), 0, 0));
-    endPointPanel.add(this.distanceToEndPointSpinner, new GridBagConstraints(
+    endPointPanel.add(this.lengthSpinner, new GridBagConstraints(
         3, 1, 1, 1, 1, 0, GridBagConstraints.LINE_START, 
         GridBagConstraints.HORIZONTAL, new Insets(5, 0, 0, 0), 0, 0));
 
@@ -751,37 +605,18 @@ public class WallPanel extends JPanel implements DialogView {
         preferences.getLocalizedString(WallPanel.class, "leftSidePanel.title"),
         new JComponent [] {this.leftSideColorRadioButton, this.leftSideColorButton, 
                            this.leftSideTextureRadioButton, this.leftSideTextureComponent}, false);
-    leftSidePanel.add(new JSeparator(), new GridBagConstraints(
-        0, 2, 2, 1, 1, 0, GridBagConstraints.CENTER,
-        GridBagConstraints.HORIZONTAL, new Insets(3, 0, 3, 0), 0, 0));
-    leftSidePanel.add(this.leftSideMattRadioButton, new GridBagConstraints(
-        0, 3, 1, 1, 1, 0, GridBagConstraints.LINE_START,
-        GridBagConstraints.NONE, new Insets(0, 0, 0, 5), 0, 0));
-    leftSidePanel.add(this.leftSideShinyRadioButton, new GridBagConstraints(
-        1, 3, 1, 1, 1, 0, GridBagConstraints.LINE_START,
-        GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
     add(leftSidePanel, new GridBagConstraints(
         0, 2, 1, 1, 1, 0, GridBagConstraints.LINE_START,
         GridBagConstraints.HORIZONTAL, rowInsets, 0, 0));
-    
     JPanel rightSidePanel = createTitledPanel(
         preferences.getLocalizedString(WallPanel.class, "rightSidePanel.title"),
         new JComponent [] {this.rightSideColorRadioButton, this.rightSideColorButton, 
                            this.rightSideTextureRadioButton, this.rightSideTextureComponent}, false);
-    rightSidePanel.add(new JSeparator(), new GridBagConstraints(
-        0, 2, 2, 1, 1, 0, GridBagConstraints.CENTER,
-        GridBagConstraints.HORIZONTAL, new Insets(3, 0, 3, 0), 0, 0));
-    rightSidePanel.add(this.rightSideMattRadioButton, new GridBagConstraints(
-        0, 3, 1, 1, 1, 0, GridBagConstraints.LINE_START,
-        GridBagConstraints.NONE, new Insets(0, 0, 0, 5), 0, 0));
-    rightSidePanel.add(this.rightSideShinyRadioButton, new GridBagConstraints(
-        1, 3, 1, 1, 1, 0, GridBagConstraints.LINE_START,
-        GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
     add(rightSidePanel, new GridBagConstraints(
         1, 2, 1, 1, 1, 0, GridBagConstraints.LINE_START,
         GridBagConstraints.HORIZONTAL, rowInsets, 0, 0));
     // Fourth row
-    JPanel heightPanel = SwingTools.createTitledPanel(
+    JPanel heightPanel = createTitledPanel(
         preferences.getLocalizedString(WallPanel.class, "heightPanel.title"));   
     // First row of height panel
     heightPanel.add(this.rectangularWallRadioButton, new GridBagConstraints(
@@ -797,7 +632,7 @@ public class WallPanel extends JPanel implements DialogView {
         GridBagConstraints.NONE, new Insets(0, 0, 5, 5), 0, 0));
     heightPanel.add(this.rectangularWallHeightSpinner, new GridBagConstraints(
         2, 1, 1, 1, 1, 0, GridBagConstraints.LINE_START, 
-        GridBagConstraints.HORIZONTAL, new Insets(0, 0, 5, 5), -10, 0));
+        GridBagConstraints.HORIZONTAL, new Insets(0, 0, 5, 5), 0, 0));
     // Third row of height panel
     heightPanel.add(this.slopingWallRadioButton, new GridBagConstraints(
         0, 2, 5, 1, 0, 0, GridBagConstraints.LINE_START, 
@@ -808,34 +643,31 @@ public class WallPanel extends JPanel implements DialogView {
         GridBagConstraints.NONE, new Insets(0, 0, 0, 5), 0, 0));
     heightPanel.add(this.slopingWallHeightAtStartSpinner, new GridBagConstraints(
         2, 3, 1, 1, 1, 0, GridBagConstraints.LINE_START, 
-        GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 5), -10, 0));
+        GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 5), 0, 0));
     heightPanel.add(this.slopingWallHeightAtEndLabel, new GridBagConstraints(
         3, 3, 1, 1, 1, 0, labelAlignment, 
         GridBagConstraints.NONE, new Insets(0, 0, 0, 5), 0, 0));
     heightPanel.add(this.slopingWallHeightAtEndSpinner, new GridBagConstraints(
         4, 3, 1, 1, 1, 0, GridBagConstraints.LINE_START, 
-        GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), -10, 0));
+        GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
     
     add(heightPanel, new GridBagConstraints(
         0, 3, 2, 1, 1, 0, GridBagConstraints.LINE_START,
         GridBagConstraints.HORIZONTAL, rowInsets, 0, 0));    
     // Fifth row
-    JPanel ticknessAndArcExtentPanel = new JPanel(new GridBagLayout());
-    ticknessAndArcExtentPanel.add(this.thicknessLabel, new GridBagConstraints(
-        0, 0, 1, 1, 0, 0, labelAlignment, 
-        GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 5), 0, 0));
-    ticknessAndArcExtentPanel.add(this.thicknessSpinner, new GridBagConstraints(
+    JPanel ticknessPanel = new JPanel(new GridBagLayout());
+    ticknessPanel.add(this.thicknessLabel, new GridBagConstraints(
+        0, 0, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
+        GridBagConstraints.HORIZONTAL, new Insets(0, 8, 0, 5), 50, 0));
+    if (OperatingSystem.isMacOSX()) {
+      this.thicknessLabel.setHorizontalAlignment(JLabel.TRAILING);
+    }
+    ticknessPanel.add(this.thicknessSpinner, new GridBagConstraints(
         1, 0, 1, 1, 1, 0, GridBagConstraints.LINE_START, 
-        GridBagConstraints.NONE, new Insets(0, 0, 0, 10), 0, 0));
-    ticknessAndArcExtentPanel.add(this.arcExtentLabel, new GridBagConstraints(
-        2, 0, 1, 1, 0, 0, labelAlignment, 
-        GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 5), 0, 0));
-    ticknessAndArcExtentPanel.add(this.arcExtentSpinner, new GridBagConstraints(
-        3, 0, 1, 1, 1, 0, GridBagConstraints.LINE_START, 
         GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
-    add(ticknessAndArcExtentPanel, new GridBagConstraints(
-        0, 4, 2, 1, 0, 0, GridBagConstraints.CENTER, 
-        GridBagConstraints.NONE, new Insets(5, 8, 10, 8), 0, 0));
+    add(ticknessPanel, new GridBagConstraints(
+        0, 4, 2, 1, 0, 0, GridBagConstraints.LINE_START, 
+        GridBagConstraints.NONE, new Insets(5, 0, 10, 0), 0, 0));
     // Last row
     add(this.wallOrientationLabel, new GridBagConstraints(
         0, 5, 2, 1, 0, 0, GridBagConstraints.CENTER,
@@ -847,18 +679,14 @@ public class WallPanel extends JPanel implements DialogView {
           public void propertyChange(PropertyChangeEvent ev) {
             startPointPanel.setVisible(controller.isEditablePoints());
             endPointPanel.setVisible(controller.isEditablePoints());
-            arcExtentLabel.setVisible(controller.isEditablePoints());
-            arcExtentSpinner.setVisible(controller.isEditablePoints());
           }
         });
     startPointPanel.setVisible(controller.isEditablePoints());
     endPointPanel.setVisible(controller.isEditablePoints());
-    this.arcExtentLabel.setVisible(controller.isEditablePoints());
-    this.arcExtentSpinner.setVisible(controller.isEditablePoints());
   }
   
   private JPanel createTitledPanel(String title, JComponent [] components, boolean horizontal) {
-    JPanel titledPanel = SwingTools.createTitledPanel(title);    
+    JPanel titledPanel = createTitledPanel(title);    
     
     if (horizontal) {
       int labelAlignment = OperatingSystem.isMacOSX() 
@@ -893,33 +721,22 @@ public class WallPanel extends JPanel implements DialogView {
     return titledPanel;
   }
   
+  private JPanel createTitledPanel(String title) {
+    JPanel titledPanel = new JPanel(new GridBagLayout());
+    Border panelBorder = BorderFactory.createTitledBorder(title);
+    // For systems different from Mac OS X 10.5, add an empty border 
+    if (!OperatingSystem.isMacOSXLeopardOrSuperior()) {
+      panelBorder = BorderFactory.createCompoundBorder(
+          panelBorder, BorderFactory.createEmptyBorder(0, 2, 2, 2));
+    }    
+    titledPanel.setBorder(panelBorder);    
+    return titledPanel;
+  }
+
   /**
    * Displays this panel in a modal dialog box. 
    */
   public void displayView(View parentView) {
-    Component homeRoot = SwingUtilities.getRoot((Component)parentView);
-    if (homeRoot != null) {
-      JOptionPane optionPane = new JOptionPane(this, 
-          JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
-      JComponent parentComponent = SwingUtilities.getRootPane((JComponent)parentView);
-      if (parentView != null) {
-        optionPane.setComponentOrientation(parentComponent.getComponentOrientation());
-      }
-      JDialog dialog = optionPane.createDialog(parentComponent, this.dialogTitle);
-      Dimension screenSize = getToolkit().getScreenSize();
-      Insets screenInsets = getToolkit().getScreenInsets(getGraphicsConfiguration());
-      // Check dialog isn't too high
-      int screenHeight = screenSize.height - screenInsets.top - screenInsets.bottom;
-      if (OperatingSystem.isLinux() && screenHeight == screenSize.height) {
-        // Let's consider that under Linux at least an horizontal bar exists 
-        screenHeight -= 30;
-      }
-      if (dialog.getHeight() > screenHeight) {
-        this.wallOrientationLabel.setVisible(false);
-      }
-      dialog.dispose();
-    }
-
     JFormattedTextField thicknessTextField = 
         ((JSpinner.DefaultEditor)thicknessSpinner.getEditor()).getTextField();
     if (SwingTools.showConfirmDialog((JComponent)parentView, 

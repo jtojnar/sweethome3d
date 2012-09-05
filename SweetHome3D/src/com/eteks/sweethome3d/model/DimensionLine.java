@@ -1,7 +1,7 @@
 /*
  * DimensionLine.java 17 sept 2007
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,12 +34,12 @@ import java.io.Serializable;
  * A dimension line in plan.
  * @author Emmanuel Puybaret
  */
-public class DimensionLine implements Serializable, Selectable, Elevatable {
+public class DimensionLine implements Serializable, Selectable {
   /**
    * The properties of a dimension line that may change. <code>PropertyChangeListener</code>s added 
    * to a dimension line will be notified under a property name equal to the string value of one these properties.
    */
-  public enum Property {X_START, Y_START, X_END, Y_END, OFFSET, LENGTH_STYLE, LEVEL} 
+  public enum Property {X_START, Y_START, X_END, Y_END, OFFSET, LENGTH_STYLE} 
    
   private static final long serialVersionUID = 1L;
   
@@ -49,7 +49,6 @@ public class DimensionLine implements Serializable, Selectable, Elevatable {
   private float     yEnd;
   private float     offset;
   private TextStyle lengthStyle;
-  private Level     level;
 
   private transient PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
   private transient Shape shapeCache;
@@ -216,35 +215,6 @@ public class DimensionLine implements Serializable, Selectable, Elevatable {
   }
 
   /**
-   * Returns the level which this dimension line belongs to. 
-   * @since 3.4
-   */
-  public Level getLevel() {
-    return this.level;
-  }
-
-  /**
-   * Sets the level of this dimension line. Once this dimension line is updated, 
-   * listeners added to this dimension line will receive a change notification.
-   * @since 3.4
-   */
-  public void setLevel(Level level) {
-    if (level != this.level) {
-      Level oldLevel = this.level;
-      this.level = level;
-      this.propertyChangeSupport.firePropertyChange(Property.LEVEL.name(), oldLevel, level);
-    }
-  }
-
-  /**
-   * Returns <code>true</code> if this dimension line is at the given level.
-   * @since 3.4
-   */
-  public boolean isAtLevel(Level level) {
-    return this.level == level;
-  }
-  
-  /**
    * Returns the points of the rectangle surrounding 
    * this dimension line and its extension lines.
    * @return an array of the 4 (x,y) coordinates of the rectangle.
@@ -373,7 +343,6 @@ public class DimensionLine implements Serializable, Selectable, Elevatable {
     try {
       DimensionLine clone = (DimensionLine)super.clone();
       clone.propertyChangeSupport = new PropertyChangeSupport(clone);
-      clone.level = null;
       return clone;
     } catch (CloneNotSupportedException ex) {
       throw new IllegalStateException("Super class isn't cloneable"); 

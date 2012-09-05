@@ -1,7 +1,7 @@
 /*
  * HelpController.java 20 juil. 07
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,9 +43,9 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.ChangedCharSetException;
 import javax.swing.text.MutableAttributeSet;
 import javax.swing.text.html.HTML;
-import javax.swing.text.html.HTML.Tag;
 import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTMLEditorKit;
+import javax.swing.text.html.HTML.Tag;
 
 import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.tools.ResourceURLContent;
@@ -59,9 +59,7 @@ public class HelpController implements Controller {
    * The properties that may be edited by the view associated to this controller. 
    */
   public enum Property {HELP_PAGE, BROWSER_PAGE, 
-      PREVIOUS_PAGE_ENABLED, NEXT_PAGE_ENABLED, HIGHLIGHTED_TEXT}
-
-  private static final String SEARCH_RESULT_PROTOCOL = "search";
+      PREVIOUS_PAGE_ENABLED, NEXT_PAGE_ENABLED}
   
   private final UserPreferences       preferences;
   private final ViewFactory           viewFactory;
@@ -74,7 +72,7 @@ public class HelpController implements Controller {
   private URL browserPage;
   private boolean previousPageEnabled;
   private boolean nextPageEnabled;
-  private String  highlightedText;
+
   
   public HelpController(UserPreferences preferences, 
                         ViewFactory viewFactory) {
@@ -191,28 +189,6 @@ public class HelpController implements Controller {
   }
 
   /**
-   * Sets the highlighted text.
-   */
-  public void setHighlightedText(String highlightedText) {
-    if (highlightedText != this.highlightedText
-        || (highlightedText != null && !highlightedText.equals(this.highlightedText))) {
-      String oldHighlightedText = this.highlightedText;
-      this.highlightedText = highlightedText;
-      this.propertyChangeSupport.firePropertyChange(Property.HIGHLIGHTED_TEXT.name(), 
-          oldHighlightedText, highlightedText);
-    }
-  }
-  
-  /**
-   * Returns the highlighted text.
-   */
-  public String getHighlightedText() {
-    return getHelpPage() == null || SEARCH_RESULT_PROTOCOL.equals(getHelpPage().getProtocol()) 
-        ? null
-        : this.highlightedText;
-  }
-
-  /**
    * Adds a property change listener to <code>preferences</code> to update
    * displayed page when language changes.
    */
@@ -269,7 +245,7 @@ public class HelpController implements Controller {
    * Controls the display of the given <code>page</code>.
    */
   public void showPage(URL page) {
-    if (isBrowserPage(page)) {
+    if (page.getProtocol().equals("http")) {
       setBrowserPage(page);
     } else if (this.historyIndex == -1
             || !this.history.get(this.historyIndex).equals(page)) {
@@ -284,45 +260,12 @@ public class HelpController implements Controller {
   }
   
   /**
-   * Returns <code>true</code> if the given <code>page</code> should be displayed 
-   * by the system browser rather than by the help view.
-   * By default, it returns <code>true</code> if the <code>page</code> protocol is http or https.
-   */
-  protected boolean isBrowserPage(URL page) {
-    String protocol = page.getProtocol();
-    return protocol.equals("http") || protocol.equals("https");
-  }
-  
-  /**
    * Returns the URL of the help index page.
    */
   private URL getHelpIndexPageURL() {
     String helpIndex = this.preferences.getLocalizedString(HelpController.class, "helpIndex");
-    try {
-      // Try first to interpret contentFile as an absolute URL 
-      return new URL(helpIndex);
-    } catch (MalformedURLException ex) {
-      String classPackage = HelpController.class.getName();
-      classPackage = classPackage.substring(0, classPackage.lastIndexOf(".")).replace('.', '/');
-      String helpIndexWithoutLeadingSlash = helpIndex.startsWith("/") 
-          ? helpIndex.substring(1) 
-          : classPackage + '/' + helpIndex;
-      for (ClassLoader classLoader : this.preferences.getResourceClassLoaders()) {
-        try {
-          return new ResourceURLContent(classLoader, helpIndexWithoutLeadingSlash).getURL();
-        } catch (IllegalArgumentException ex2) {
-          // Try next class loader 
-        }
-      }
-      try {
-        // Build URL of index page with ResourceURLContent because of Java bug #6746185 
-        return new ResourceURLContent(HelpController.class, helpIndex).getURL();
-      } catch (IllegalArgumentException ex2) {
-        ex2.printStackTrace();
-        // Return English help by default
-        return new ResourceURLContent(HelpController.class, "resources/help/en/index.html").getURL();
-      }
-    }
+    // Build URL of index page with ResourceURLContent because of bug #6746185 
+    return new ResourceURLContent(HelpController.class, helpIndex).getURL();
   }
   
   /**
@@ -331,14 +274,11 @@ public class HelpController implements Controller {
    */
   public void search(String searchedText) {
     URL helpIndex = getHelpIndexPageURL();
-    String [] searchedWords = getLowerCaseSearchedWords(searchedText);
-    List<HelpDocument> helpDocuments = searchInHelpDocuments(helpIndex, searchedWords);
-    URL applicationIconUrl = null;
-    try {
-      applicationIconUrl = new ResourceURLContent(HelpController.class, "resources/help/images/applicationIcon32.png").getURL();
-    } catch (Exception ex) {
-      // Ignore icon
+    String [] searchedWords = searchedText.split("\\s");
+    for (int i = 0; i < searchedWords.length; i++) {
+      searchedWords [i] = searchedWords [i].toLowerCase().trim();
     }
+    List<HelpDocument> helpDocuments = searchInHelpDocuments(helpIndex, searchedWords);
     // Build dynamically the search result page
     final StringBuilder htmlText = new StringBuilder(
         "<html><head><meta http-equiv='content-type' content='text/html;charset=UTF-8'><link href='" 
@@ -352,9 +292,9 @@ public class HelpController implements Controller {
         + "  <table width='100%' border='0' cellspacing='0' cellpadding='0'>"
         + "    <tr valign='bottom' height='32'>"
         + "      <td width='3' height='32'>&nbsp;</td>"
-        + (applicationIconUrl != null 
-              ? "<td width='32' height='32'><img src='" + applicationIconUrl + "' height='32' width='32'></td>" 
-              : "")
+        + "      <td width='32' height='32'><img src='"  
+        + new ResourceURLContent(HelpController.class, "resources/help/images/sweethome3dIcon32.png").getURL() 
+        + "' height='32' width='32'></td>"
         + "      <td width='8' height='32'>&nbsp;&nbsp;</td>"
         + "      <td valign='bottom' height='32'><font id='topic'>" 
         +            this.preferences.getLocalizedString(HelpController.class, "searchResult") + "</font></td>"
@@ -386,7 +326,7 @@ public class HelpController implements Controller {
 
     try {
       // Show built HTML text as a page read from an URL
-      showPage(new URL(null, SEARCH_RESULT_PROTOCOL + "://" + htmlText.hashCode(), new URLStreamHandler() {
+      showPage(new URL(null, "string://" + htmlText.hashCode(), new URLStreamHandler() {
           @Override
           protected URLConnection openConnection(URL url) throws IOException {
             return new URLConnection(url) {
@@ -409,38 +349,45 @@ public class HelpController implements Controller {
   }
 
   /**
-   * Returns the searched words in the given text.
-   */
-  private String [] getLowerCaseSearchedWords(String searchedText) {
-    String [] searchedWords = searchedText.split("\\s");
-    for (int i = 0; i < searchedWords.length; i++) {
-      searchedWords [i] = searchedWords [i].toLowerCase().trim();
-    }
-    return searchedWords;
-  }
-
-  /**
    * Searches <code>searchedWords</code> in help documents and returns 
    * the list of matching documents sorted from the most relevant to the least relevant.
    * This method uses some Swing classes for their HTML parsing capabilities 
    * and not to create components.
    */
-  private List<HelpDocument> searchInHelpDocuments(URL helpIndex, String [] searchedWords) {
+  public List<HelpDocument> searchInHelpDocuments(URL helpIndex, String [] searchedWords) {
     List<URL> parsedDocuments = new ArrayList<URL>(); 
     parsedDocuments.add(helpIndex);
     
     List<HelpDocument> helpDocuments = new ArrayList<HelpDocument>();
     // Parse all the URLs added to parsedDocuments at each loop
+    HTMLEditorKit html = new HTMLEditorKit();
     for (int i = 0; i < parsedDocuments.size(); i++) {
+      URL helpDocumentUrl = (URL)parsedDocuments.get(i);
+      Reader urlReader = null;
       try {
-        // Parse a HTML document
-        URL helpDocumentUrl = parsedDocuments.get(i);
+        urlReader = new InputStreamReader(helpDocumentUrl.openStream(), "ISO-8859-1");
+
+        // Create an HTML document
         HelpDocument helpDocument = new HelpDocument(helpDocumentUrl, searchedWords);
-        helpDocument.parse();
+        // Parse HTML file first without ignoring charset directive
+        helpDocument.putProperty("IgnoreCharsetDirective", Boolean.FALSE);
+        try {
+          html.read(urlReader, helpDocument, 0);
+        } catch (ChangedCharSetException ex) {
+          // Retrieve document real encoding
+          String mimeType = ex.getCharSetSpec();
+          String encoding = mimeType.substring(mimeType.indexOf("=") + 1).trim();
+          // Restart reading document with its real encoding
+          urlReader.close();
+          urlReader = new InputStreamReader(helpDocumentUrl.openStream(), encoding);
+          helpDocument.putProperty("IgnoreCharsetDirective", Boolean.TRUE);
+          html.read(urlReader, helpDocument, 0);
+        }
         // If searched text was found add it to returned documents list
         if (helpDocument.getRelevance() > 0) {
           helpDocuments.add(helpDocument);
         }
+
         // Check if the HTML file contains new URLs to parse
         for (URL url : helpDocument.getReferencedDocuments()) {
           String lowerCaseFile = url.getFile().toLowerCase();
@@ -451,6 +398,14 @@ public class HelpController implements Controller {
         } 
       } catch (IOException ex) {
         // Ignore unknown documents (their URLs should be checked outside of Sweet Home 3D)
+      } catch (BadLocationException ex) {
+      } finally {
+        if (urlReader != null) {
+          try {
+            urlReader.close();
+          } catch (IOException ex) {
+          }
+        }
       }
     }
     // Sort by relevance
@@ -465,50 +420,17 @@ public class HelpController implements Controller {
   /**
    * A help HTML document parsed with <code>HTMLEditorKit</code>. 
    */
-  private class HelpDocument extends HTMLDocument {
+  private static class HelpDocument extends HTMLDocument {
     // Documents set referenced in this file 
-    private Set<URL>     referencedDocuments = new HashSet<URL>();
-    private String []    searchedWords;
-    private int          relevance;
-    private String       title = "";
+    private Set<URL>  referencedDocuments = new HashSet<URL>();
+    private String [] searchedWords;
+    private int       relevance;
+    private String    title = "";
 
     public HelpDocument(URL helpDocument, String [] searchedWords) {
       this.searchedWords = searchedWords;
       // Store HTML file base
       setBase(helpDocument);
-    }
-
-    /**
-     * Parses this document. 
-     */
-    public void parse() throws IOException {
-      HTMLEditorKit html = new HTMLEditorKit();
-      Reader urlReader = null;
-      try {
-        urlReader = new InputStreamReader(getBase().openStream(), "ISO-8859-1");
-        // Parse HTML file first without ignoring charset directive
-        putProperty("IgnoreCharsetDirective", Boolean.FALSE);
-        try {
-          html.read(urlReader, this, 0);
-        } catch (ChangedCharSetException ex) {
-          // Retrieve document real encoding
-          String mimeType = ex.getCharSetSpec();
-          String encoding = mimeType.substring(mimeType.indexOf("=") + 1).trim();
-          // Restart reading document with its real encoding
-          urlReader.close();
-          urlReader = new InputStreamReader(getBase().openStream(), encoding);
-          putProperty("IgnoreCharsetDirective", Boolean.TRUE);
-          html.read(urlReader, this, 0);
-        }
-      } catch (BadLocationException ex) {
-      } finally {
-        if (urlReader != null) {
-          try {
-            urlReader.close();
-          } catch (IOException ex) {
-          }
-        }
-      }
     }
 
     public Set<URL> getReferencedDocuments() {
@@ -518,15 +440,15 @@ public class HelpController implements Controller {
     public int getRelevance() {
       return this.relevance;
     }
-    
+
     public String getTitle() {
       return this.title;
     }
     
     private void addReferencedDocument(String referencedDocument) {
       try {        
-        URL url = new URL(getBase(), referencedDocument);
-        if (!isBrowserPage(url)) {
+        if (!referencedDocument.startsWith("http:")) {
+          URL url = new URL(getBase(), referencedDocument);
           URL urlWithNoAnchor = new URL(
               url.getProtocol(), url.getHost(), url.getPort(), url.getFile());
           this.referencedDocuments.add(urlWithNoAnchor);
@@ -549,14 +471,15 @@ public class HelpController implements Controller {
       @Override
       public void handleStartTag(HTML.Tag tag,
                                  MutableAttributeSet att, int pos) {
+        String attribute;
         if (tag.equals(HTML.Tag.A)) { // <a href=...> tag
-          String attribute = (String)att.getAttribute(HTML.Attribute.HREF);
+          attribute = (String)att.getAttribute(HTML.Attribute.HREF);
           if (attribute != null) {
             addReferencedDocument(attribute);
           }
         } else if (tag.equals(HTML.Tag.TITLE)) {
           this.inTitle = true;
-        } 
+        }
       }
       
       @Override
@@ -567,27 +490,12 @@ public class HelpController implements Controller {
       }
       
       @Override
-      public void handleSimpleTag(Tag tag, MutableAttributeSet att, int pos) {
-        if (tag.equals(HTML.Tag.META)) {
-          String nameAttribute = (String)att.getAttribute(HTML.Attribute.NAME); 
-          String contentAttribute = (String)att.getAttribute(HTML.Attribute.CONTENT);
-          if ("keywords".equalsIgnoreCase(nameAttribute)
-              && contentAttribute != null) {
-            searchWords(contentAttribute);
-          }
-        }
-      }
-      
-      @Override
       public void handleText(char [] data, int pos) {
         String text = new String(data);
         if (this.inTitle) {
           title += text;
         }
-        searchWords(text);
-      }
-
-      private void searchWords(String text) {
+        
         String lowerCaseText = text.toLowerCase();
         for (String searchedWord : searchedWords) {
           for (int index = 0; index < lowerCaseText.length(); index += searchedWord.length() + 1) {

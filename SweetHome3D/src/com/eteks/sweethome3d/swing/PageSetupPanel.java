@@ -1,7 +1,7 @@
 /*
  * PageSetupPanel.java 27 aout 07
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,6 @@ import java.awt.print.Paper;
 import java.awt.print.PrinterJob;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.security.AccessControlException;
 
 import javax.swing.ActionMap;
 import javax.swing.ButtonGroup;
@@ -70,7 +69,7 @@ import com.eteks.sweethome3d.viewcontroller.View;
  * @author Emmanuel Puybaret
  */
 public class PageSetupPanel extends JPanel implements DialogView {
-  private static final int DEFAULT_SCALE = 100;
+  private static final int DEFAULT_SCALE = 10;
   
   private final PageSetupController controller;
   private PageFormat          pageFormat;
@@ -164,14 +163,14 @@ public class PageSetupPanel extends JPanel implements DialogView {
     this.headerFormatLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
         PageSetupPanel.class, "headerFormatLabel.text"));
     this.headerFormatTextField = new JTextField(20);
-    if (!OperatingSystem.isMacOSXLeopardOrSuperior()) {
+    if (!OperatingSystem.isMacOSX()) {
       SwingTools.addAutoSelectionOnFocusGain(this.headerFormatTextField);
     }
     
     this.footerFormatLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
         PageSetupPanel.class, "footerFormatLabel.text"));
     this.footerFormatTextField = new JTextField(20);
-    if (!OperatingSystem.isMacOSXLeopardOrSuperior()) {
+    if (!OperatingSystem.isMacOSX()) {
       SwingTools.addAutoSelectionOnFocusGain(this.footerFormatTextField);
     }
 
@@ -282,21 +281,8 @@ public class PageSetupPanel extends JPanel implements DialogView {
    */
   private void updateComponents(HomePrint homePrint) {
     this.pageFormat = HomePrintableComponent.getPageFormat(homePrint);
-    boolean no3D;
-    try {
-      no3D = Boolean.getBoolean("com.eteks.sweethome3d.no3D");
-    } catch (AccessControlException ex) {
-      // If com.eteks.sweethome3d.no3D property can't be read, 
-      // security manager won't allow to access to Java 3D DLLs required to print 3D images too
-      no3D = true;
-    }
     // Check if off screen image is supported 
-    boolean offscreenCanvas3DSupported;
-    if (no3D) {
-      offscreenCanvas3DSupported = false;
-    } else { 
-      offscreenCanvas3DSupported = Component3DManager.getInstance().isOffScreenImageSupported();
-    }
+    boolean offscreenCanvas3DSupported = Component3DManager.getInstance().isOffScreenImageSupported();
     final NullableSpinnerNumberModel userPlanScaleSpinnerModel = 
         (NullableSpinner.NullableSpinnerNumberModel)this.userPlanScaleSpinner.getModel();
     if (homePrint != null) {
@@ -333,7 +319,6 @@ public class PageSetupPanel extends JPanel implements DialogView {
       this.footerFormatTextField.setText("");
     }
     this.view3DPrintedCheckBox.setEnabled(offscreenCanvas3DSupported);
-    this.view3DPrintedCheckBox.setVisible(!no3D);
   }
 
   /**
@@ -467,7 +452,7 @@ public class PageSetupPanel extends JPanel implements DialogView {
     if (SwingTools.showConfirmDialog((JComponent)parentView, 
             this, this.dialogTitle, this.pageFormatButton) == JOptionPane.OK_OPTION
         && this.controller != null) {
-      this.controller.modifyPageSetup();
+          this.controller.modifyPageSetup();
     }
   }
 }

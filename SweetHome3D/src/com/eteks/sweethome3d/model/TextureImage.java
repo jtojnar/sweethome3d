@@ -1,7 +1,7 @@
 /*
  * TextureImage.java 5 oct. 07
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,13 +19,11 @@
  */
 package com.eteks.sweethome3d.model;
 
-import java.io.Serializable;
-
 /**
  * An image used as texture.
  * @author Emmanuel Puybaret
  */
-public interface TextureImage extends Serializable {
+public interface TextureImage {
   /**
    * Returns the name of this texture image.
    */

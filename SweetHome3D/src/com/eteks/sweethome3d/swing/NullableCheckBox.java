@@ -1,7 +1,7 @@
 /*
  * NullableCheckBox.java 7 nov. 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -177,13 +177,6 @@ public class NullableCheckBox extends JComponent {
    */
   public String getText() {
     return this.checkBox.getText();
-  }
-  
-  /**
-   * Sets the tool tip text displayed by this check box.
-   */
-  public void setToolTipText(String text) {
-    this.checkBox.setToolTipText(text);
   }
 
   @Override

@@ -1,7 +1,7 @@
 /*
  * DefaultHomeInputStream.java 13 Oct 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,11 +29,9 @@ import java.io.InterruptedIOException;
 import java.io.ObjectInputStream;
 import java.io.OutputStream;
 import java.net.URL;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import com.eteks.sweethome3d.model.Home;
-import com.eteks.sweethome3d.tools.OperatingSystem;
 import com.eteks.sweethome3d.tools.URLContent;
 
 /**
@@ -42,7 +40,6 @@ import com.eteks.sweethome3d.tools.URLContent;
  * @see DefaultHomeOutputStream
  */
 public class DefaultHomeInputStream extends FilterInputStream {
-  private final ContentRecording contentRecording;
   private File tempFile;
 
   /**
@@ -50,17 +47,7 @@ public class DefaultHomeInputStream extends FilterInputStream {
    * from <code>in</code>.
    */
   public DefaultHomeInputStream(InputStream in) throws IOException {
-    this(in, ContentRecording.INCLUDE_ALL_CONTENT);
-  }
-
-  /**
-   * Creates a home input stream filter able to read a home and its content
-   * from <code>in</code>.
-   */
-  public DefaultHomeInputStream(InputStream in, 
-                                ContentRecording contentRecording) throws IOException {
     super(in);
-    this.contentRecording = contentRecording;
   }
 
   /**
@@ -78,38 +65,30 @@ public class DefaultHomeInputStream extends FilterInputStream {
    * Reads home from a zipped stream.
    */
   public Home readHome() throws IOException, ClassNotFoundException {
-    if (this.contentRecording != ContentRecording.INCLUDE_NO_CONTENT) {
-      // Copy home stream in a temporary file 
-      this.tempFile = OperatingSystem.createTemporaryFile("open", ".sweethome3d");
-      checkCurrentThreadIsntInterrupted();
-      OutputStream tempOut = null;
-      try {
-        tempOut = new FileOutputStream(this.tempFile);
-        byte [] buffer = new byte [8192];
-        int size; 
-        while ((size = this.in.read(buffer)) != -1) {
-          tempOut.write(buffer, 0, size);
-        }
-      } finally {
-        if (tempOut != null) {
-          tempOut.close();
-        }
+    // Copy home stream in a temporary file 
+    this.tempFile = File.createTempFile("open", ".sweethome3d");
+    this.tempFile.deleteOnExit();
+    checkCurrentThreadIsntInterrupted();
+    OutputStream tempOut = null;
+    try {
+      tempOut = new FileOutputStream(this.tempFile);
+      byte [] buffer = new byte [8096];
+      int size; 
+      while ((size = this.in.read(buffer)) != -1) {
+        tempOut.write(buffer, 0, size);
+      }
+    } finally {
+      if (tempOut != null) {
+        tempOut.close();
       }
     }
     
     ZipInputStream zipIn = null;
     try {
       // Open a zip input from temp file
-      zipIn = new ZipInputStream(this.contentRecording == ContentRecording.INCLUDE_NO_CONTENT
-          ? this.in : new FileInputStream(this.tempFile));
-      // Read Home entry
-      ZipEntry entry;
-      while ((entry = zipIn.getNextEntry()) != null
-          && !"Home".equals(entry.getName())) {
-      }
-      if (entry == null) {
-        throw new IOException("Missing entry \"Home\"");
-      }
+      zipIn = new ZipInputStream(new FileInputStream(this.tempFile));
+      // Read home in first entry
+      zipIn.getNextEntry();
       checkCurrentThreadIsntInterrupted();
       // Use an ObjectInputStream that replaces temporary URLs of Content objects 
       // by URLs relative to file 
@@ -129,9 +108,7 @@ public class DefaultHomeInputStream extends FilterInputStream {
   private class HomeObjectInputStream extends ObjectInputStream {
     public HomeObjectInputStream(InputStream in) throws IOException {
       super(in);
-      if (contentRecording != ContentRecording.INCLUDE_NO_CONTENT) {
-        enableResolveObject(true);
-      }
+      enableResolveObject(true);
     }
 
     @Override
@@ -141,14 +118,7 @@ public class DefaultHomeInputStream extends FilterInputStream {
         String url = tmpURL.toString();
         if (url.startsWith("jar:file:temp!/")) {
           // Replace "temp" in URL by current temporary file
-          String entryName = url.substring(url.indexOf('!') + 2);
-          URL fileURL = new URL("jar:file:" + tempFile.toString() + "!/" + entryName);
-          try {
-            // Check entry exists
-            fileURL.openStream().close();
-          } catch (IOException ex) {
-            throw new IOException("Missing entry \"" + entryName + "\"");
-          }
+          URL fileURL = new URL("jar:file:" + tempFile.toString() + url.substring(url.indexOf('!')));
           return new HomeURLContent(fileURL);
         } else {
           return obj;

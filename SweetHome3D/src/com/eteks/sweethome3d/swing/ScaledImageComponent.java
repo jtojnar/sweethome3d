@@ -1,7 +1,7 @@
 /*
  * TextureButton.java 01 oct. 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,31 +40,13 @@ import javax.swing.border.EtchedBorder;
  */
 public class ScaledImageComponent extends JComponent {
   private BufferedImage image;
-  private boolean       imageEnlargementEnabled;
   
-  /**
-   * Creates a component that will display no image.
-   */
   public ScaledImageComponent() {
     this(null);
   }
 
-  /**
-   * Creates a component that will display the given <code>image</code> 
-   * at a maximum scale equal to 1.
-   */
   public ScaledImageComponent(BufferedImage image) {
-    this(image, false);
-  }
-
-  /**
-   * Creates a component that will display the given <code>image</code> 
-   * with no maximum scale if <code>imageEnlargementEnabled</code> is <code>true</code>.
-   */
-  public ScaledImageComponent(BufferedImage image, 
-                              boolean imageEnlargementEnabled) {
     this.image = image;
-    this.imageEnlargementEnabled = imageEnlargementEnabled;
     setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
   }
 
@@ -79,7 +61,7 @@ public class ScaledImageComponent extends JComponent {
       Insets insets = getInsets();
       final int defaultPreferredWidth = 300; 
       final int defaultPreferredHeight = 300; 
-      if (this.image == null) {
+      if (image == null) {
         return new Dimension(defaultPreferredWidth + insets.left + insets.right, 
             defaultPreferredHeight + insets.top + insets.bottom);
       } else {
@@ -87,12 +69,12 @@ public class ScaledImageComponent extends JComponent {
         // its bigger dimension (width or height) is 300 pixels
         int maxImagePreferredWith   = defaultPreferredWidth - insets.left - insets.right;
         int maxImagePreferredHeight = defaultPreferredHeight - insets.top - insets.bottom;
-        float widthScale = (float)this.image.getWidth() / maxImagePreferredWith;
-        float heightScale = (float)this.image.getHeight() / maxImagePreferredHeight;
+        float widthScale = (float)image.getWidth() / maxImagePreferredWith;
+        float heightScale = (float)image.getHeight() / maxImagePreferredHeight;
         if (widthScale > heightScale) {
           return new Dimension(defaultPreferredWidth, (int)(image.getHeight() / widthScale) + insets.top + insets.bottom);
         } else {
-          return new Dimension((int)(this.image.getWidth() / heightScale) + insets.left + insets.right, defaultPreferredHeight);
+          return new Dimension((int)(image.getWidth() / heightScale) + insets.left + insets.right, defaultPreferredHeight);
         }
       }
     }
@@ -100,10 +82,6 @@ public class ScaledImageComponent extends JComponent {
   
   @Override
   protected void paintComponent(Graphics g) {
-    if (isOpaque()) {
-      g.setColor(getBackground());
-      g.fillRect(0, 0, getWidth(), getHeight());
-    }
     paintImage(g, null);
   }
 
@@ -114,7 +92,8 @@ public class ScaledImageComponent extends JComponent {
   protected void paintImage(Graphics g, AlphaComposite composite) {
     if (image != null) {
       Graphics2D g2D = (Graphics2D)g;
-      g2D.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+      g2D.setRenderingHint(RenderingHints.KEY_RENDERING, 
+          RenderingHints.VALUE_RENDER_QUALITY);
       AffineTransform oldTransform = g2D.getTransform();
       Composite oldComposite = g2D.getComposite();
       Point translation = getImageTranslation();      
@@ -152,15 +131,10 @@ public class ScaledImageComponent extends JComponent {
    * Returns the scale used to draw the image of this component.
    */
   protected float getImageScale() {
-    if (this.image != null) {
+    if (image != null) {
       Insets insets = getInsets();
-      float imageScale = Math.min((float)(getWidth() - insets.left - insets.right) / image.getWidth(), 
-          (float)(getHeight() - insets.top - insets.bottom) / image.getHeight());
-      if (this.imageEnlargementEnabled) {
-        return imageScale;
-      } else {
-        return Math.min(1, imageScale);
-      }
+      return Math.min(1, Math.min((float)(getWidth() - insets.left - insets.right) / image.getWidth(), 
+          (float)(getHeight() - insets.top - insets.bottom) / image.getHeight()));
     } else {
       return 1;
     }

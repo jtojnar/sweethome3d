@@ -1,7 +1,7 @@
 /*
  * ResourceURLContent.java 9 juil. 2007
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,7 +63,6 @@ public class ResourceURLContent extends URLContent {
   
   /**
    * Creates a content for <code>resourceName</code> relative to <code>resourceClassLoader</code>.
-   * <code>resourceName</code> is absolute and shouldn't start with a slash.
    * @param resourceClassLoader the class loader used to load the given resource name
    * @param resourceName  the name of the resource
    * @throws IllegalArgumentException if the resource doesn't match a valid resource.

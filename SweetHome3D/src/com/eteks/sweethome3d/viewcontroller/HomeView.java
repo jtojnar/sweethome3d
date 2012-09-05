@@ -1,7 +1,7 @@
 /*
  * HomeView.java 28 oct 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,12 +36,11 @@ public interface HomeView extends View {
       NEW_HOME, CLOSE, OPEN, DELETE_RECENT_HOMES, SAVE, SAVE_AS, SAVE_AND_COMPRESS,
       PAGE_SETUP, PRINT_PREVIEW, PRINT, PRINT_TO_PDF, PREFERENCES, EXIT, 
       UNDO, REDO, CUT, COPY, PASTE, DELETE, SELECT_ALL,
-      ADD_HOME_FURNITURE, DELETE_HOME_FURNITURE, MODIFY_FURNITURE, 
-      IMPORT_FURNITURE, IMPORT_FURNITURE_LIBRARY, IMPORT_TEXTURES_LIBRARY,
+      ADD_HOME_FURNITURE, DELETE_HOME_FURNITURE, MODIFY_FURNITURE, IMPORT_FURNITURE, IMPORT_FURNITURE_LIBRARY,
       SORT_HOME_FURNITURE_BY_CATALOG_ID, SORT_HOME_FURNITURE_BY_NAME, 
       SORT_HOME_FURNITURE_BY_WIDTH, SORT_HOME_FURNITURE_BY_DEPTH, SORT_HOME_FURNITURE_BY_HEIGHT, 
       SORT_HOME_FURNITURE_BY_X, SORT_HOME_FURNITURE_BY_Y, SORT_HOME_FURNITURE_BY_ELEVATION, 
-      SORT_HOME_FURNITURE_BY_ANGLE, SORT_HOME_FURNITURE_BY_LEVEL, SORT_HOME_FURNITURE_BY_COLOR, SORT_HOME_FURNITURE_BY_TEXTURE, 
+      SORT_HOME_FURNITURE_BY_ANGLE, SORT_HOME_FURNITURE_BY_COLOR, 
       SORT_HOME_FURNITURE_BY_MOVABILITY, SORT_HOME_FURNITURE_BY_TYPE, SORT_HOME_FURNITURE_BY_VISIBILITY, 
       SORT_HOME_FURNITURE_BY_PRICE, SORT_HOME_FURNITURE_BY_VALUE_ADDED_TAX_PERCENTAGE, 
       SORT_HOME_FURNITURE_BY_VALUE_ADDED_TAX, SORT_HOME_FURNITURE_BY_PRICE_VALUE_ADDED_TAX_INCLUDED,
@@ -49,22 +48,17 @@ public interface HomeView extends View {
       DISPLAY_HOME_FURNITURE_CATALOG_ID, DISPLAY_HOME_FURNITURE_NAME, 
       DISPLAY_HOME_FURNITURE_WIDTH, DISPLAY_HOME_FURNITURE_DEPTH, DISPLAY_HOME_FURNITURE_HEIGHT, 
       DISPLAY_HOME_FURNITURE_X, DISPLAY_HOME_FURNITURE_Y, DISPLAY_HOME_FURNITURE_ELEVATION, 
-      DISPLAY_HOME_FURNITURE_ANGLE, DISPLAY_HOME_FURNITURE_COLOR, DISPLAY_HOME_FURNITURE_LEVEL, DISPLAY_HOME_FURNITURE_TEXTURE, 
+      DISPLAY_HOME_FURNITURE_ANGLE, DISPLAY_HOME_FURNITURE_COLOR, 
       DISPLAY_HOME_FURNITURE_MOVABLE, DISPLAY_HOME_FURNITURE_DOOR_OR_WINDOW, DISPLAY_HOME_FURNITURE_VISIBLE,
       DISPLAY_HOME_FURNITURE_PRICE, DISPLAY_HOME_FURNITURE_VALUE_ADDED_TAX_PERCENTAGE,
       DISPLAY_HOME_FURNITURE_VALUE_ADDED_TAX, DISPLAY_HOME_FURNITURE_PRICE_VALUE_ADDED_TAX_INCLUDED,
-      ALIGN_FURNITURE_ON_TOP, ALIGN_FURNITURE_ON_BOTTOM, ALIGN_FURNITURE_ON_LEFT, ALIGN_FURNITURE_ON_RIGHT, 
-      ALIGN_FURNITURE_ON_FRONT_SIDE, ALIGN_FURNITURE_ON_BACK_SIDE, ALIGN_FURNITURE_ON_LEFT_SIDE, ALIGN_FURNITURE_ON_RIGHT_SIDE, ALIGN_FURNITURE_SIDE_BY_SIDE,
-      DISTRIBUTE_FURNITURE_HORIZONTALLY, DISTRIBUTE_FURNITURE_VERTICALLY,
-      GROUP_FURNITURE, UNGROUP_FURNITURE,
-      SELECT, PAN, CREATE_WALLS, CREATE_ROOMS, CREATE_DIMENSION_LINES, CREATE_LABELS, DELETE_SELECTION,
-      LOCK_BASE_PLAN, UNLOCK_BASE_PLAN, MODIFY_COMPASS, MODIFY_WALL, REVERSE_WALL_DIRECTION, SPLIT_WALL, MODIFY_ROOM, MODIFY_LABEL,
+      ALIGN_FURNITURE_ON_TOP, ALIGN_FURNITURE_ON_BOTTOM, ALIGN_FURNITURE_ON_LEFT, ALIGN_FURNITURE_ON_RIGHT,
+      SELECT, CREATE_WALLS, CREATE_ROOMS, CREATE_DIMENSION_LINES, CREATE_LABELS, DELETE_SELECTION, 
+      LOCK_BASE_PLAN, UNLOCK_BASE_PLAN, MODIFY_WALL, REVERSE_WALL_DIRECTION, SPLIT_WALL, MODIFY_ROOM, MODIFY_LABEL,
       INCREASE_TEXT_SIZE, DECREASE_TEXT_SIZE, TOGGLE_BOLD_STYLE, TOGGLE_ITALIC_STYLE,
       IMPORT_BACKGROUND_IMAGE, MODIFY_BACKGROUND_IMAGE, HIDE_BACKGROUND_IMAGE, SHOW_BACKGROUND_IMAGE, DELETE_BACKGROUND_IMAGE, 
-      ADD_LEVEL, DELETE_LEVEL, MODIFY_LEVEL,
       ZOOM_OUT, ZOOM_IN, EXPORT_TO_SVG,
-      VIEW_FROM_TOP, VIEW_FROM_OBSERVER, MODIFY_OBSERVER, STORE_POINT_OF_VIEW, DETACH_3D_VIEW, ATTACH_3D_VIEW,  
-      DISPLAY_ALL_LEVELS, DISPLAY_SELECTED_LEVEL, MODIFY_3D_ATTRIBUTES, CREATE_PHOTO, CREATE_VIDEO, EXPORT_TO_OBJ,
+      VIEW_FROM_TOP, VIEW_FROM_OBSERVER, MODIFY_3D_ATTRIBUTES, EXPORT_TO_OBJ,
       HELP, ABOUT}
   public enum SaveAnswer {SAVE, CANCEL, DO_NOT_SAVE}
 
@@ -86,32 +80,10 @@ public interface HomeView extends View {
    */
   public abstract void setTransferEnabled(boolean enabled);
 
-
-  /**
-   * Detaches the given <code>view</code> from home view.
-   */
-  public abstract void detachView(View view);
-                
-  /**
-   * Attaches the given <code>view</code> to home view.
-   */
-  public abstract void attachView(View view);
-  
   /**
    * Displays a content chooser open dialog to choose the name of a home.
    */
   public abstract String showOpenDialog();
-
-  /**
-   * Displays a content chooser open dialog to choose a language library.
-   */
-  public abstract String showImportLanguageLibraryDialog();
-
-  /**
-   * Displays a dialog that lets user choose whether he wants to overwrite
-   * an existing language library or not. 
-   */
-  public abstract boolean confirmReplaceLanguageLibrary(String languageLibraryName);
 
   /**
    * Displays a content chooser open dialog to choose a furniture library.
@@ -123,17 +95,6 @@ public interface HomeView extends View {
    * an existing furniture library or not. 
    */
   public abstract boolean confirmReplaceFurnitureLibrary(String furnitureLibraryName);
-
-  /**
-   * Displays a content chooser open dialog to choose a textures library.
-   */
-  public abstract String showImportTexturesLibraryDialog();
-
-  /**
-   * Displays a dialog that lets user choose whether he wants to overwrite
-   * an existing textures library or not. 
-   */
-  public abstract boolean confirmReplaceTexturesLibrary(String texturesLibraryName);
 
   /**
    * Displays a dialog that lets user choose whether he wants to overwrite
@@ -238,11 +199,6 @@ public interface HomeView extends View {
    */
   public abstract void exportToOBJ(String objFile) throws RecorderException;
 
-  /**
-   * Displays a dialog that lets the user choose a name for the current camera.
-   */
-  public abstract String showStoreCameraDialog(String cameraName);
-  
   /**
    * Returns <code>true</code> if clipboard contains data that
    * components are able to handle.

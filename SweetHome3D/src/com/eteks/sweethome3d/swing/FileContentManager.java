@@ -1,7 +1,7 @@
 /*
  * FileContentManager.java 4 juil. 07
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,6 @@ import java.util.Map;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 
 import com.eteks.sweethome3d.model.Content;
@@ -91,20 +90,7 @@ public class FileContentManager implements ContentManager {
    
        @Override
        public String getDescription() {
-         return "3DS - 3D Studio";
-       }
-     },
-     new FileFilter() {
-       @Override
-       public boolean accept(File file) {
-         // Accept directories and 3DS files
-         return file.isDirectory()
-                || file.getName().toLowerCase().endsWith(".dae");
-       }
-   
-       @Override
-       public String getDescription() {
-         return "DAE - Collada";
+         return "3DS";
        }
      },
      new FileFilter() {
@@ -121,23 +107,6 @@ public class FileContentManager implements ContentManager {
        }
      }};
   private static final String PNG_EXTENSION = ".png";
-  /**
-   * Supported OBJ filter.
-   */
-  private static final FileFilter [] PNG_FILTER = {
-      new FileFilter() {
-        @Override
-        public boolean accept(File file) {
-          // Accept directories and .png files
-          return file.isDirectory()
-              || file.getName().toLowerCase().endsWith(PNG_EXTENSION);
-        }
-        
-        @Override
-        public String getDescription() {
-          return "PNG";
-        }
-      }};
   /**
    * Supported image file filters.
    */
@@ -183,23 +152,17 @@ public class FileContentManager implements ContentManager {
           return "JPEG";
         }
       }, 
-      PNG_FILTER [0]};
-  private static final String MOV_EXTENSION = ".mov";
-  /**
-   * Supported MOV filter.
-   */
-  private static final FileFilter [] MOV_FILTER = {
       new FileFilter() {
         @Override
         public boolean accept(File file) {
-          // Accept directories and .mov files
+          // Accept directories and PNG files
           return file.isDirectory()
-              || file.getName().toLowerCase().endsWith(MOV_EXTENSION);
+                 || file.getName().toLowerCase().endsWith(PNG_EXTENSION);
         }
-        
+    
         @Override
         public String getDescription() {
-          return "MOV";
+          return "PNG";
         }
       }};
   private static final String PDF_EXTENSION = ".pdf";
@@ -241,29 +204,22 @@ public class FileContentManager implements ContentManager {
   
   private final UserPreferences           preferences;
   private final String                    sweetHome3DFileExtension;
-  private final String                    languageLibraryFileExtension;
   private final String                    furnitureLibraryFileExtension;
-  private final String                    texturesLibraryFileExtension;
   private final String                    pluginFileExtension;
-  private Map<ContentType, File>          lastDirectories;
+  private File                            currentDirectory;
   private Map<ContentType, FileFilter []> fileFilters;
   private Map<ContentType, String>        defaultFileExtensions;
 
   public FileContentManager(final UserPreferences preferences) {  
     this.preferences = preferences;
     this.sweetHome3DFileExtension = preferences.getLocalizedString(FileContentManager.class, "homeExtension");
-    this.languageLibraryFileExtension = preferences.getLocalizedString(FileContentManager.class, "languageLibraryExtension");
     this.furnitureLibraryFileExtension = preferences.getLocalizedString(FileContentManager.class, "furnitureLibraryExtension");
-    this.texturesLibraryFileExtension = preferences.getLocalizedString(FileContentManager.class, "texturesLibraryExtension");
     this.pluginFileExtension = preferences.getLocalizedString(FileContentManager.class, "pluginExtension");
-    this.lastDirectories = new HashMap<ContentManager.ContentType, File>();
     
     // Fill file filters map
     this.fileFilters = new HashMap<ContentType, FileFilter[]>();
     this.fileFilters.put(ContentType.MODEL, MODEL_FILTERS);
     this.fileFilters.put(ContentType.IMAGE, IMAGE_FILTERS);
-    this.fileFilters.put(ContentType.MOV, MOV_FILTER);
-    this.fileFilters.put(ContentType.PNG, PNG_FILTER);
     this.fileFilters.put(ContentType.PDF, PDF_FILTER);
     this.fileFilters.put(ContentType.SVG, SVG_FILTER);
     this.fileFilters.put(ContentType.OBJ, OBJ_FILTER);
@@ -282,21 +238,6 @@ public class FileContentManager implements ContentManager {
           }
         }
       });
-    this.fileFilters.put(ContentType.LANGUAGE_LIBRARY, new FileFilter [] {
-        new FileFilter() {
-          @Override
-          public boolean accept(File file) {
-            // Accept directories and .sh3f files
-            return file.isDirectory()
-                || file.getName().toLowerCase().endsWith(languageLibraryFileExtension);
-          }
-         
-          @Override
-          public String getDescription() {
-            return preferences.getLocalizedString(FileContentManager.class, "languageLibraryDescription");
-          }
-        }
-      });
     this.fileFilters.put(ContentType.FURNITURE_LIBRARY, new FileFilter [] {
         new FileFilter() {
           @Override
@@ -309,21 +250,6 @@ public class FileContentManager implements ContentManager {
           @Override
           public String getDescription() {
             return preferences.getLocalizedString(FileContentManager.class, "furnitureLibraryDescription");
-          }
-        }
-      });
-    this.fileFilters.put(ContentType.TEXTURES_LIBRARY, new FileFilter [] {
-        new FileFilter() {
-          @Override
-          public boolean accept(File file) {
-            // Accept directories and .sh3f files
-            return file.isDirectory()
-                || file.getName().toLowerCase().endsWith(texturesLibraryFileExtension);
-          }
-         
-          @Override
-          public String getDescription() {
-            return preferences.getLocalizedString(FileContentManager.class, "texturesLibraryDescription");
           }
         }
       });
@@ -346,12 +272,8 @@ public class FileContentManager implements ContentManager {
     // Fill file default extension map
     this.defaultFileExtensions = new HashMap<ContentType, String>();
     this.defaultFileExtensions.put(ContentType.SWEET_HOME_3D, sweetHome3DFileExtension);
-    this.defaultFileExtensions.put(ContentType.LANGUAGE_LIBRARY, languageLibraryFileExtension);
     this.defaultFileExtensions.put(ContentType.FURNITURE_LIBRARY, furnitureLibraryFileExtension);
-    this.defaultFileExtensions.put(ContentType.TEXTURES_LIBRARY, texturesLibraryFileExtension);
     this.defaultFileExtensions.put(ContentType.PLUGIN, pluginFileExtension);
-    this.defaultFileExtensions.put(ContentType.PNG, PNG_EXTENSION);
-    this.defaultFileExtensions.put(ContentType.MOV, MOV_EXTENSION);
     this.defaultFileExtensions.put(ContentType.PDF, PDF_EXTENSION);
     this.defaultFileExtensions.put(ContentType.SVG, SVG_EXTENSION);
     this.defaultFileExtensions.put(ContentType.OBJ, OBJ_EXTENSION);
@@ -407,7 +329,7 @@ public class FileContentManager implements ContentManager {
    * This method may be overridden to change the default file extension of an existing content type
    * or to define the default file extension of a user defined content type.
    */
-  public String getDefaultFileExtension(ContentType contentType) {
+  protected String getDefaultFileExtension(ContentType contentType) {
     if (contentType == ContentType.USER_DEFINED) {
       return null;
     } else {
@@ -521,10 +443,9 @@ public class FileContentManager implements ContentManager {
           return isAcceptable(new File(dir, name).toString(), contentType);
         }
       });
-    // Update directory
-    File directory = getLastDirectory(contentType);
-    if (directory != null) {
-      fileDialog.setDirectory(directory.toString());
+    // Update current directory
+    if (this.currentDirectory != null) {
+      fileDialog.setDirectory(this.currentDirectory.toString());
     }
     if (save) {
       fileDialog.setMode(FileDialog.SAVE);
@@ -541,38 +462,13 @@ public class FileContentManager implements ContentManager {
     String selectedFile = fileDialog.getFile();
     // If user chose a file
     if (selectedFile != null) {
-      // Retrieve directory for future calls
-      directory = new File(fileDialog.getDirectory());
-      // Store current directory
-      setLastDirectory(contentType, directory);
+      // Retrieve current directory for future calls
+      this.currentDirectory = new File(fileDialog.getDirectory());
       // Return selected file
-      return directory + File.separator + selectedFile;
+      return this.currentDirectory + File.separator + selectedFile;
     } else {
       return null;
     }
-  }
-
-  /**
-   * Returns the last directory used for the given content type.
-   * @return the last directory for <code>contentType</code> or the default last directory 
-   *         if it's not set. If <code>contentType</code> is <code>null</code>, the
-   *         returned directory will be the default last one or <code>null</code> if it's not set yet.
-   */
-  protected File getLastDirectory(ContentType contentType) {
-    File directory = this.lastDirectories.get(contentType);
-    if (directory == null) {
-      directory = this.lastDirectories.get(null);
-    }
-    return directory;
-  }
-
-  /**
-   * Stores the last directory for the given content type.
-   */
-  protected void setLastDirectory(ContentType contentType, File directory) {
-    this.lastDirectories.put(contentType, directory);
-    // Store default last directory in null content 
-    this.lastDirectories.put(null, directory);
   }
 
   /**
@@ -602,10 +498,9 @@ public class FileContentManager implements ContentManager {
       fileChooser.setFileFilter(acceptAllFileFilter);
     }
     
-    // Update directory
-    File directory = getLastDirectory(contentType);
-    if (directory != null) {
-      fileChooser.setCurrentDirectory(directory);
+    // Update current directory
+    if (this.currentDirectory != null) {
+      fileChooser.setCurrentDirectory(this.currentDirectory);
     }
     
     if (dialogTitle == null) {
@@ -620,10 +515,8 @@ public class FileContentManager implements ContentManager {
       option = fileChooser.showOpenDialog((JComponent)parentView);
     }    
     if (option == JFileChooser.APPROVE_OPTION) {
-      // Retrieve last directory for future calls
-      directory = fileChooser.getCurrentDirectory();
-      // Store last directory
-      setLastDirectory(contentType, directory);
+      // Retrieve current directory for future calls
+      this.currentDirectory = fileChooser.getCurrentDirectory();
       // Return selected file
       return fileChooser.getSelectedFile().toString();
     } else {
@@ -654,7 +547,7 @@ public class FileContentManager implements ContentManager {
     String replace = this.preferences.getLocalizedString(FileContentManager.class, "confirmOverwrite.overwrite");
     String cancel = this.preferences.getLocalizedString(FileContentManager.class, "confirmOverwrite.cancel");
     
-    return JOptionPane.showOptionDialog(SwingUtilities.getRootPane((JComponent)parentView), 
+    return JOptionPane.showOptionDialog((JComponent)parentView, 
         message, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE,
         null, new Object [] {replace, cancel}, cancel) == JOptionPane.OK_OPTION;
   }

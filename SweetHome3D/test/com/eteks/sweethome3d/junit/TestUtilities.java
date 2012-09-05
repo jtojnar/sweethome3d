@@ -23,7 +23,6 @@ import java.awt.Component;
 import java.awt.Container;
 import java.lang.reflect.Field;
 
-import junit.framework.TestCase;
 import abbot.finder.BasicFinder;
 import abbot.finder.ComponentSearchException;
 import abbot.finder.Matcher;
@@ -34,7 +33,7 @@ import abbot.finder.Matcher;
  */
 public final class TestUtilities {  
   private TestUtilities() {    
-    // This class isn't instantiable and contains only static methods
+    // This class isn't instatiable and contains only static methods
   }
 
   /**
@@ -49,17 +48,6 @@ public final class TestUtilities {
   }
 
   /**
-   * Sets the value of the <code>fieldName</code> 
-   * in a given <code>instance</code> by reflection.
-   */
-  public static void setField(Object instance, String fieldName, Object value)
-      throws NoSuchFieldException, IllegalAccessException {
-    Field field = instance.getClass().getDeclaredField(fieldName);
-    field.setAccessible(true);
-    field.set(instance, value);
-  }
-
-  /**
    * Returns the component of a given class in <code>container</code> hierarchy.
    */
   public static Component findComponent(Container container, 
@@ -70,14 +58,5 @@ public final class TestUtilities {
           return componentClass.isInstance(component);
         }
       });
-  }
-
-  /**
-   * Asserts <code>value1</code> equals <code>value2</code> within <code>epsilon</code>.
-   */
-  public static void assertEqualsWithinEpsilon(String message, 
-                                               float value1, float value2, float epsilon) {
-    TestCase.assertTrue(message + ", expected:" + value1 + " but was:" + value2, 
-        Math.abs(value1 - value2) < epsilon);
   }
 }

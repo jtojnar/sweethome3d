@@ -1,7 +1,7 @@
 /*
  * HomeAppletRecorder.java 13 Oct 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,10 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 
-import com.eteks.sweethome3d.io.ContentRecording;
+import javax.jnlp.BasicService;
+import javax.jnlp.ServiceManager;
+import javax.jnlp.UnavailableServiceException;
+
 import com.eteks.sweethome3d.io.DefaultHomeInputStream;
 import com.eteks.sweethome3d.io.DefaultHomeOutputStream;
 import com.eteks.sweethome3d.model.Home;
@@ -44,47 +47,29 @@ import com.eteks.sweethome3d.model.RecorderException;
  * @author Emmanuel Puybaret
  */
 public class HomeAppletRecorder implements HomeRecorder {
-  private final String           writeHomeURL;
-  private final String           readHomeURL;
-  private final String           listHomesURL;
-  private final ContentRecording contentRecording;
+  private String writeHomeURL;
+  private String readHomeURL;
+  private String listHomesURL;
 
-  /**
-   * Creates a recorder that will use the URLs in parameter to write, read and list homes.
-   * @see SweetHome3DApplet
-   */
   public HomeAppletRecorder(String writeHomeURL, 
                             String readHomeURL,
                             String listHomesURL) {
-    this(writeHomeURL, readHomeURL, listHomesURL, true);
-  }
-  
-  /**
-   * Creates a recorder that will use the URLs in parameter to write, read and list homes.
-   * @see SweetHome3DApplet
-   */
-  public HomeAppletRecorder(String writeHomeURL, 
-                            String readHomeURL,
-                            String listHomesURL,
-                            boolean includeTemporaryContent) {
-    this(writeHomeURL, readHomeURL, listHomesURL, 
-        includeTemporaryContent 
-            ? ContentRecording.INCLUDE_TEMPORARY_CONTENT
-            : ContentRecording.INCLUDE_ALL_CONTENT);
-  }
-  
-  /**
-   * Creates a recorder that will use the URLs in parameter to write, read and list homes.
-   * @see SweetHome3DApplet
-   */
-  public HomeAppletRecorder(String writeHomeURL, 
-                            String readHomeURL,
-                            String listHomesURL,
-                            ContentRecording contentRecording) {
     this.writeHomeURL = writeHomeURL;
     this.readHomeURL = readHomeURL;
     this.listHomesURL = listHomesURL;
-    this.contentRecording = contentRecording;
+  }
+  
+  /**
+   * Returns the HTTP URL used to save the home with a given <code>name</code> to server.
+   */
+  protected URL getURL(String urlBase, Object ... parameterValues) throws IOException {
+    try { 
+      // Lookup the javax.jnlp.BasicService object 
+      final BasicService service = (BasicService)ServiceManager.lookup("javax.jnlp.BasicService");
+      return new URL(service.getCodeBase(), String.format(urlBase, parameterValues));
+    } catch (UnavailableServiceException ex) {
+      throw new IOException("Can't retrieve code base");
+    } 
   }
   
   /**
@@ -95,7 +80,7 @@ public class HomeAppletRecorder implements HomeRecorder {
     HttpURLConnection connection = null;
     try {
       // Open a stream to server 
-      connection = (HttpURLConnection)new URL(this.writeHomeURL).openConnection();
+      connection = (HttpURLConnection)getURL(this.writeHomeURL).openConnection();
       connection.setRequestMethod("POST");
       String multiPartBoundary = "---------#@&$!d3emohteews!$&@#---------";
       connection.setRequestProperty("Content-Type", "multipart/form-data; charset=UTF-8; boundary=" + multiPartBoundary);
@@ -107,16 +92,16 @@ public class HomeAppletRecorder implements HomeRecorder {
       OutputStream out = connection.getOutputStream();
       out.write(("--" + multiPartBoundary + "\r\n").getBytes("UTF-8"));
       out.write(("Content-Disposition: form-data; name=\"home\"; filename=\"" 
-          + name.replace('\"', '\'') + "\"\r\n").getBytes("UTF-8"));
+          + name + "\"\r\n").getBytes("UTF-8"));
       out.write(("Content-Type: application/octet-stream\r\n\r\n").getBytes("UTF-8"));
       out.flush();
-      DefaultHomeOutputStream homeOut = new DefaultHomeOutputStream(out, 9, this.contentRecording);
+      DefaultHomeOutputStream homeOut = new DefaultHomeOutputStream(out, 9, true);
       // Write home with HomeOuputStream
       homeOut.writeHome(home);
       homeOut.flush();
       
       // Post last boundary
-      out.write(("\r\n--" + multiPartBoundary + "--\r\n").getBytes("UTF-8"));
+      out.write(("\r\n--" + multiPartBoundary + "\r\n").getBytes("UTF-8"));
       out.close();
       
       // Read response
@@ -146,14 +131,11 @@ public class HomeAppletRecorder implements HomeRecorder {
     URLConnection connection = null;
     DefaultHomeInputStream in = null;
     try {
-      // Replace % sequence by %% except %s before formating readHomeURL with home name 
-      String readHomeURL = String.format(this.readHomeURL.replaceAll("(%[^s])", "%$1"), 
-          URLEncoder.encode(name, "UTF-8"));
-      // Open a home input stream to server
-      connection = new URL(readHomeURL).openConnection();
+      // Open a home input stream to server 
+      connection = getURL(this.readHomeURL, URLEncoder.encode(name, "UTF-8")).openConnection();
       connection.setRequestProperty("Content-Type", "charset=UTF-8");
       connection.setUseCaches(false);
-      in = new DefaultHomeInputStream(connection.getInputStream(), this.contentRecording);
+      in = new DefaultHomeInputStream(connection.getInputStream());
       // Read home with HomeInputStream
       Home home = in.readHome();
       return home;
@@ -195,7 +177,7 @@ public class HomeAppletRecorder implements HomeRecorder {
     InputStream in = null;
     try {
       // Open a stream to server 
-      connection = new URL(this.listHomesURL).openConnection();
+      connection = getURL(this.listHomesURL).openConnection();
       connection.setUseCaches(false);
       in = connection.getInputStream();
       String contentEncoding = connection.getContentEncoding();
@@ -221,7 +203,7 @@ public class HomeAppletRecorder implements HomeRecorder {
           in.close();
         }
       } catch (IOException ex) {
-        throw new RecorderException("Can't close connection", ex);
+        throw new RecorderException("Can't close coonection", ex);
       }
     }
   }

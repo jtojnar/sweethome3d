@@ -1,7 +1,7 @@
 /*
  * PieceOfFurniture.java 15 mai 2006
  *
- * Sweet Home 3D, Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,12 +75,6 @@ public interface PieceOfFurniture {
   public abstract Content getIcon();
 
   /**
-   * Returns the icon of this piece of furniture displayed in plan or <code>null</code>.
-   * @since 2.2
-   */
-  public abstract Content getPlanIcon();
-
-    /**
    * Returns the 3D model of this piece of furniture.
    */
   public abstract Content getModel();
@@ -90,13 +84,6 @@ public interface PieceOfFurniture {
    * its model is correctly oriented.
    */
   public float [][] getModelRotation();
-  
-  /**
-   * Returns the shape used to cut out upper levels when they intersect with the piece   
-   * like a staircase.
-   * @since 3.4
-   */
-  public String getStaircaseCutOutShape();
   
   /**
    * Returns <code>true</code> if the back face of the piece of furniture
@@ -115,19 +102,6 @@ public interface PieceOfFurniture {
   public abstract boolean isResizable();
   
   /**
-   * Returns <code>true</code> if this piece is deformable. The width, depth and height
-   * of a deformable piece may change independently from each other.
-   * @since 3.0
-   */
-  public abstract boolean isDeformable();
-
-  /**
-   * Returns <code>false</code> if this piece should always keep the same color or texture.
-   * @since 3.0
-   */
-  public abstract boolean isTexturable();
-  
-  /**
    * Returns the price of this piece of furniture or <code>null</code>. 
    */
   public abstract BigDecimal getPrice();
@@ -136,11 +110,4 @@ public interface PieceOfFurniture {
    * Returns the Value Added Tax percentage applied to the price of this piece of furniture. 
    */
   public abstract BigDecimal getValueAddedTaxPercentage();
-  
-  /**
-   * Returns the price currency, noted with ISO 4217 code, or <code>null</code> 
-   * if it has no price or default currency should be used.
-   * @since 3.4
-   */
-  public abstract String getCurrency();
 }

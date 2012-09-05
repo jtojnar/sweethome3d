@@ -1,7 +1,7 @@
 /*
  * LabelController.java 29 nov. 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ public class LabelController implements Controller {
   private final ViewFactory           viewFactory;
   private final UndoableEditSupport   undoSupport;
   private final PropertyChangeSupport propertyChangeSupport;
-  private DialogView                  labelView;
+  private DialogView                  pageSetupView;
 
   private String text;
   
@@ -98,7 +98,7 @@ public class LabelController implements Controller {
     if (selectedLabels.isEmpty()) {
       setText(null); // Nothing to edit
     } else {
-      // Search the common properties among selected labels
+      // Search the common properties among selected furniture
       Label firstLabel = selectedLabels.get(0);
       String text = firstLabel.getText();
       if (text != null) {
@@ -118,10 +118,10 @@ public class LabelController implements Controller {
    */
   public DialogView getView() {
     // Create view lazily only once it's needed
-    if (this.labelView == null) {
-      this.labelView = this.viewFactory.createLabelView(this.x == null, this.preferences, this);
+    if (this.pageSetupView == null) {
+      this.pageSetupView = this.viewFactory.createLabelView(this.x == null, this.preferences, this);
     }
-    return this.labelView;
+    return this.pageSetupView;
   }
   
   /**
@@ -182,7 +182,6 @@ public class LabelController implements Controller {
             this.home, this.preferences, oldSelection, basePlanLocked, label, newBasePlanLocked);
         this.undoSupport.postEdit(undoableEdit);
       }
-      this.preferences.addAutoCompletionString("LabelText", text);
     }
   }
 
@@ -277,8 +276,7 @@ public class LabelController implements Controller {
         UndoableEdit undoableEdit = new LabelModificationUndoableEdit(this.home, 
             this.preferences, oldSelection, modifiedLabels, text);
         this.undoSupport.postEdit(undoableEdit);
-      }      
-      this.preferences.addAutoCompletionString("LabelText", text);
+      }
     }
   }
   
@@ -339,7 +337,7 @@ public class LabelController implements Controller {
   }
 
   /**
-   * Restores label properties from the values stored in <code>modifiedLabels</code>.
+   * Restores furniture properties from the values stored in <code>modifiedLabels</code>.
    */
   private static void undoModifyLabels(ModifiedLabel [] modifiedLabels) {
     for (ModifiedLabel modifiedPiece : modifiedLabels) {
@@ -348,7 +346,7 @@ public class LabelController implements Controller {
   }
 
   /**
-   * Stores the current properties values of a modified label.
+   * Stores the current properties values of a modified label of furniture.
    */
   private static final class ModifiedLabel {
     private final Label  label;
