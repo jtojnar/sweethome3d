@@ -1,7 +1,7 @@
 /*
  * NullableSpinner.java 29 mai 07
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,16 +22,15 @@ package com.eteks.sweethome3d.swing;
 import java.text.ParseException;
 
 import javax.swing.JFormattedTextField;
+import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.text.NumberFormatter;
 
-import com.eteks.sweethome3d.model.LengthUnit;
 import com.eteks.sweethome3d.model.UserPreferences;
 
 /**
  * Spinner that accepts empty string values. In this case the returned value is <code>null</code>. 
  */
-public class NullableSpinner extends AutoCommitSpinner {
+public class NullableSpinner extends JSpinner {
   /**
    * Creates a default nullable spinner able to edit an integer. 
    */
@@ -42,81 +41,32 @@ public class NullableSpinner extends AutoCommitSpinner {
   /**
    * Creates a nullable spinner from <code>model</code>. 
    */
-  public NullableSpinner(NullableSpinnerNumberModel model) {
+ public NullableSpinner(NullableSpinnerNumberModel model) {
     super(model);
     final JFormattedTextField textField = ((DefaultEditor)getEditor()).getTextField();
-    final JFormattedTextField.AbstractFormatter defaultFormatter = textField.getFormatter();
+    final JFormattedTextField.AbstractFormatter formatter = textField.getFormatter();
     // Change formatted text field formatter to enable the edition of empty values
     textField.setFormatterFactory(new JFormattedTextField.AbstractFormatterFactory() {
         @Override
         public JFormattedTextField.AbstractFormatter getFormatter(JFormattedTextField tf) {
-          return new NumberFormatter () {
-              @Override
-              public boolean getCommitsOnValidEdit() {
-                if (defaultFormatter instanceof NumberFormatter) {
-                  return ((NumberFormatter)defaultFormatter).getCommitsOnValidEdit();
-                } else {
-                  return super.getCommitsOnValidEdit();
-                }
-              }
-              
-              @SuppressWarnings("unchecked")
-              @Override
-              public Comparable getMaximum() {
-                if (defaultFormatter instanceof NumberFormatter) {
-                  return ((NumberFormatter)defaultFormatter).getMaximum();
-                } else {
-                  return super.getMaximum();
-                }
-              }
-              
-              @SuppressWarnings("unchecked")
-              @Override
-              public Comparable getMinimum() {
-                if (defaultFormatter instanceof NumberFormatter) {
-                  return ((NumberFormatter)defaultFormatter).getMinimum();
-                } else {
-                  return super.getMinimum();
-                }
-              }
-              
-              @SuppressWarnings("unchecked")
-              @Override
-              public void setMaximum(Comparable maximum) {
-                if (defaultFormatter instanceof NumberFormatter) {
-                  ((NumberFormatter)defaultFormatter).setMaximum(maximum);
-                } else {
-                  super.setMaximum(maximum);
-                }
-              }
-              
-              @SuppressWarnings("unchecked")
-              @Override
-              public void setMinimum(Comparable minimum) {
-                if (defaultFormatter instanceof NumberFormatter) {
-                  ((NumberFormatter)defaultFormatter).setMinimum(minimum);
-                } else {
-                  super.setMinimum(minimum);
-                }
-              }
-              
+          return new JFormattedTextField.AbstractFormatter () {
               @Override
               public Object stringToValue(String text) throws ParseException {
                 if (text.length() == 0 && ((NullableSpinnerNumberModel)getModel()).isNullable()) {
                   // Return null for empty text 
                   return null;
                 } else {
-                  return defaultFormatter.stringToValue(text);
+                  return formatter.stringToValue(text);
                 }
               }
 
               @Override
               public String valueToString(Object value) throws ParseException {
                 if (value == null && ((NullableSpinnerNumberModel)getModel()).isNullable()) {
-                  // Return empty text for null values
+                  // Return empty text forn null values
                   return "";
                 } else {
-                  return defaultFormatter.valueToString(value);
+                  return formatter.valueToString(value);
                 }
               }
             };
@@ -145,13 +95,7 @@ public class NullableSpinner extends AutoCommitSpinner {
       if (this.isNull) {
         return super.getValue();
       } 
-      Object nextValue = super.getNextValue();
-      if (nextValue == null) {
-        // Force to maximum value
-        return getMaximum();
-      } else {
-        return nextValue;
-      }
+      return super.getNextValue();
     }
 
     @Override
@@ -159,13 +103,7 @@ public class NullableSpinner extends AutoCommitSpinner {
       if (this.isNull) {
         return super.getValue();
       } 
-      Object previousValue = super.getPreviousValue();
-      if (previousValue == null) {
-        // Force to minimum value
-        return getMinimum();
-      } else {
-        return previousValue;
-      }
+      return super.getPreviousValue();
     }
 
     @Override
@@ -178,7 +116,7 @@ public class NullableSpinner extends AutoCommitSpinner {
     }
 
     /**
-     * Sets model value. This method is overridden to store whether current value is <code>null</code> 
+     * Sets model value. This method is overriden to store whether current value is <code>null</code> 
      * or not (super class <code>setValue</code> doesn't accept <code>null</code> value).
      */
     @Override
@@ -188,18 +126,9 @@ public class NullableSpinner extends AutoCommitSpinner {
           this.isNull = true;
           fireStateChanged();
         }
-      } else {
-        if (this.isNull 
-            && value != null 
-            && value.equals(super.getValue())) {
-          // Fire a state change if the value set is the same one as the one stored by number model
-          // and this model exposed a null value before
-          this.isNull = false;
-          fireStateChanged();
-        } else {
-          this.isNull = false;
-          super.setValue(value);
-        }
+      } else { 
+        this.isNull = false;
+        super.setValue(value);
       }
     }
 
@@ -232,26 +161,23 @@ public class NullableSpinner extends AutoCommitSpinner {
   public static class NullableSpinnerLengthModel extends NullableSpinnerNumberModel {
     private final UserPreferences preferences;
 
-    /**
-     * Creates a model managing lengths between the given <code>minimum</code> and <code>maximum</code> values in centimeter. 
-     */
     public NullableSpinnerLengthModel(UserPreferences preferences, float minimum, float maximum) {
-      super(preferences.getLengthUnit().centimeterToUnit(minimum), 
-            preferences.getLengthUnit().centimeterToUnit(minimum), 
-            preferences.getLengthUnit().centimeterToUnit(maximum), 
-            preferences.getLengthUnit() == LengthUnit.INCH
-              ? 0.125f : preferences.getLengthUnit().centimeterToUnit(0.5f));
+      super(minimum, minimum, maximum, 
+            preferences.getUnit() == UserPreferences.Unit.INCH
+              ? 0.125f : 0.5f);
       this.preferences = preferences;
     }
 
     /**
-     * Returns the displayed value in centimeter.
+     * Returns the diplayed value in centimeter.
      */
     public Float getLength() {
       if (getValue() == null) {
         return null;
+      } else if (this.preferences.getUnit() == UserPreferences.Unit.INCH) {
+        return UserPreferences.Unit.inchToCentimeter(((Number)getValue()).floatValue());
       } else {
-        return this.preferences.getLengthUnit().unitToCentimeter(((Number)getValue()).floatValue());
+        return ((Number)getValue()).floatValue();
       }
     }
 
@@ -259,8 +185,9 @@ public class NullableSpinner extends AutoCommitSpinner {
      * Sets the length in centimeter displayed in this model.
      */
     public void setLength(Float length) {
-      if (length != null) {
-        length = this.preferences.getLengthUnit().centimeterToUnit(length);
+      if (length != null 
+          && this.preferences.getUnit() == UserPreferences.Unit.INCH) {
+        length = UserPreferences.Unit.centimeterToInch(length);
       } 
       setValue(length);
     }

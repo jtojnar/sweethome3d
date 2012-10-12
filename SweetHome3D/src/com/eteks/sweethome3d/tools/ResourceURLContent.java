@@ -1,7 +1,7 @@
 /*
  * ResourceURLContent.java 9 juil. 2007
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,10 +19,6 @@
  */
 package com.eteks.sweethome3d.tools;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-
-
 /**
  * URL content read from a class resource.
  * @author Emmanuel Puybaret
@@ -30,98 +26,35 @@ import java.net.URL;
 public class ResourceURLContent extends URLContent {
   private static final long serialVersionUID = 1L;
 
-  private boolean multiPartResource;
+  private Class  resourceClass;
+  private String resourceName;
   
   /**
    * Creates a content for <code>resourceName</code> relative to <code>resourceClass</code>.
-   * @param resourceClass the class relative to the resource name to load
+   * @param resourceClass the class to which the resource name is relative
    * @param resourceName  the name of the resource
    * @throws IllegalArgumentException if the resource doesn't match a valid resource.
    */
-  public ResourceURLContent(Class<?> resourceClass, 
-                            String resourceName) {
-    this(resourceClass, resourceName, false);
-  }
-
-  /**
-   * Creates a content for <code>resourceName</code> relative to <code>resourceClass</code>.
-   * @param resourceClass the class relative to the resource name to load
-   * @param resourceName  the name of the resource
-   * @param multiPartResource  if <code>true</code> then the resource is a multi part resource 
-   *           stored in a directory with other required resources
-   * @throws IllegalArgumentException if the resource doesn't match a valid resource.
-   */
-  public ResourceURLContent(Class<?> resourceClass,
-                            String resourceName, 
-                            boolean multiPartResource) {
-    super(getClassResource(resourceClass, resourceName));
+  public ResourceURLContent(Class resourceClass, String resourceName) {
+    super(resourceClass.getResource(resourceName));
     if (getURL() == null) {
       throw new IllegalArgumentException("Unknown resource " + resourceName);
     }
-    this.multiPartResource = multiPartResource;
-  }
-  
-  /**
-   * Creates a content for <code>resourceName</code> relative to <code>resourceClassLoader</code>.
-   * <code>resourceName</code> is absolute and shouldn't start with a slash.
-   * @param resourceClassLoader the class loader used to load the given resource name
-   * @param resourceName  the name of the resource
-   * @throws IllegalArgumentException if the resource doesn't match a valid resource.
-   */
-  public ResourceURLContent(ClassLoader resourceClassLoader, 
-                            String resourceName) {
-    super(resourceClassLoader.getResource(resourceName));
-    if (getURL() == null) {
-      throw new IllegalArgumentException("Unknown resource " + resourceName);
-    }
-  }
-
-  private static final boolean isJava1dot5dot0_16 = 
-      System.getProperty("java.version").startsWith("1.5.0_16"); 
-  
-  /**
-   * Returns the URL of the given resource relative to <code>resourceClass</code>.
-   */
-  private static URL getClassResource(Class<?> resourceClass,
-                                      String resourceName) {
-    URL defaultUrl = resourceClass.getResource(resourceName);
-    // Fix for bug #6746185
-    // http://bugs.sun.com/view_bug.do?bug_id=6746185
-    if (isJava1dot5dot0_16
-        && defaultUrl != null
-        && "jar".equalsIgnoreCase(defaultUrl.getProtocol())) {
-      String defaultUrlExternalForm = defaultUrl.toExternalForm();
-      if (defaultUrl.toExternalForm().indexOf("!/") == -1) {
-        String fixedUrl = "jar:" 
-          + resourceClass.getProtectionDomain().getCodeSource().getLocation().toExternalForm() 
-          + "!/" + defaultUrl.getPath();
-        
-        if (!fixedUrl.equals(defaultUrlExternalForm)) {
-          try {
-            return new URL(fixedUrl);
-          } catch (MalformedURLException ex) {
-            // Too bad: keep defaultUrl
-          } 
-        }
-      }
-    }
-    return defaultUrl;
+    this.resourceClass = resourceClass;
+    this.resourceName = resourceName;    
   }
 
   /**
-   * Creates a content for <code>resourceUrl</code>. 
-   * @param url  the URL of the resource
+   * Returns the class to which the resource is relative.
    */
-  public ResourceURLContent(URL url, boolean multiPartResource) {
-    super(url);
-    this.multiPartResource = multiPartResource;
+  public Class getResourceClass() {
+    return this.resourceClass;
   }
 
   /**
-   * Returns <code>true</code> if the resource is a multi part resource stored 
-   * in a directory with other required resources.
+   * Returns the resource name relative to resource class.
    */
-  public boolean isMultiPartResource() {
-    return this.multiPartResource;
+  public String getResourceName() {
+    return this.resourceName;
   }
 }
