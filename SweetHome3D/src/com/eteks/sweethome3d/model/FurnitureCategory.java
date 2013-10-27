@@ -1,8 +1,9 @@
 /*
  * FurnitureCategory.java 7 avr. 2006
  * 
- * Sweet Home 3D, Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>
- *  
+ * Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights
+ * Reserved.
+ * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation; either version 2 of the License, or (at your option) any later
@@ -29,15 +30,14 @@ import java.util.List;
  * @author Emmanuel Puybaret
  */
 public class FurnitureCategory implements Comparable<FurnitureCategory> {
-  private final String                  name;
+  private String                 name;
   private List<CatalogPieceOfFurniture> furniture;
-  private boolean                       sorted;
-  
+  private boolean                sorted;
   private static final Collator  COMPARATOR = Collator.getInstance();
 
   /**
    * Create a category.
-   * @param name the name of the category.
+   * @param name the name of the cateory.
    */
   public FurnitureCategory(String name) {
     this.name = name;
@@ -86,19 +86,16 @@ public class FurnitureCategory implements Comparable<FurnitureCategory> {
   }
 
   /**
-   * Returns the index of the given <code>piece</code> of furniture.
-   * @since 3.6
-   */
-  public int getIndexOfPieceOfFurniture(CatalogPieceOfFurniture piece) {
-    checkFurnitureSorted();
-    return this.furniture.indexOf(piece);
-  }
-
-  /**
    * Adds a piece of furniture to this category.
    * @param piece the piece to add.
+   * @throws IllegalArgumentException if a piece with same name as the one in
+   *           parameter already exists in this category.
    */
   void add(CatalogPieceOfFurniture piece) {
+    if (this.furniture.contains(piece)) {
+      throw new IllegalHomonymException(
+         piece.getName() + " already in category " + this.name);
+    }
     piece.setCategory(this);
     this.furniture.add(piece);    
     this.sorted = false;
@@ -121,7 +118,7 @@ public class FurnitureCategory implements Comparable<FurnitureCategory> {
   }
   
   /**
-   * Returns <code>true</code> if this category and the one in parameter have the same name.
+   * Returns true if this category and the one in parameter have the same name.
    */
   @Override
   public boolean equals(Object obj) {

@@ -1,7 +1,7 @@
 /*
  * ControllerAction.java 8 août 2006
  *
- * Sweet Home 3D, Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,8 +22,7 @@ package com.eteks.sweethome3d.swing;
 import java.awt.event.ActionEvent;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-
-import com.eteks.sweethome3d.model.UserPreferences;
+import java.util.ResourceBundle;
 
 /**
  * An action which <code>actionPerformed</code> method 
@@ -31,39 +30,15 @@ import com.eteks.sweethome3d.model.UserPreferences;
  * @author Emmanuel Puybaret
  */
 public class ControllerAction extends ResourceAction {
-  private final Object    controller;
-  private final Method    controllerMethod;
-  private final Object [] parameters;
-
-  /**
-   * Creates a disabled action with properties retrieved from a resource bundle 
-   * in which key starts with <code>actionPrefix</code>.
-   * @param preferences   user preferences used to retrieve localized description of the action
-   * @param resourceClass the class used as a context to retrieve localized properties of the action
-   * @param actionPrefix prefix used in resource bundle to search action properties
-   * @param controller   the controller on which the method will be called
-   * @param method       the name of the controller method that will be invoked
-   *          in {@link #actionPerformed(ActionEvent) actionPerfomed}
-   * @param parameters list of parameters to be used with <code>method</code>
-   * @throws NoSuchMethodException if <code>method</code> with a
-   *           matching <code>parameters</code> list doesn't exist
-   */
-  public ControllerAction(UserPreferences preferences, 
-                          Class<?> resourceClass, 
-                          String actionPrefix, 
-                          Object controller, 
-                          String method, 
-                          Object ... parameters) throws NoSuchMethodException {
-    this(preferences, resourceClass, actionPrefix, false, controller, method, parameters);
-  }
+  private Object    controller;
+  private Method    controllerMethod;
+  private Object [] parameters;
 
   /**
    * Creates an action with properties retrieved from a resource bundle 
    * in which key starts with <code>actionPrefix</code>.
-   * @param preferences   user preferences used to retrieve localized description of the action
-   * @param resourceClass the class used as a context to retrieve localized properties of the action
+   * @param resource     a resource bundle
    * @param actionPrefix prefix used in resource bundle to search action properties
-   * @param enabled <code>true</code> if the action should be enabled at creation.
    * @param controller   the controller on which the method will be called
    * @param method       the name of the controller method that will be invoked
    *          in {@link #actionPerformed(ActionEvent) actionPerfomed}
@@ -71,18 +46,14 @@ public class ControllerAction extends ResourceAction {
    * @throws NoSuchMethodException if <code>method</code> with a
    *           matching <code>parameters</code> list doesn't exist
    */
-  public ControllerAction(UserPreferences preferences, 
-                          Class<?> resourceClass, 
-                          String actionPrefix,
-                          boolean enabled,
-                          Object controller, 
-                          String method, 
-                          Object ... parameters) throws NoSuchMethodException {
-    super(preferences, resourceClass, actionPrefix, enabled);
+  public ControllerAction(ResourceBundle resource, String actionPrefix, 
+               Object controller, String method, Object ... parameters)
+                     throws NoSuchMethodException {
+    super(resource, actionPrefix);
     this.controller = controller;
     this.parameters = parameters;
     // Get parameters class
-    Class<?> [] parametersClass = new Class [parameters.length];
+    Class [] parametersClass = new Class [parameters.length];
     for(int i = 0; i < parameters.length; i++)
       parametersClass [i] = parameters [i].getClass();
     

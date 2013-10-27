@@ -1,7 +1,7 @@
 /*
  * FurnitureCatalogTransferHandler.java 12 sept. 2006
  *
- * Sweet Home 3D, Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,35 +29,37 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.swing.Icon;
 import javax.swing.JComponent;
+import javax.swing.TransferHandler;
 
-import com.eteks.sweethome3d.model.CatalogPieceOfFurniture;
-import com.eteks.sweethome3d.model.HomePieceOfFurniture;
-import com.eteks.sweethome3d.model.PieceOfFurniture;
-import com.eteks.sweethome3d.model.Selectable;
-import com.eteks.sweethome3d.viewcontroller.ContentManager;
-import com.eteks.sweethome3d.viewcontroller.FurnitureCatalogController;
-import com.eteks.sweethome3d.viewcontroller.FurnitureController;
+import com.eteks.sweethome3d.model.ContentManager;
+import com.eteks.sweethome3d.model.FurnitureCatalog;
 
 /**
  * Catalog transfer handler.
  * @author Emmanuel Puybaret
  */
-public class FurnitureCatalogTransferHandler extends VisualTransferHandler {
-  private final ContentManager             contentManager;
-  private final FurnitureCatalogController catalogController;
-  private final FurnitureController        furnitureController;
-  
+public class FurnitureCatalogTransferHandler extends TransferHandler {
+  private FurnitureCatalog           catalog;
+  private ContentManager    contentManager;
+  private FurnitureCatalogController catalogController;
+
   /**
    * Creates a handler able to transfer catalog selected furniture.
    */
-  public FurnitureCatalogTransferHandler(ContentManager contentManager,
-                                         FurnitureCatalogController catalogController,
-                                         FurnitureController furnitureController) {
+  public FurnitureCatalogTransferHandler(FurnitureCatalog catalog) {
+    this(catalog, null, null);
+  }
+
+  /**
+   * Creates a handler able to transfer catalog selected furniture.
+   */
+  public FurnitureCatalogTransferHandler(FurnitureCatalog catalog,
+                                ContentManager contentManager,
+                                FurnitureCatalogController catalogController) {
+    this.catalog = catalog;
     this.contentManager = contentManager;
     this.catalogController = catalogController;
-    this.furnitureController = furnitureController;
   }
 
   /**
@@ -69,47 +71,12 @@ public class FurnitureCatalogTransferHandler extends VisualTransferHandler {
   }
 
   /**
-   * Returns the icon of the piece of furniture of <code>transferable</code> 
-   * for {@link HomeTransferableList#HOME_FLAVOR HOME_FLAVOR} flavor if it contains 
-   * only one piece of furniture.
-   * @return a 48 pixels high icon of <code>null</code>. 
-   */
-  @Override
-  public Icon getVisualRepresentation(Transferable transferable) {
-    try {
-      if (transferable.isDataFlavorSupported(HomeTransferableList.HOME_FLAVOR)) {
-        // Return the image icon of the piece of furniture contained in transfer data
-        List<Selectable> transferedItems = (List<Selectable>)transferable.
-            getTransferData(HomeTransferableList.HOME_FLAVOR);
-        if (transferedItems.size() == 1) {
-          Selectable transferedItem = transferedItems.get(0);
-          if(transferedItem instanceof PieceOfFurniture) {
-            return IconManager.getInstance().
-                getIcon(((PieceOfFurniture)transferedItem).getIcon(), 48, null);
-          }
-        }        
-      } 
-    } catch (UnsupportedFlavorException ex) {
-      // Use default representation
-    } catch (IOException ex) {
-      // Use default representation
-    }
-    return super.getVisualRepresentation(transferable);
-  }
-  
-  /**
    * Returns a {@link HomeTransferableList transferable object}
    * that contains a copy of the selected furniture in catalog. 
    */
   @Override
   protected Transferable createTransferable(JComponent source) {
-    List<CatalogPieceOfFurniture> selectedCatalogFurniture = this.catalogController.getSelectedFurniture();
-    List<HomePieceOfFurniture> transferedFurniture = 
-        new ArrayList<HomePieceOfFurniture>(selectedCatalogFurniture.size());
-    for (CatalogPieceOfFurniture catalogPiece : selectedCatalogFurniture) {
-      transferedFurniture.add(this.furnitureController.createHomePieceOfFurniture(catalogPiece));
-    }
-    return new HomeTransferableList(transferedFurniture);
+    return new HomeTransferableList(catalog.getSelectedFurniture());
   }
 
   /**

@@ -25,7 +25,6 @@ import java.text.Collator;
 import java.util.List;
 import java.util.Locale;
 
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
@@ -36,8 +35,8 @@ import javax.swing.tree.TreeModel;
 import junit.framework.TestCase;
 
 import com.eteks.sweethome3d.io.DefaultFurnitureCatalog;
-import com.eteks.sweethome3d.model.CatalogPieceOfFurniture;
 import com.eteks.sweethome3d.model.FurnitureCatalog;
+import com.eteks.sweethome3d.model.CatalogPieceOfFurniture;
 import com.eteks.sweethome3d.model.FurnitureCategory;
 import com.eteks.sweethome3d.swing.FurnitureCatalogTree;
 
@@ -123,7 +122,7 @@ public class CatalogTreeTest extends TestCase {
     Component childLabel = renderer.
         getTreeCellRendererComponent(tree, node, 
            false, true, false, 0, false);
-    return ((JLabel)((JComponent)childLabel).getComponent(0)).getText();
+    return ((JLabel)childLabel).getText();
   }
   
   public static void main(String [] args) {

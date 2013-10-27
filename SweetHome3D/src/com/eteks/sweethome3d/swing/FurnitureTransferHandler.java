@@ -1,7 +1,7 @@
 /*
  * FurnitureTransferHandler.java 12 sept. 2006
  *
- * Sweet Home 3D, Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,28 +25,24 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.JComponent;
 
+import com.eteks.sweethome3d.model.ContentManager;
 import com.eteks.sweethome3d.model.Home;
 import com.eteks.sweethome3d.model.HomePieceOfFurniture;
-import com.eteks.sweethome3d.model.Selectable;
-import com.eteks.sweethome3d.viewcontroller.ContentManager;
-import com.eteks.sweethome3d.viewcontroller.HomeController;
 
 /**
  * Home furniture transfer handler.
  * @author Emmanuel Puybaret
  */
 public class FurnitureTransferHandler extends LocatedTransferHandler {
-  private final Home                 home;
-  private final ContentManager       contentManager;
-  private final HomeController       homeController;
+  private Home                       home;
+  private ContentManager             contentManager;
+  private HomeController             homeController;
   private List<HomePieceOfFurniture> copiedFurniture;
-  private String                     copiedCSV;
 
   /**
    * Creates a handler able to transfer home furniture.
@@ -74,37 +70,9 @@ public class FurnitureTransferHandler extends LocatedTransferHandler {
   @Override
   protected Transferable createTransferable(JComponent source) {
     this.copiedFurniture = Home.getFurnitureSubList(this.home.getSelectedItems());
-    final Transferable transferable = new HomeTransferableList(this.copiedFurniture);
-    if (source instanceof FurnitureTable) {
-      // Create a text that describes furniture in CSV format
-      this.copiedCSV = ((FurnitureTable)source).getClipboardCSV();
-      // Create a transferable that contains copied furniture and its CSV description 
-      return new Transferable () {
-        public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException, IOException {
-          if (DataFlavor.stringFlavor.equals(flavor)) {
-            return copiedCSV;
-          } else {
-            return transferable.getTransferData(flavor);
-          }
-        }
-
-        public DataFlavor [] getTransferDataFlavors() {
-          ArrayList<DataFlavor> dataFlavors = 
-              new ArrayList<DataFlavor>(Arrays.asList(transferable.getTransferDataFlavors()));
-          dataFlavors.add(DataFlavor.stringFlavor);
-          return dataFlavors.toArray(new DataFlavor [dataFlavors.size()]);
-        }
-
-        public boolean isDataFlavorSupported(DataFlavor flavor) {
-          return transferable.isDataFlavorSupported(flavor)
-            || DataFlavor.stringFlavor.equals(flavor);
-        }
-      };
-    } else {
-      return transferable;
-    }
+    return new HomeTransferableList(this.copiedFurniture);
   }
-
+  
   /**
    * Removes the copied element once moved.
    */
@@ -114,17 +82,15 @@ public class FurnitureTransferHandler extends LocatedTransferHandler {
       this.homeController.cut(copiedFurniture);      
     }
     this.copiedFurniture = null;
-    this.copiedCSV = null;
     this.homeController.enablePasteAction();
   }
 
   /**
    * Returns <code>true</code> if flavors contains 
-   * {@link HomeTransferableList#HOME_FLAVOR HOME_FLAVOR} flavor
-   * or <code>DataFlavor.javaFileListFlavor</code> flavor.
+   * {@link HomeTransferableList#HOME_FLAVOR LIST_FLAVOR} flavor.
    */
   @Override
-  public boolean canImportFlavor(DataFlavor [] flavors) {
+  public boolean canImport(JComponent destination, DataFlavor [] flavors) {
     List<DataFlavor> flavorList = Arrays.asList(flavors);
     return flavorList.contains(HomeTransferableList.HOME_FLAVOR)
         || flavorList.contains(DataFlavor.javaFileListFlavor);
@@ -135,11 +101,11 @@ public class FurnitureTransferHandler extends LocatedTransferHandler {
    */
   @Override
   public boolean importData(JComponent destination, Transferable transferable) {
-    if (canImportFlavor(transferable.getTransferDataFlavors())) {
+    if (canImport(destination, transferable.getTransferDataFlavors())) {
       try {
         List<DataFlavor> flavorList = Arrays.asList(transferable.getTransferDataFlavors());
         if (flavorList.contains(HomeTransferableList.HOME_FLAVOR)) {
-          List<Selectable> items = (List<Selectable>)transferable.
+          List<Object> items = (List<Object>)transferable.
               getTransferData(HomeTransferableList.HOME_FLAVOR);
           List<HomePieceOfFurniture> furniture = Home.getFurnitureSubList(items);
           if (isDrop()) {

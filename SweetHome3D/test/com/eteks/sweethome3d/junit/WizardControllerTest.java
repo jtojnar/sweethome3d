@@ -27,24 +27,19 @@ import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import junit.framework.TestCase;
 import abbot.finder.ComponentSearchException;
-import abbot.tester.JComponentTester;
 
-import com.eteks.sweethome3d.io.DefaultUserPreferences;
-import com.eteks.sweethome3d.model.UserPreferences;
-import com.eteks.sweethome3d.swing.SwingViewFactory;
+import com.eteks.sweethome3d.swing.WizardController;
 import com.eteks.sweethome3d.swing.WizardPane;
-import com.eteks.sweethome3d.viewcontroller.View;
-import com.eteks.sweethome3d.viewcontroller.ViewFactory;
-import com.eteks.sweethome3d.viewcontroller.WizardController;
 
 /**
- * Tests {@link com.eteks.sweethome3d.viewcontroller.WizardController wizard controller}.
+ * Tests {@link com.eteks.sweethome3d.swing.WizardController wizard controller}.
  * @author Emmanuel Puybaret
  */
 public class WizardControllerTest extends TestCase {
@@ -52,7 +47,7 @@ public class WizardControllerTest extends TestCase {
       throws NoSuchFieldException, IllegalAccessException, ComponentSearchException {
     // 1. Create a wizard controller test waiting for finish call
     final boolean [] finished = {false};
-    WizardController controller = new ControllerTest(new DefaultUserPreferences(), new SwingViewFactory()) {
+    WizardController controller = new ControllerTest() {
       @Override
       public void finish() {
         finished [0] = true;
@@ -60,8 +55,8 @@ public class WizardControllerTest extends TestCase {
     }; 
     WizardPane view = (WizardPane)controller.getView();
     // Retrieve view back and next buttons
-    final JButton backOptionButton = (JButton)TestUtilities.getField(view, "backOptionButton"); 
-    final JButton nextFinishOptionButton = (JButton)TestUtilities.getField(view, "nextFinishOptionButton"); 
+    JButton backOptionButton = (JButton)TestUtilities.getField(view, "backOptionButton"); 
+    JButton nextFinishOptionButton = (JButton)TestUtilities.getField(view, "nextFinishOptionButton"); 
     String nextFinishOptionButtonText = nextFinishOptionButton.getText();
     // Check view displays first step view
     assertEquals("First step view class isn't correct", 
@@ -72,12 +67,7 @@ public class WizardControllerTest extends TestCase {
     assertTrue("Next button isn't enabled", nextFinishOptionButton.isEnabled());
     
     // 2. Click on nextFinishButton
-    JComponentTester tester = new JComponentTester();
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          nextFinishOptionButton.doClick();
-        }
-      });
+    nextFinishOptionButton.doClick();
     // Check view displays second step view
     assertEquals("Second step view class isn't correct", 
         ControllerTest.SecondStepView.class, 
@@ -90,11 +80,7 @@ public class WizardControllerTest extends TestCase {
         nextFinishOptionButton.getText().equals(nextFinishOptionButtonText));
     
     // 3. Click on backButton
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          backOptionButton.doClick();
-        }
-      });
+    backOptionButton.doClick();
     // Check view displays first step view
     assertEquals("First step view class isn't correct", 
         ControllerTest.FirstStepView.class, 
@@ -108,41 +94,33 @@ public class WizardControllerTest extends TestCase {
     
 
     // 4. Click on nextFinishButton
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          nextFinishOptionButton.doClick();
-        }
-      });
+    nextFinishOptionButton.doClick();
     // Check view displays second step view
     assertEquals("Second step view class isn't correct", 
         ControllerTest.SecondStepView.class, 
         ((BorderLayout)((JPanel)view.getMessage()).getLayout()).getLayoutComponent(BorderLayout.CENTER).getClass());
     // Check the check box in second step view isn't selected
-    final JCheckBox yesCheckBox = (JCheckBox)TestUtilities.findComponent(view, JCheckBox.class);
+    JCheckBox yesCheckBox = (JCheckBox)TestUtilities.findComponent(view, JCheckBox.class);
     assertFalse("Check box is selected", yesCheckBox.isSelected());
     // Select the check box in second step view
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          yesCheckBox.doClick();
-        }
-      });
+    yesCheckBox.doClick();
     // Check the check box is selected and next button is enabled
     assertTrue("Check box isn't selected", yesCheckBox.isSelected());
     assertTrue("Next button isn't enabled", nextFinishOptionButton.isEnabled());
     
     // 5. Click on nextFinishButton
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          nextFinishOptionButton.doClick();
-        }
-      });
+    nextFinishOptionButton.doClick();
     // Check finish was called
     assertTrue("Finish wasn't called", finished [0]);
   }
   
   public static void main(String [] args) {
     // Display the wizard controlled by ControllerTest
-    new ControllerTest(new DefaultUserPreferences(), new SwingViewFactory()).displayView(null);
+    new ControllerTest() {
+      {
+        displayView();
+      }
+    };
   }
 
   /**
@@ -151,8 +129,7 @@ public class WizardControllerTest extends TestCase {
   private static class ControllerTest extends WizardController {
     private static URL stepIcon = WizardController.class.getResource("resources/backgroundImageWizard.png");
     
-    public ControllerTest(UserPreferences preferences, ViewFactory viewFactory) {
-      super(preferences, viewFactory);
+    public ControllerTest() {
       // Choose step to display
       setStepState(new FirstStep());            
     }
@@ -170,7 +147,7 @@ public class WizardControllerTest extends TestCase {
       }
       
       @Override
-      public View getView() {
+      public JComponent getView() {
         return new FirstStepView();
       }
       
@@ -191,7 +168,7 @@ public class WizardControllerTest extends TestCase {
     }
     
     // First step view is a simple label
-    private static class FirstStepView extends JLabel implements View {
+    private static class FirstStepView extends JLabel {
       public FirstStepView() {
         super("First step");
       }
@@ -200,7 +177,7 @@ public class WizardControllerTest extends TestCase {
     // Second step of wizard
     private class SecondStep extends WizardControllerStepState {
       @Override
-      public View getView() {        
+      public JComponent getView() {        
         return new SecondStepView(this);
       }
       
@@ -226,7 +203,7 @@ public class WizardControllerTest extends TestCase {
     }
     
     // Second step view is a panel displaying a check box that enables next step
-    private static class SecondStepView extends JPanel implements View {
+    private static class SecondStepView extends JPanel {
       public SecondStepView(final SecondStep secondStepController) {
         add(new JLabel("Finish ?"));
         add(new JCheckBox(new AbstractAction("Yes") {
