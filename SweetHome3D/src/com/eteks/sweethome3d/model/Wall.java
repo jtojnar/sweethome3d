@@ -1,7 +1,7 @@
 /*
  * Wall.java 3 juin 2006
  *
- * Sweet Home 3D, Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,10 +24,6 @@ import java.awt.geom.GeneralPath;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,103 +32,53 @@ import java.util.List;
  * A wall of a home plan.
  * @author Emmanuel Puybaret
  */
-public class Wall implements Serializable, Selectable, Elevatable {
-  /**
-   * The properties of a wall that may change. <code>PropertyChangeListener</code>s added 
-   * to a wall will be notified under a property name equal to the string value of one these properties.
-   */
-  public enum Property {X_START, Y_START, X_END, Y_END, ARC_EXTENT, WALL_AT_START, WALL_AT_END, 
-                        THICKNESS, HEIGHT, HEIGHT_AT_END, 
-                        LEFT_SIDE_COLOR, LEFT_SIDE_TEXTURE, LEFT_SIDE_SHININESS, 
-                        RIGHT_SIDE_COLOR, RIGHT_SIDE_TEXTURE, RIGHT_SIDE_SHININESS,
-                        PATTERN, TOP_COLOR, LEVEL}
-  
+public class Wall implements Serializable  {
   private static final long serialVersionUID = 1L;
   
-  private float        xStart;
-  private float        yStart;
-  private float        xEnd;
-  private float        yEnd; 
-  private Float        arcExtent; 
-  private Wall         wallAtStart;
-  private Wall         wallAtEnd;
-  private float        thickness;
-  private Float        height;
-  private Float        heightAtEnd;
-  private Integer      leftSideColor;
-  private HomeTexture  leftSideTexture;
-  private float        leftSideShininess;
-  private Integer      rightSideColor;
-  private HomeTexture  rightSideTexture;
-  private float        rightSideShininess;
-  private boolean      symmetric = true;
-  private TextureImage pattern;  
-  private Integer      topColor;
-  private Level        level;
+  private float   xStart;
+  private float   yStart;
+  private float   xEnd;
+  private float   yEnd; 
+  private Wall    wallAtStart;
+  private Wall    wallAtEnd;
+  private float   thickness;
+  private Float   height;
+  private Float   heightAtEnd;
+  private Integer     leftSideColor;
+  private HomeTexture leftSideTexture;
+  private Integer     rightSideColor;
+  private HomeTexture rightSideTexture;
   
-  private transient PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
   private transient float [][] pointsCache;
 
-
   /**
    * Creates a wall from (<code>xStart</code>,<code>yStart</code>)
    * to (<code>xEnd</code>, <code>yEnd</code>), 
-   * with given thickness. Height, left and right colors are <code>null</code>.
-   * @deprecated specify a height with the {@linkplain #Wall(float, float, float, float, float, float) other constructor}.
+   * with given thickness. Left and right colors are <code>null</code>.
    */
   public Wall(float xStart, float yStart, float xEnd, float yEnd, float thickness) {
-    this(xStart, yStart, xEnd, yEnd, thickness, 0);
-  }
-  
-  /**
-   * Creates a wall from (<code>xStart</code>,<code>yStart</code>)
-   * to (<code>xEnd</code>, <code>yEnd</code>), 
-   * with given thickness and height. Pattern, left and right colors are <code>null</code>.
-   */
-  public Wall(float xStart, float yStart, float xEnd, float yEnd, float thickness, float height) {
-    this(xStart, yStart, xEnd, yEnd, thickness, height, null);
-  }
-  
-  /**
-   * Creates a wall from (<code>xStart</code>,<code>yStart</code>)
-   * to (<code>xEnd</code>, <code>yEnd</code>), 
-   * with given thickness, height and pattern. 
-   * Colors are <code>null</code>.
-   * @since 4.0
-   */
-  public Wall(float xStart, float yStart, float xEnd, float yEnd, float thickness, float height, TextureImage pattern) {
     this.xStart = xStart;
     this.yStart = yStart;
     this.xEnd = xEnd;
     this.yEnd = yEnd;
     this.thickness = thickness;
-    this.height = height;
-    this.pattern = pattern;
   }
   
   /**
-   * Initializes new wall transient fields  
-   * and reads wall from <code>in</code> stream with default reading method.
+   * Creates a wall from a given <code>wall</code>.
+   * The walls at start and at end are not copied.  
    */
-  private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-    this.propertyChangeSupport = new PropertyChangeSupport(this);
-    in.defaultReadObject();
+  public Wall(Wall wall) {
+    this(wall.getXStart(), wall.getYStart(), 
+         wall.getXEnd(), wall.getYEnd(), wall.getThickness());
+    this.height = wall.getHeight();
+    this.heightAtEnd = wall.getHeightAtEnd();
+    this.leftSideColor = wall.getLeftSideColor();
+    this.leftSideTexture = wall.getLeftSideTexture();
+    this.rightSideColor = wall.getRightSideColor();
+    this.rightSideTexture = wall.getRightSideTexture();
   }
-
-  /**
-   * Adds the property change <code>listener</code> in parameter to this wall.
-   */
-  public void addPropertyChangeListener(PropertyChangeListener listener) {
-    this.propertyChangeSupport.addPropertyChangeListener(listener);
-  }
-
-  /**
-   * Removes the property change <code>listener</code> in parameter from this wall.
-   */
-  public void removePropertyChangeListener(PropertyChangeListener listener) {
-    this.propertyChangeSupport.removePropertyChangeListener(listener);
-  }
-
+  
   /**
    * Returns the start point abscissa of this wall.
    */
@@ -141,16 +87,13 @@ public class Wall implements Serializable, Selectable, Elevatable {
   }
 
   /**
-   * Sets the start point abscissa of this wall. Once this wall is updated, 
-   * listeners added to this wall will receive a change notification.
+   * Sets the start point abscissa of this wall.
+   * This method should be called from {@link Home}, which
+   * controls notifications when a wall changed.
    */
-  public void setXStart(float xStart) {
-    if (xStart != this.xStart) {
-      float oldXStart = this.xStart;
-      this.xStart = xStart;
-      clearPointsCache();
-      this.propertyChangeSupport.firePropertyChange(Property.X_START.name(), oldXStart, xStart);
-    }
+  void setXStart(float xStart) {
+    this.xStart = xStart;
+    clearPointsCache();
   }
 
   /**
@@ -161,16 +104,13 @@ public class Wall implements Serializable, Selectable, Elevatable {
   }
 
   /**
-   * Sets the start point ordinate of this wall. Once this wall is updated, 
-   * listeners added to this wall will receive a change notification.
+   * Sets the start point ordinate of this wall.
+   * This method should be called from {@link Home}, which
+   * controls notifications when a wall changed.
    */
-  public void setYStart(float yStart) {
-    if (yStart != this.yStart) {
-      float oldYStart = this.yStart;
-      this.yStart = yStart;
-      clearPointsCache();
-      this.propertyChangeSupport.firePropertyChange(Property.Y_START.name(), oldYStart, yStart);
-    }
+  void setYStart(float yStart) {
+    this.yStart = yStart;
+    clearPointsCache();
   }
 
   /**
@@ -181,16 +121,13 @@ public class Wall implements Serializable, Selectable, Elevatable {
   }
 
   /**
-   * Sets the end point abscissa of this wall. Once this wall is updated, 
-   * listeners added to this wall will receive a change notification.
+   * Sets the end point abscissa of this wall.
+   * This method should be called from {@link Home}, which
+   * controls notifications when a wall changed.
    */
-  public void setXEnd(float xEnd) {
-    if (xEnd != this.xEnd) {
-      float oldXEnd = this.xEnd;
-      this.xEnd = xEnd;
-      clearPointsCache();
-      this.propertyChangeSupport.firePropertyChange(Property.X_END.name(), oldXEnd, xEnd);
-    }
+  void setXEnd(float xEnd) {
+    this.xEnd = xEnd;
+    clearPointsCache();
   }
 
   /**
@@ -201,108 +138,15 @@ public class Wall implements Serializable, Selectable, Elevatable {
   }
 
   /**
-   * Sets the end point ordinate of this wall. Once this wall is updated, 
-   * listeners added to this wall will receive a change notification.
+   * Sets the end point ordinate of this wall.
+   * This method should be called from {@link Home}, which
+   * controls notifications when a wall changed.
    */
-  public void setYEnd(float yEnd) {
-    if (yEnd != this.yEnd) {
-      float oldYEnd = this.yEnd;
-      this.yEnd = yEnd;
-      clearPointsCache();
-      this.propertyChangeSupport.firePropertyChange(Property.Y_END.name(), oldYEnd, yEnd);
-    }
+  void setYEnd(float yEnd) {
+    this.yEnd = yEnd;
+    clearPointsCache();
   }
 
-  /**
-   * Returns the length of this wall.
-   * @since 2.0
-   */
-  public float getLength() {
-    if (this.arcExtent == null
-        || this.arcExtent == 0) {
-      return (float)Point2D.distance(this.xStart, this.yStart, this.xEnd, this.yEnd);
-    } else {
-      float [] arcCircleCenter = getArcCircleCenter();
-      float arcCircleRadius = (float)Point2D.distance(this.xStart, this.yStart, 
-          arcCircleCenter [0], arcCircleCenter [1]);
-      return Math.abs(this.arcExtent) * arcCircleRadius;
-    }
-  }
-  
-  /**
-   * Returns the distance from the start point of this wall to its end point.
-   * @since 3.0
-   */
-  public float getStartPointToEndPointDistance() {
-    return (float)Point2D.distance(this.xStart, this.yStart, this.xEnd, this.yEnd);
-  }
-  
-  /**
-   * Sets the arc extent of a round wall.
-   * @since 3.0
-   */
-  public void setArcExtent(Float arcExtent) {
-    if (arcExtent != this.arcExtent
-        || (arcExtent != null && !arcExtent.equals(this.arcExtent))) {
-      Float oldArcExtent = this.arcExtent;
-      this.arcExtent = arcExtent;
-      clearPointsCache();
-      this.propertyChangeSupport.firePropertyChange(Property.ARC_EXTENT.name(), 
-          oldArcExtent, arcExtent);
-    }
-  }
-
-  /**
-   * Returns the arc extent of a round wall or <code>null</code> if this wall isn't round.
-   * @since 3.0
-   */
-  public Float getArcExtent() {
-    return this.arcExtent;
-  }
-
-  /**
-   * Returns the abscissa of the arc circle center of this wall.
-   * If the wall isn't round, the return abscissa is at the middle of the wall. 
-   * @since 3.0
-   */
-  public float getXArcCircleCenter() {
-    if (this.arcExtent == null) {
-      return (this.xStart + this.xEnd) / 2; 
-    } else {
-      return getArcCircleCenter() [0];
-    }
-  }
-
-  /**
-   * Returns the ordinate of the arc circle center of this wall.
-   * If the wall isn't round, the return ordinate is at the middle of the wall. 
-   * @since 3.0
-   */
-  public float getYArcCircleCenter() {
-    if (this.arcExtent == null) {
-      return (this.yStart + this.yEnd) / 2;
-    } else {
-      return getArcCircleCenter() [1];
-    }
-  }
-
-  /**
-   * Returns the coordinates of the arc circle center of this wall.
-   */
-  private float [] getArcCircleCenter() {
-    double startToEndPointsDistance = Point2D.distance(this.xStart, this.yStart, this.xEnd, this.yEnd);
-    double wallToStartPointArcCircleCenterAngle = Math.abs(this.arcExtent) > Math.PI 
-        ? -(Math.PI + this.arcExtent) / 2
-        : (Math.PI - this.arcExtent) / 2;
-    float arcCircleCenterToWallDistance = -(float)(Math.tan(wallToStartPointArcCircleCenterAngle) 
-        * startToEndPointsDistance / 2); 
-    float xMiddlePoint = (this.xStart + this.xEnd) / 2;
-    float yMiddlePoint = (this.yStart + this.yEnd) / 2;
-    double angle = Math.atan2(this.xStart - this.xEnd, this.yEnd - this.yStart);
-    return new float [] {(float)(xMiddlePoint + arcCircleCenterToWallDistance * Math.cos(angle)), 
-                         (float)(yMiddlePoint + arcCircleCenterToWallDistance * Math.sin(angle))};
-  }
-  
   /**
    * Returns the wall joined to this wall at start point.
    */
@@ -311,33 +155,13 @@ public class Wall implements Serializable, Selectable, Elevatable {
   }
 
   /**
-   * Sets the wall joined to this wall at start point. Once this wall is updated, 
-   * listeners added to this wall will receive a change notification.
-   * If the start point of this wall is attached to an other wall, it will be detached 
-   * from this wall, and wall listeners will receive a change notification.
-   * @param wallAtStart a wall or <code>null</code> to detach this wall
-   *          from any wall it was attached to before.
+   * Sets the wall joined to this wall at start point.
+   * This method should be called from {@link Home}, which
+   * controls notifications when a wall changed.
    */
-  public void setWallAtStart(Wall wallAtStart) {
-    setWallAtStart(wallAtStart, true);
-  }
-
-  /**
-   * Sets the wall joined to this wall at start point and detachs the wall at start
-   * from this wall if <code>detachJoinedWallAtStart</code> is true. 
-   */
-  private void setWallAtStart(Wall wallAtStart, boolean detachJoinedWallAtStart) {
-    if (wallAtStart != this.wallAtStart) {
-      Wall oldWallAtStart = this.wallAtStart;
-      this.wallAtStart = wallAtStart;
-      clearPointsCache();
-      this.propertyChangeSupport.firePropertyChange(Property.WALL_AT_START.name(), 
-          oldWallAtStart, wallAtStart);
-      
-      if (detachJoinedWallAtStart) {
-        detachJoinedWall(oldWallAtStart);
-      }
-    }
+  void setWallAtStart(Wall wallAtStart) {
+    this.wallAtStart = wallAtStart;
+    clearPointsCache();
   }
 
   /**
@@ -349,47 +173,13 @@ public class Wall implements Serializable, Selectable, Elevatable {
  
  
   /**
-   * Sets the wall joined to this wall at end point. Once this wall is updated, 
-   * listeners added to this wall will receive a change notification. 
-   * If the end point of this wall is attached to an other wall, it will be detached 
-   * from this wall, and wall listeners will receive a change notification.
-   * @param wallAtEnd a wall or <code>null</code> to detach this wall
-   *          from any wall it was attached to before.
+   * Sets the wall joined to this wall at end point.
+   * This method should be called from {@link Home}, which
+   * controls notifications when a wall changed.
    */
-  public void setWallAtEnd(Wall wallAtEnd) {
-    setWallAtEnd(wallAtEnd, true);
-  }
-
-  /**
-   * Sets the wall joined to this wall at end point and detachs the wall at end
-   * from this wall if <code>detachJoinedWallAtEnd</code> is true. 
-   */
-  private void setWallAtEnd(Wall wallAtEnd, boolean detachJoinedWallAtEnd) {
-    if (wallAtEnd != this.wallAtEnd) {
-      Wall oldWallAtEnd = this.wallAtEnd;
-      this.wallAtEnd = wallAtEnd;
-      clearPointsCache();
-      this.propertyChangeSupport.firePropertyChange(Property.WALL_AT_END.name(), 
-          oldWallAtEnd, wallAtEnd);
-      
-      if (detachJoinedWallAtEnd) {
-        detachJoinedWall(oldWallAtEnd);
-      }
-    }
-  }
-
-  /**
-   * Detaches <code>joinedWall</code> from this wall.
-   */
-  private void detachJoinedWall(Wall joinedWall) {
-    // Detach the previously attached wall 
-    if (joinedWall != null) {
-      if (joinedWall.getWallAtStart() == this) {
-        joinedWall.setWallAtStart(null, false);
-      } else if (joinedWall.getWallAtEnd() == this) {
-        joinedWall.setWallAtEnd(null, false);
-      } 
-    }
+  void setWallAtEnd(Wall wallAtEnd) {
+    this.wallAtEnd = wallAtEnd;
+    clearPointsCache();
   }
 
   /**
@@ -400,17 +190,13 @@ public class Wall implements Serializable, Selectable, Elevatable {
   }
 
   /**
-   * Sets wall thickness. Once this wall is updated, 
-   * listeners added to this wall will receive a change notification.
+   * Sets wall thickness.
+   * This method should be called from {@link Home}, which
+   * controls notifications when a wall changed.
    */
-  public void setThickness(float thickness) {
-    if (thickness != this.thickness) {
-      float oldThickness = this.thickness;
-      this.thickness = thickness;
-      clearPointsCache();
-      this.propertyChangeSupport.firePropertyChange(Property.THICKNESS.name(), 
-          oldThickness, thickness);
-    }
+  void setThickness(float thickness) {
+    this.thickness = thickness;
+    clearPointsCache();
   }
 
   /**
@@ -423,17 +209,12 @@ public class Wall implements Serializable, Selectable, Elevatable {
   }
 
   /**
-   * Sets the height of this wall. Once this wall is updated, 
-   * listeners added to this wall will receive a change notification.
+   * Sets the height of this wall.
+   * This method should be called from {@link Home}, which
+   * controls notifications when a wall changed.
    */
-  public void setHeight(Float height) {
-    if (height != this.height
-        || (height != null && !height.equals(this.height))) {
-      Float oldHeight = this.height;
-      this.height = height;
-      this.propertyChangeSupport.firePropertyChange(Property.HEIGHT.name(), 
-          oldHeight, height);
-    }
+  void setHeight(Float height) {
+    this.height = height;
   }
 
   /**
@@ -444,17 +225,12 @@ public class Wall implements Serializable, Selectable, Elevatable {
   }
 
   /**
-   * Sets the height of this wall at its end point. Once this wall is updated, 
-   * listeners added to this wall will receive a change notification.
+   * Sets the height of this wall at its end point.
+   * This method should be called from {@link Home}, which
+   * controls notifications when a wall changed.
    */
-  public void setHeightAtEnd(Float heightAtEnd) {
-    if (heightAtEnd != this.heightAtEnd
-        && (heightAtEnd == null || !heightAtEnd.equals(this.heightAtEnd))) {
-      Float oldHeightAtEnd = this.heightAtEnd;
-      this.heightAtEnd = heightAtEnd;
-      this.propertyChangeSupport.firePropertyChange(Property.HEIGHT_AT_END.name(), 
-          oldHeightAtEnd, heightAtEnd);
-    }
+  void setHeightAtEnd(Float heightAtEnd) {
+    this.heightAtEnd = heightAtEnd;
   }
 
   /**
@@ -476,17 +252,12 @@ public class Wall implements Serializable, Selectable, Elevatable {
   }
 
   /**
-   * Sets left side color of this wall. Once this wall is updated, 
-   * listeners added to this wall will receive a change notification.
+   * Sets left side color of this wall. 
+   * This method should be called from {@link Home}, which
+   * controls notifications when a wall changed.
    */
-  public void setLeftSideColor(Integer leftSideColor) {
-    if (leftSideColor != this.leftSideColor
-        && (leftSideColor == null || !leftSideColor.equals(this.leftSideColor))) {
-      Integer oldLeftSideColor = this.leftSideColor;
-      this.leftSideColor = leftSideColor;
-      this.propertyChangeSupport.firePropertyChange(Property.LEFT_SIDE_COLOR.name(), 
-          oldLeftSideColor, leftSideColor);
-    }
+  void setLeftSideColor(Integer leftColor) {
+    this.leftSideColor = leftColor;
   }
 
   /**
@@ -498,17 +269,10 @@ public class Wall implements Serializable, Selectable, Elevatable {
   }
 
   /**
-   * Sets right side color of this wall. Once this wall is updated, 
-   * listeners added to this wall will receive a change notification.
+   * Sets right side color of this wall. 
    */
-  public void setRightSideColor(Integer rightSideColor) {
-    if (rightSideColor != this.rightSideColor
-        && (rightSideColor == null || !rightSideColor.equals(this.rightSideColor))) {
-      Integer oldLeftSideColor = this.rightSideColor;
-      this.rightSideColor = rightSideColor;
-      this.propertyChangeSupport.firePropertyChange(Property.RIGHT_SIDE_COLOR.name(), 
-          oldLeftSideColor, rightSideColor);
-    }
+  void setRightSideColor(Integer rightColor) {
+    this.rightSideColor = rightColor;
   }
 
   
@@ -520,17 +284,10 @@ public class Wall implements Serializable, Selectable, Elevatable {
   }
 
   /**
-   * Sets the left side texture of this wall. Once this wall is updated, 
-   * listeners added to this wall will receive a change notification.
+   * Sets the left side texture of this wall.
    */
-  public void setLeftSideTexture(HomeTexture leftSideTexture) {
-    if (leftSideTexture != this.leftSideTexture
-        && (leftSideTexture == null || !leftSideTexture.equals(this.leftSideTexture))) {
-      HomeTexture oldLeftSideTexture = this.leftSideTexture;
-      this.leftSideTexture = leftSideTexture;
-      this.propertyChangeSupport.firePropertyChange(Property.LEFT_SIDE_TEXTURE.name(), 
-          oldLeftSideTexture, leftSideTexture);
-    }
+  void setLeftSideTexture(HomeTexture leftSideTexture) {
+    this.leftSideTexture = leftSideTexture;
   }
 
   /**
@@ -541,152 +298,10 @@ public class Wall implements Serializable, Selectable, Elevatable {
   }
 
   /**
-   * Sets the right side texture of this wall. Once this wall is updated, 
-   * listeners added to this wall will receive a change notification.
+   * Sets the right side texture of this wall.
    */
-  public void setRightSideTexture(HomeTexture rightSideTexture) {
-    if (rightSideTexture != this.rightSideTexture
-        && (rightSideTexture == null || !rightSideTexture.equals(this.rightSideTexture))) {
-      HomeTexture oldLeftSideTexture = this.rightSideTexture;
-      this.rightSideTexture = rightSideTexture;
-      this.propertyChangeSupport.firePropertyChange(Property.RIGHT_SIDE_TEXTURE.name(), 
-          oldLeftSideTexture, rightSideTexture);
-    }
-  }
-
-  /**
-   * Returns the left side shininess of this wall.
-   * @return a value between 0 (matt) and 1 (very shiny)  
-   * @since 3.0
-   */
-  public float getLeftSideShininess() {
-    return this.leftSideShininess;
-  }
-
-  /**
-   * Sets the left side shininess of this wall. Once this wall is updated, 
-   * listeners added to this wall will receive a change notification.
-   * @since 3.0
-   */
-  public void setLeftSideShininess(float leftSideShininess) {
-    if (leftSideShininess != this.leftSideShininess) {
-      float oldLeftSideShininess = this.leftSideShininess;
-      this.leftSideShininess = leftSideShininess;
-      this.propertyChangeSupport.firePropertyChange(Property.LEFT_SIDE_SHININESS.name(), oldLeftSideShininess, leftSideShininess);
-    }
-  }
-
-  /**
-   * Returns the right side shininess of this wall.
-   * @return a value between 0 (matt) and 1 (very shiny)  
-   * @since 3.0
-   */
-  public float getRightSideShininess() {
-    return this.rightSideShininess;
-  }
-
-  /**
-   * Sets the right side shininess of this wall. Once this wall is updated, 
-   * listeners added to this wall will receive a change notification.
-   * @since 3.0
-   */
-  public void setRightSideShininess(float rightSideShininess) {
-    if (rightSideShininess != this.rightSideShininess) {
-      float oldRightSideShininess = this.rightSideShininess;
-      this.rightSideShininess = rightSideShininess;
-      this.propertyChangeSupport.firePropertyChange(Property.RIGHT_SIDE_SHININESS.name(), oldRightSideShininess, rightSideShininess);
-    }
-  }
-
-  /**
-   * Returns the pattern of this wall in the plan.
-   * @since 3.3
-   */
-  public TextureImage getPattern() {
-    return this.pattern;
-  }
-  
-  /**
-   * Sets the pattern of this wall in the plan, and notifies
-   * listeners of this change.
-   * @since 3.3 
-   */
-  public void setPattern(TextureImage pattern) {
-    if (this.pattern != pattern) {
-      TextureImage oldPattern = this.pattern;
-      this.pattern = pattern;
-      this.propertyChangeSupport.firePropertyChange(Property.PATTERN.name(), 
-          oldPattern, pattern);
-    }
-  }
-
-  /**
-   * Returns the color of the top of this wall in the 3D view.
-   * @since 4.0
-   */
-  public Integer getTopColor() {
-    return this.topColor;
-  }
-  
-  /**
-   * Sets the color of the top of this wall in the 3D view, and notifies
-   * listeners of this change.
-   * @since 4.0 
-   */
-  public void setTopColor(Integer topColor) {
-    if (this.topColor != topColor
-        && (topColor == null || !topColor.equals(this.topColor))) {
-      Integer oldTopColor = this.topColor;
-      this.topColor = topColor;
-      this.propertyChangeSupport.firePropertyChange(Property.TOP_COLOR.name(), 
-          oldTopColor, topColor);
-    }
-  }
-
-  /**
-   * Returns the level which this wall belongs to. 
-   * @since 3.4
-   */
-  public Level getLevel() {
-    return this.level;
-  }
-
-  /**
-   * Sets the level of this wall. Once this wall is updated, 
-   * listeners added to this wall will receive a change notification.
-   * @since 3.4
-   */
-  public void setLevel(Level level) {
-    if (level != this.level) {
-      Level oldLevel = this.level;
-      this.level = level;
-      this.propertyChangeSupport.firePropertyChange(Property.LEVEL.name(), oldLevel, level);
-    }
-  }
-
-  /**
-   * Returns <code>true</code> if this wall is visible at the given level.
-   * @since 3.4
-   */
-  public boolean isAtLevel(Level level) {
-    return this.level == level
-        || this.level != null && level != null
-            && this.level.getElevation() <= level.getElevation()
-            && this.level.getElevation() + getWallMaximumHeight() > level.getElevation();
-  }
-  
-  /**
-   * Returns the maximum height of the given wall.
-   */
-  private float getWallMaximumHeight() {
-    if (this.height == null) {
-      // Shouldn't happen
-      return 0; 
-    } else if (isTrapezoidal()) {
-      return Math.max(this.height, this.heightAtEnd);
-    } else {
-      return this.height;
-    }
+  void setRightSideTexture(HomeTexture rightSideTexture) {
+    this.rightSideTexture = rightSideTexture;
   }
 
   /**
@@ -704,210 +319,71 @@ public class Wall implements Serializable, Selectable, Elevatable {
   
   /**
    * Returns the points of each corner of a wall. 
-   * @return an array of the (x,y) coordinates of the wall corners.
-   *    For a straight wall, the points at index 0 and 3 indicates the start of the wall, 
-   *    while the points at index 1 and 2 indicates the end of the wall. 
+   * @return an array of the 4 (x,y) coordinates of the wall corners.
+   *    The points at index 0 and 3 indicates the start of the wall, while
+   *    the points at index 1 and 2 indicates the end of the wall. 
    */
   public float [][] getPoints() {
     if (this.pointsCache == null) {
-      final float epsilon = 0.01f;
-      float [][] wallPoints = getUnjoinedShapePoints();
-      int leftSideStartPointIndex = 0;
-      int rightSideStartPointIndex = wallPoints.length - 1;
-      int leftSideEndPointIndex = wallPoints.length / 2 - 1;
-      int rightSideEndPointIndex = wallPoints.length / 2;
+      float [][] wallPoints = getRectanglePoints();
       float limit = 2 * this.thickness;
       // If wall is joined to a wall at its start, 
       // compute the intersection between their outlines 
       if (this.wallAtStart != null) {
-        float [][] wallAtStartPoints = this.wallAtStart.getUnjoinedShapePoints();
-        int wallAtStartLeftSideStartPointIndex = 0;
-        int wallAtStartRightSideStartPointIndex = wallAtStartPoints.length - 1;
-        int wallAtStartLeftSideEndPointIndex = wallAtStartPoints.length / 2 - 1;
-        int wallAtStartRightSideEndPointIndex = wallAtStartPoints.length / 2;
-        boolean wallAtStartJoinedAtEnd = this.wallAtStart.getWallAtEnd() == this
-            // Check the coordinates when walls are joined to each other at both ends 
-            && (this.wallAtStart.getWallAtStart() != this
-                || (this.wallAtStart.xEnd == this.xStart
-                    && this.wallAtStart.yEnd == this.yStart));
-        boolean wallAtStartJoinedAtStart = this.wallAtStart.getWallAtStart() == this
-            // Check the coordinates when walls are joined to each other at both ends 
-            && (this.wallAtStart.getWallAtEnd() != this
-                || (this.wallAtStart.xStart == this.xStart
-                    && this.wallAtStart.yStart == this.yStart));
-        if (wallAtStartJoinedAtEnd) {
-          computeIntersection(wallPoints [leftSideStartPointIndex], wallPoints [leftSideStartPointIndex + 1], 
-              wallAtStartPoints [wallAtStartLeftSideEndPointIndex], wallAtStartPoints [wallAtStartLeftSideEndPointIndex - 1], limit);
-          computeIntersection(wallPoints [rightSideStartPointIndex], wallPoints [rightSideStartPointIndex - 1],  
-              wallAtStartPoints [wallAtStartRightSideEndPointIndex], wallAtStartPoints [wallAtStartRightSideEndPointIndex + 1], limit);
-
-          // If the computed start point of this wall and the computed end point of the wall at start 
-          // are equal to within epsilon, share the exact same point to avoid computing errors on areas 
-          if (this.wallAtStart.pointsCache != null) {
-            if (Math.abs(wallPoints [leftSideStartPointIndex][0] - this.wallAtStart.pointsCache [wallAtStartLeftSideEndPointIndex][0]) < epsilon
-                && Math.abs(wallPoints [leftSideStartPointIndex][1] - this.wallAtStart.pointsCache [wallAtStartLeftSideEndPointIndex][1]) < epsilon) {
-              wallPoints [leftSideStartPointIndex] = this.wallAtStart.pointsCache [wallAtStartLeftSideEndPointIndex];
-            }                        
-            if (Math.abs(wallPoints [rightSideStartPointIndex][0] - this.wallAtStart.pointsCache [wallAtStartRightSideEndPointIndex][0]) < epsilon
-                && Math.abs(wallPoints [rightSideStartPointIndex][1] - this.wallAtStart.pointsCache [wallAtStartRightSideEndPointIndex][1]) < epsilon) {
-              wallPoints [rightSideStartPointIndex] = this.wallAtStart.pointsCache [wallAtStartRightSideEndPointIndex];
-            }
-          }
-        } else if (wallAtStartJoinedAtStart) {
-          computeIntersection(wallPoints [leftSideStartPointIndex], wallPoints [leftSideStartPointIndex + 1], 
-              wallAtStartPoints [wallAtStartRightSideStartPointIndex], wallAtStartPoints [wallAtStartRightSideStartPointIndex - 1], limit);
-          computeIntersection(wallPoints [rightSideStartPointIndex], wallPoints [rightSideStartPointIndex - 1],  
-              wallAtStartPoints [wallAtStartLeftSideStartPointIndex], wallAtStartPoints [wallAtStartLeftSideStartPointIndex + 1], limit);
-          
-          // If the computed start point of this wall and the computed start point of the wall at start 
-          // are equal to within epsilon, share the exact same point to avoid computing errors on areas 
-          if (this.wallAtStart.pointsCache != null) {
-            if (Math.abs(wallPoints [leftSideStartPointIndex][0] - this.wallAtStart.pointsCache [wallAtStartRightSideStartPointIndex][0]) < epsilon
-                && Math.abs(wallPoints [leftSideStartPointIndex][1] - this.wallAtStart.pointsCache [wallAtStartRightSideStartPointIndex][1]) < epsilon) {
-              wallPoints [leftSideStartPointIndex] = this.wallAtStart.pointsCache [wallAtStartRightSideStartPointIndex];
-            }                            
-            if (this.wallAtStart.pointsCache != null
-                && Math.abs(wallPoints [rightSideStartPointIndex][0] - this.wallAtStart.pointsCache [wallAtStartLeftSideStartPointIndex][0]) < epsilon
-                && Math.abs(wallPoints [rightSideStartPointIndex][1] - this.wallAtStart.pointsCache [wallAtStartLeftSideStartPointIndex][1]) < epsilon) {
-              wallPoints [rightSideStartPointIndex] = this.wallAtStart.pointsCache [wallAtStartLeftSideStartPointIndex];
-            }
-          }
+        float [][] wallAtStartPoints = this.wallAtStart.getRectanglePoints();
+        if (this.wallAtStart.getWallAtEnd() == this) {
+          computeIntersection(wallPoints [0], wallPoints [1], 
+              wallAtStartPoints [1], wallAtStartPoints [0], limit);
+          computeIntersection(wallPoints [3], wallPoints [2],  
+              wallAtStartPoints [2], wallAtStartPoints [3], limit);
+        } else if (this.wallAtStart.getWallAtStart() == this) {
+          computeIntersection(wallPoints [0], wallPoints [1], 
+              wallAtStartPoints [2], wallAtStartPoints [3], limit);
+          computeIntersection(wallPoints [3], wallPoints [2],  
+              wallAtStartPoints [0], wallAtStartPoints [1], limit);
         }
       }
     
       // If wall is joined to a wall at its end, 
       // compute the intersection between their outlines 
       if (this.wallAtEnd != null) {
-        float [][] wallAtEndPoints = this.wallAtEnd.getUnjoinedShapePoints();
-        int wallAtEndLeftSideStartPointIndex = 0;
-        int wallAtEndRightSideStartPointIndex = wallAtEndPoints.length - 1;
-        int wallAtEndLeftSideEndPointIndex = wallAtEndPoints.length / 2 - 1;
-        int wallAtEndRightSideEndPointIndex = wallAtEndPoints.length / 2;
-        boolean wallAtEndJoinedAtStart = this.wallAtEnd.getWallAtStart() == this
-            // Check the coordinates when walls are joined to each other at both ends 
-            && (this.wallAtEnd.getWallAtEnd() != this
-                || (this.wallAtEnd.xStart == this.xEnd
-                    && this.wallAtEnd.yStart == this.yEnd));
-        boolean wallAtEndJoinedAtEnd = this.wallAtEnd.getWallAtEnd() == this
-            // Check the coordinates when walls are joined to each other at both ends 
-            && (this.wallAtEnd.getWallAtStart() != this
-                || (this.wallAtEnd.xEnd == this.xEnd
-                    && this.wallAtEnd.yEnd == this.yEnd));
-        if (wallAtEndJoinedAtStart) {
-          computeIntersection(wallPoints [leftSideEndPointIndex], wallPoints [leftSideEndPointIndex - 1], 
-              wallAtEndPoints [wallAtEndLeftSideStartPointIndex], wallAtEndPoints [wallAtEndLeftSideStartPointIndex + 1], limit);
-          computeIntersection(wallPoints [rightSideEndPointIndex], wallPoints [rightSideEndPointIndex + 1], 
-              wallAtEndPoints [wallAtEndRightSideStartPointIndex], wallAtEndPoints [wallAtEndRightSideStartPointIndex - 1], limit);
-
-          // If the computed end point of this wall and the computed start point of the wall at end 
-          // are equal to within epsilon, share the exact same point to avoid computing errors on areas 
-          if (this.wallAtEnd.pointsCache != null) {
-            if (Math.abs(wallPoints [leftSideEndPointIndex][0] - this.wallAtEnd.pointsCache [wallAtEndLeftSideStartPointIndex][0]) < epsilon
-                && Math.abs(wallPoints [leftSideEndPointIndex][1] - this.wallAtEnd.pointsCache [wallAtEndLeftSideStartPointIndex][1]) < epsilon) {
-              wallPoints [leftSideEndPointIndex] = this.wallAtEnd.pointsCache [wallAtEndLeftSideStartPointIndex];
-            }                        
-            if (Math.abs(wallPoints [rightSideEndPointIndex][0] - this.wallAtEnd.pointsCache [wallAtEndRightSideStartPointIndex][0]) < epsilon
-                && Math.abs(wallPoints [rightSideEndPointIndex][1] - this.wallAtEnd.pointsCache [wallAtEndRightSideStartPointIndex][1]) < epsilon) {
-              wallPoints [rightSideEndPointIndex] = this.wallAtEnd.pointsCache [wallAtEndRightSideStartPointIndex];
-            }
-          }
-        } else if (wallAtEndJoinedAtEnd) {
-          computeIntersection(wallPoints [leftSideEndPointIndex], wallPoints [leftSideEndPointIndex - 1],  
-              wallAtEndPoints [wallAtEndRightSideEndPointIndex], wallAtEndPoints [wallAtEndRightSideEndPointIndex + 1], limit);
-          computeIntersection(wallPoints [rightSideEndPointIndex], wallPoints [rightSideEndPointIndex + 1], 
-              wallAtEndPoints [wallAtEndLeftSideEndPointIndex], wallAtEndPoints [wallAtEndLeftSideEndPointIndex - 1], limit);
-
-          // If the computed end point of this wall and the computed start point of the wall at end 
-          // are equal to within epsilon, share the exact same point to avoid computing errors on areas 
-          if (this.wallAtEnd.pointsCache != null) {
-            if (Math.abs(wallPoints [leftSideEndPointIndex][0] - this.wallAtEnd.pointsCache [wallAtEndRightSideEndPointIndex][0]) < epsilon
-                && Math.abs(wallPoints [leftSideEndPointIndex][1] - this.wallAtEnd.pointsCache [wallAtEndRightSideEndPointIndex][1]) < epsilon) {
-              wallPoints [leftSideEndPointIndex] = this.wallAtEnd.pointsCache [wallAtEndRightSideEndPointIndex];
-            }                        
-            if (Math.abs(wallPoints [rightSideEndPointIndex][0] - this.wallAtEnd.pointsCache [wallAtEndLeftSideEndPointIndex][0]) < epsilon
-                && Math.abs(wallPoints [rightSideEndPointIndex][1] - this.wallAtEnd.pointsCache [wallAtEndLeftSideEndPointIndex][1]) < epsilon) {
-              wallPoints [rightSideEndPointIndex] = this.wallAtEnd.pointsCache [wallAtEndLeftSideEndPointIndex];
-            }
-          }
+        float [][] wallAtEndPoints = this.wallAtEnd.getRectanglePoints();
+        if (this.wallAtEnd.getWallAtStart() == this) {
+          computeIntersection(wallPoints [1], wallPoints [0], 
+              wallAtEndPoints [0], wallAtEndPoints [1], limit);
+          computeIntersection(wallPoints [2], wallPoints [3], 
+              wallAtEndPoints [3], wallAtEndPoints [2], limit);
+        
+        } else if (this.wallAtEnd.getWallAtEnd() == this) {
+          computeIntersection(wallPoints [1], wallPoints [0],  
+              wallAtEndPoints [3], wallAtEndPoints [2], limit);
+          computeIntersection(wallPoints [2], wallPoints [3], 
+              wallAtEndPoints [0], wallAtEndPoints [1], limit);
         }
       }
       // Cache shape
       this.pointsCache = wallPoints;
     }
-    float [][] points = new float [this.pointsCache.length][];
-    for (int i = 0; i < this.pointsCache.length; i++) {
-      points [i] = this.pointsCache [i].clone();
-    }
-    return points;
+    return new float [][] {
+        {this.pointsCache [0][0], this.pointsCache [0][1]},
+        {this.pointsCache [1][0], this.pointsCache [1][1]},
+        {this.pointsCache [2][0], this.pointsCache [2][1]},
+        {this.pointsCache [3][0], this.pointsCache [3][1]}};
   }
 
   /**
-   * Computes the rectangle or the circle arc of a wall with its thickness.
+   * Compute the rectangle of a wall with its thickness.
    */  
-  private float [][] getUnjoinedShapePoints() {
-    if (this.arcExtent != null
-        && this.arcExtent != 0
-        && Point2D.distanceSq(this.xStart, this.yStart, this.xEnd, this.yEnd) > 1E-10) {
-      float [] arcCircleCenter = getArcCircleCenter();
-      float startAngle = (float)Math.atan2(arcCircleCenter [1] - this.yStart, arcCircleCenter [0] - this.xStart);
-      startAngle += 2 * (float)Math.atan2(this.yStart - this.yEnd, this.xEnd - this.xStart);
-      float arcCircleRadius = (float)Point2D.distance(arcCircleCenter [0], arcCircleCenter [1], this.xStart, this.yStart);
-      float exteriorArcRadius = arcCircleRadius + this.thickness / 2;
-      float interiorArcRadius = Math.max(0, arcCircleRadius - this.thickness / 2);
-      float exteriorArcLength = exteriorArcRadius * Math.abs(this.arcExtent);
-      float angleDelta = this.arcExtent / (float)Math.sqrt(exteriorArcLength);
-      int angleStepCount = (int)(this.arcExtent / angleDelta);
-      List<float[]> wallPoints = new ArrayList<float[]>((angleStepCount + 2) * 2);      
-      if (this.symmetric) {
-        if (Math.abs(this.arcExtent - angleStepCount * angleDelta) > 1E-6) {
-          angleDelta = this.arcExtent / ++angleStepCount;
-        }
-        for (int i = 0; i <= angleStepCount; i++) {
-          computeRoundWallShapePoint(wallPoints, startAngle + this.arcExtent - i * angleDelta, i, angleDelta, 
-              arcCircleCenter, exteriorArcRadius, interiorArcRadius);
-        }
-      } else {
-        // Don't change the way walls were computed in version 3.0 to ensure they exactly look the same
-        int i = 0;
-        for (float angle = this.arcExtent; angleDelta > 0 ? angle >= angleDelta * 0.1f : angle <= -angleDelta * 0.1f; angle -= angleDelta, i++) {
-          computeRoundWallShapePoint(wallPoints, startAngle + angle, i, angleDelta, 
-              arcCircleCenter, exteriorArcRadius, interiorArcRadius);
-        }
-        computeRoundWallShapePoint(wallPoints, startAngle, i, angleDelta, 
-            arcCircleCenter, exteriorArcRadius, interiorArcRadius);
-      }
-      return wallPoints.toArray(new float [wallPoints.size()][]);
-    } else { 
-      double angle = Math.atan2(this.yEnd - this.yStart, 
-                                this.xEnd - this.xStart);
-      float dx = (float)Math.sin(angle) * this.thickness / 2;
-      float dy = (float)Math.cos(angle) * this.thickness / 2;
-      return new float [][] {
-          {this.xStart + dx, this.yStart - dy},
-          {this.xEnd   + dx, this.yEnd   - dy},
-          {this.xEnd   - dx, this.yEnd   + dy},
-          {this.xStart - dx, this.yStart + dy}};
-    }
-  }
-
-  /**
-   * Computes the exterior and interior arc points of a round wall at the given <code>index</code>.
-   */  
-  private void computeRoundWallShapePoint(List<float []> wallPoints, float angle, int index, float angleDelta, 
-                                          float [] arcCircleCenter, float exteriorArcRadius, float interiorArcRadius) {
-    double cos = Math.cos(angle);
-    double sin = Math.sin(angle);
-    float [] interiorArcPoint = new float [] {(float)(arcCircleCenter [0] + interiorArcRadius * cos), 
-                                              (float)(arcCircleCenter [1] - interiorArcRadius * sin)};
-    float [] exteriorArcPoint = new float [] {(float)(arcCircleCenter [0] + exteriorArcRadius * cos), 
-                                              (float)(arcCircleCenter [1] - exteriorArcRadius * sin)};
-    if (angleDelta > 0) {
-      wallPoints.add(index, interiorArcPoint);
-      wallPoints.add(wallPoints.size() - 1 - index, exteriorArcPoint);
-    } else {
-      wallPoints.add(index, exteriorArcPoint);
-      wallPoints.add(wallPoints.size() - 1 - index, interiorArcPoint);
-    }
+  private float [][] getRectanglePoints() {
+    double angle = Math.atan2(this.yEnd - this.yStart, 
+                              this.xEnd - this.xStart);
+    float dx = (float)Math.sin(angle) * this.thickness / 2;
+    float dy = (float)Math.cos(angle) * this.thickness / 2;
+    return new float [][] {
+        {this.xStart + dx, this.yStart - dy},
+        {this.xEnd   + dx, this.yEnd   - dy},
+        {this.xEnd   - dx, this.yEnd   + dy},
+        {this.xStart - dx, this.yStart + dy}};
   }
   
   /**
@@ -917,42 +393,30 @@ public class Wall implements Serializable, Selectable, Elevatable {
    */
   private void computeIntersection(float [] point1, float [] point2, 
                                    float [] point3, float [] point4, float limit) {
+    float x = point1 [0];
+    float y = point1 [1];
     float alpha1 = (point2 [1] - point1 [1]) / (point2 [0] - point1 [0]);
+    float beta1  = point2 [1] - alpha1 * point2 [0];
     float alpha2 = (point4 [1] - point3 [1]) / (point4 [0] - point3 [0]);
+    float beta2  = point4 [1] - alpha2 * point4 [0];
     // If the two lines are not parallel
     if (alpha1 != alpha2) {
-      float x = point1 [0];
-      float y = point1 [1];
-      
       // If first line is vertical
-      if (Math.abs(alpha1) > 4000)  {
-        if (Math.abs(alpha2) < 4000) {
-          x = point1 [0];
-          float beta2  = point4 [1] - alpha2 * point4 [0];
-          y = alpha2 * x + beta2;
-        }
+      if (point1 [0] == point2 [0]) {
+        x = point1 [0];
+        y = alpha2 * x + beta2;
       // If second line is vertical
-      } else if (Math.abs(alpha2) > 4000) {
-        if (Math.abs(alpha1) < 4000) {
-          x = point3 [0];
-          float beta1  = point2 [1] - alpha1 * point2 [0];
-          y = alpha1 * x + beta1;
-        }
-      } else {
-        boolean sameSignum = Math.signum(alpha1) == Math.signum(alpha2);
-        if ((sameSignum && (Math.abs(alpha1) > Math.abs(alpha2)   ? alpha1 / alpha2   : alpha2 / alpha1) > 1.004)
-            || (!sameSignum && Math.abs(alpha1 - alpha2) > 1E-5)) {
-          float beta1 = point2 [1] - alpha1 * point2 [0];
-          float beta2 = point4 [1] - alpha2 * point4 [0];
-          x = (beta2 - beta1) / (alpha1 - alpha2);
-          y = alpha1 * x + beta1;
-        } 
-      }
-      
-      if (Point2D.distanceSq(x, y, point1 [0], point1 [1]) < limit * limit) {
-        point1 [0] = x;
-        point1 [1] = y;
-      }
+      } else if (point3 [0] == point4 [0]) {
+        x = point3 [0];
+        y = alpha1 * x + beta1;
+      } else  {
+        x = (beta2 - beta1) / (alpha1 - alpha2);
+        y = alpha1 * x + beta1;
+      } 
+    }
+    if (Point2D.distanceSq(x, y, point1 [0], point1 [1]) < limit * limit) {
+      point1 [0] = x;
+      point1 [1] = y;
     }
   }
   
@@ -983,8 +447,7 @@ public class Wall implements Serializable, Selectable, Elevatable {
    */
   public boolean containsWallStartAt(float x, float y, float margin) {
     float [][] wallPoints = getPoints();
-    Line2D startLine = new Line2D.Float(wallPoints [0][0], wallPoints [0][1], 
-        wallPoints [wallPoints.length - 1][0], wallPoints [wallPoints.length - 1][1]);
+    Line2D startLine = new Line2D.Float(wallPoints [0][0], wallPoints [0][1], wallPoints [3][0], wallPoints [3][1]);
     return containsShapeAtWithMargin(startLine, x, y, margin);
   }
   
@@ -995,8 +458,7 @@ public class Wall implements Serializable, Selectable, Elevatable {
    */
   public boolean containsWallEndAt(float x, float y, float margin) {
     float [][] wallPoints = getPoints();
-    Line2D endLine = new Line2D.Float(wallPoints [wallPoints.length / 2 - 1][0], wallPoints [wallPoints.length / 2 - 1][1], 
-        wallPoints [wallPoints.length / 2][0], wallPoints [wallPoints.length / 2][1]); 
+    Line2D endLine = new Line2D.Float(wallPoints [1][0], wallPoints [1][1], wallPoints [2][0], wallPoints [2][1]); 
     return containsShapeAtWithMargin(endLine, x, y, margin);
   }
 
@@ -1006,11 +468,7 @@ public class Wall implements Serializable, Selectable, Elevatable {
    * with a given <code>margin</code>.
    */
   private boolean containsShapeAtWithMargin(Shape shape, float x, float y, float margin) {
-    if (margin == 0) {
-      return shape.contains(x, y);
-    } else {
-      return shape.intersects(x - margin, y - margin, 2 * margin, 2 * margin);
-    }
+    return shape.intersects(x - margin, y - margin, 2 * margin, 2 * margin);
   }
 
   /**
@@ -1028,15 +486,15 @@ public class Wall implements Serializable, Selectable, Elevatable {
   }
   
   /**
-   * Returns a clone of the <code>walls</code> list. All existing walls 
+   * Returns a deep copy of the <code>walls</code>. All existing walls 
    * are copied and their wall at start and end point are set with copied
    * walls only if they belong to the returned list.
    */
-  public static List<Wall> clone(List<Wall> walls) {
+  public static List<Wall> deepCopy(List<Wall> walls) {
     ArrayList<Wall> wallsCopy = new ArrayList<Wall>(walls.size());
-    // Clone walls
+    // Deep copy walls
     for (Wall wall : walls) {
-      wallsCopy.add(wall.clone());      
+      wallsCopy.add(new Wall(wall));      
     }
     // Update walls at start and end point
     for (int i = 0; i < walls.size(); i++) {
@@ -1051,34 +509,5 @@ public class Wall implements Serializable, Selectable, Elevatable {
       }
     }
     return wallsCopy;
-  }
-
-  /**
-   * Moves this wall of (<code>dx</code>, <code>dy</code>) units.
-   */
-  public void move(float dx, float dy) {
-    setXStart(getXStart() + dx);
-    setYStart(getYStart() + dy);
-    setXEnd(getXEnd() + dx);
-    setYEnd(getYEnd() + dy);
-  }
-  
-  /**
-   * Returns a clone of this wall expected 
-   * its wall at start and wall at end aren't copied.
-   */
-  @Override
-  public Wall clone() {
-    try {
-      Wall clone = (Wall)super.clone();
-      clone.propertyChangeSupport = new PropertyChangeSupport(clone);
-      clone.wallAtStart = null;
-      clone.wallAtEnd = null;
-      clone.level = null;
-      clone.pointsCache = null;
-      return clone;
-    } catch (CloneNotSupportedException ex) {
-      throw new IllegalStateException("Super class isn't cloneable"); 
-    }
   }
 }

@@ -1,7 +1,7 @@
 /*
  * FileFurnitureLibraryUserPreferences.java 6 juin 2010
  *
- * Furniture Library Editor, Copyright (c) 2010 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2010 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,13 +20,11 @@
 package com.eteks.furniturelibraryeditor.io;
 
 import java.io.File;
-import java.util.List;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 import com.eteks.furniturelibraryeditor.model.FurnitureLibraryUserPreferences;
 import com.eteks.sweethome3d.model.LengthUnit;
-import com.eteks.sweethome3d.model.Library;
 import com.eteks.sweethome3d.model.RecorderException;
 
 /**
@@ -123,11 +121,6 @@ public class FileFurnitureLibraryUserPreferences extends FurnitureLibraryUserPre
 
   @Override
   public boolean texturesLibraryExists(String texturesLibraryName) throws RecorderException {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public List<Library> getLibraries() {
     throw new UnsupportedOperationException();
   }
 }

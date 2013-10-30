@@ -1,7 +1,7 @@
 /*
  * BackgroundImage.java 8 juin 07
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,27 +37,14 @@ public class BackgroundImage implements Serializable {
   private final float   scaleDistanceYEnd;
   private final float   xOrigin;
   private final float   yOrigin;
-  private final boolean invisible; 
   
   /**
-   * Creates a visible background image.
+   * Creates a background image.
    */
   public BackgroundImage(Content image, float scaleDistance, 
                          float scaleDistanceXStart, float scaleDistanceYStart, 
                          float scaleDistanceXEnd, float scaleDistanceYEnd, 
                          float xOrigin, float yOrigin) {
-    this(image, scaleDistance, scaleDistanceXStart, 
-        scaleDistanceYStart, scaleDistanceXEnd, scaleDistanceYEnd, xOrigin, yOrigin, true);
-  }
-
-  /**
-   * Creates a background image.
-   * @since 1.8
-   */
-  public BackgroundImage(Content image, float scaleDistance, 
-                         float scaleDistanceXStart, float scaleDistanceYStart, 
-                         float scaleDistanceXEnd, float scaleDistanceYEnd, 
-                         float xOrigin, float yOrigin, boolean visible) {
     this.image = image;
     this.scaleDistance = scaleDistance;
     this.scaleDistanceXStart = scaleDistanceXStart;
@@ -66,9 +53,6 @@ public class BackgroundImage implements Serializable {
     this.scaleDistanceYEnd = scaleDistanceYEnd;
     this.xOrigin = xOrigin;
     this.yOrigin = yOrigin;
-    // Use an invisible field instead of a visible field to get a default false value
-    // for images created before version 1.8
-    this.invisible = !visible;
   }
 
   /**
@@ -141,7 +125,7 @@ public class BackgroundImage implements Serializable {
   }
   
   /**
-   * Returns the origin abscissa of this image.
+   * Returns the origin abcissa of this image.
    */
   public float getXOrigin() {
     return this.xOrigin;
@@ -152,13 +136,5 @@ public class BackgroundImage implements Serializable {
    */
   public float getYOrigin() {
     return this.yOrigin;
-  }
-
-  /**
-   * Returns <code>true</code> if this image is visible in plan.
-   * @since 1.8
-   */
-  public boolean isVisible() {
-    return !this.invisible;
   }
 }

@@ -1,7 +1,7 @@
 /*
  * FurnitureLibrary.java 18 déc. 2009
  *
- * Furniture Library Editor, Copyright (c) 2009 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2009 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,59 +34,48 @@ import com.eteks.sweethome3d.model.CatalogPieceOfFurniture;
 import com.eteks.sweethome3d.model.CollectionChangeSupport;
 import com.eteks.sweethome3d.model.CollectionEvent;
 import com.eteks.sweethome3d.model.CollectionListener;
-import com.eteks.sweethome3d.model.Library;
-import com.eteks.sweethome3d.model.UserPreferences;
 
 /**
- * A library of furniture catalog pieces.
+ * A collection of furniture catalog pieces.
  * @author Emmanuel Puybaret
  */
-public class FurnitureLibrary implements Library {
+public class FurnitureLibrary {
   /**
    * The properties of this library that may change. <code>PropertyChangeListener</code>s added 
    * to a library will be notified under a property name equal to the name value of one these properties.
    */
-  public enum Property {LOCATION, ID, NAME, MODIFIED, DESCRIPTION, VERSION, LICENSE, PROVIDER, LOCALIZED_DATA};
+  public enum Property {NAME, MODIFIED, DESCRIPTION, VERSION, LICENSE, PROVIDER, LOCALIZED_DATA};
   
   public static final String DEFAULT_LANGUAGE = "";
 
-  public static final String FURNITURE_ID_PROPERTY                           = "ID";
-  public static final String FURNITURE_NAME_PROPERTY                         = "NAME";
-  public static final String FURNITURE_DESCRIPTION_PROPERTY                  = "DESCRIPTION";
-  public static final String FURNITURE_INFORMATION_PROPERTY                  = "INFORMATION";
-  public static final String FURNITURE_TAGS_PROPERTY                         = "TAGS";
-  public static final String FURNITURE_CREATION_DATE_PROPERTY                = "CREATION_DATE";
-  public static final String FURNITURE_GRADE_PROPERTY                        = "GRADE";
-  public static final String FURNITURE_CATEGORY_PROPERTY                     = "CATEGORY";
-  public static final String FURNITURE_CREATOR_PROPERTY                      = "CREATOR";
-  public static final String FURNITURE_PRICE_PROPERTY                        = "PRICE";
-  public static final String FURNITURE_VALUE_ADDED_TAX_PERCENTAGE_PROPERTY   = "VALUE_ADDED_TAX_PERCENTAGE";
-  public static final String FURNITURE_MODEL_PROPERTY                        = "MODEL";
-  public static final String FURNITURE_ICON_PROPERTY                         = "ICON";
-  public static final String FURNITURE_PLAN_ICON_PROPERTY                    = "PLAN_ICON";
-  public static final String FURNITURE_WIDTH_PROPERTY                        = "WIDTH";
-  public static final String FURNITURE_DEPTH_PROPERTY                        = "DEPTH";
-  public static final String FURNITURE_HEIGHT_PROPERTY                       = "HEIGHT";
-  public static final String FURNITURE_MOVABLE_PROPERTY                      = "MOVABLE";
-  public static final String FURNITURE_DOOR_OR_WINDOW_PROPERTY               = "DOOR_OR_WINDOW";
-  public static final String FURNITURE_DOOR_OR_WINDOW_CUT_OUT_SHAPE_PROPERTY = "DOOR_OR_WINDOW_CUT_OUT_SHAPE";
-  public static final String FURNITURE_STAIRCASE_CUT_OUT_SHAPE_PROPERTY      = "STAIRCASE_CUT_OUT_SHAPE";
-  public static final String FURNITURE_ELEVATION_PROPERTY                    = "ELEVATION";
-  public static final String FURNITURE_MODEL_ROTATION_PROPERTY               = "MODEL_ROTATION";
-  public static final String FURNITURE_RESIZABLE_PROPERTY                    = "RESIZABLE";
-  public static final String FURNITURE_DEFORMABLE_PROPERTY                   = "DEFORMABLE";
-  public static final String FURNITURE_TEXTURABLE_PROPERTY                   = "TEXTURABLE";
+  public static final String FURNITURE_ID_PROPERTY                         = "ID";
+  public static final String FURNITURE_NAME_PROPERTY                       = "NAME";
+  public static final String FURNITURE_DESCRIPTION_PROPERTY                = "DESCRIPTION";
+  public static final String FURNITURE_CATEGORY_PROPERTY                   = "CATEGORY";
+  public static final String FURNITURE_CREATOR_PROPERTY                    = "CREATOR";
+  public static final String FURNITURE_PRICE_PROPERTY                      = "PRICE";
+  public static final String FURNITURE_VALUE_ADDED_TAX_PERCENTAGE_PROPERTY = "VALUE_ADDED_TAX_PERCENTAGE";
+  public static final String FURNITURE_MODEL_PROPERTY                      = "MODEL";
+  public static final String FURNITURE_ICON_PROPERTY                       = "ICON";
+  public static final String FURNITURE_PLAN_ICON_PROPERTY                  = "PLAN_ICON";
+  public static final String FURNITURE_WIDTH_PROPERTY                      = "WIDTH";
+  public static final String FURNITURE_DEPTH_PROPERTY                      = "DEPTH";
+  public static final String FURNITURE_HEIGHT_PROPERTY                     = "HEIGHT";
+  public static final String FURNITURE_MOVABLE_PROPERTY                    = "MOVABLE";
+  public static final String FURNITURE_DOOR_OR_WINDOW_PROPERTY             = "DOOR_OR_WINDOW";
+  public static final String FURNITURE_ELEVATION_PROPERTY                  = "ELEVATION";
+  public static final String FURNITURE_MODEL_ROTATION_PROPERTY             = "MODEL_ROTATION";
+  public static final String FURNITURE_RESIZABLE_PROPERTY                  = "RESIZABLE";
+  public static final String FURNITURE_DEFORMABLE_PROPERTY                 = "DEFORMABLE";
+
   
   private final PropertyChangeSupport                                    propertyChangeSupport;
   private List<CatalogPieceOfFurniture>                                  furniture;
-  private Map<String, CatalogPieceOfFurniture>                           furnitureByIds;
   private Map<CatalogPieceOfFurniture, Map<String, Map<String, Object>>> furnitureLocalizedData;
   private Set<String>                                                    supportedLanguages;
   private CollectionChangeSupport<CatalogPieceOfFurniture>               furnitureChangeSupport;
   private boolean   noRequestSinceLastChange = true;
-  private String    location;
   private boolean   modified;
-  private String    id;
   private String    name;
   private String    description;
   private String    version;
@@ -95,7 +84,6 @@ public class FurnitureLibrary implements Library {
   
   public FurnitureLibrary() {
     this.furniture = new ArrayList<CatalogPieceOfFurniture>();
-    this.furnitureByIds = new HashMap<String, CatalogPieceOfFurniture>();
     // Use IdentityHashMap to ignore equality between two CatalogPieceOfFurniture instances with same name 
     this.furnitureLocalizedData = new IdentityHashMap<CatalogPieceOfFurniture, Map<String, Map<String, Object>>>();
     this.supportedLanguages = new HashSet<String>();
@@ -163,10 +151,6 @@ public class FurnitureLibrary implements Library {
       this.noRequestSinceLastChange = true;
     }
     this.furniture.add(index, piece);
-    String pieceId = piece.getId();
-    if (pieceId != null) {
-      this.furnitureByIds.put(pieceId, piece);
-    }
     this.furnitureChangeSupport.fireCollectionChanged(piece, index, CollectionEvent.Type.ADD);
   }
 
@@ -185,10 +169,6 @@ public class FurnitureLibrary implements Library {
           this.noRequestSinceLastChange = true;
         }
         this.furniture.remove(index);
-        String pieceId = piece.getId();
-        if (pieceId != null) {
-          this.furnitureByIds.remove(pieceId);
-        }
         this.furnitureLocalizedData.remove(piece);
         if (this.furnitureLocalizedData.isEmpty()) {
           this.supportedLanguages.clear();
@@ -211,13 +191,6 @@ public class FurnitureLibrary implements Library {
       }
     }
     return -1;
-  }
-  
-  /**
-   * Returns the first piece of furniture with the given ID or <code>null</code>.
-   */
-  public CatalogPieceOfFurniture getPieceOfFurniture(String pieceId) {
-    return this.furnitureByIds.get(pieceId);
   }
   
   /**
@@ -283,25 +256,6 @@ public class FurnitureLibrary implements Library {
   }
 
   /**
-   * Returns the location where this library is stored.
-   */
-  public String getLocation() {
-    return this.location;
-  }
-
-  /**
-   * Sets the location where this library is stored and fires a <code>PropertyChangeEvent</code>.
-   */
-  public void setLocation(String location) {
-    if (location != this.location
-        || (location != null && !location.equals(this.location))) {
-      String oldLocation = this.location;
-      this.location = location;
-      this.propertyChangeSupport.firePropertyChange(Property.LOCATION.name(), oldLocation, location);
-    }
-  }
-
-  /**
    * Returns <code>true</code> if the library handled by this controller is modified.
    */
   public boolean isModified() {
@@ -318,32 +272,6 @@ public class FurnitureLibrary implements Library {
     }
   }
   
-  /**
-   * Returns the id of this library.
-   */
-  public String getId() {
-    return this.id;
-  }
-
-  /**
-   * Sets the id of this library and fires a <code>PropertyChangeEvent</code>.
-   */
-  public void setId(String id) {
-    if (id != this.id
-        || (id != null && !id.equals(this.id))) {
-      String oldId = this.id;
-      this.id = id;
-      this.propertyChangeSupport.firePropertyChange(Property.ID.name(), oldId, id);
-    }
-  }
-
-  /**
-   * Returns {@link UserPreferences#FURNITURE_LIBRARY_TYPE}.
-   */
-  public String getType() {
-    return UserPreferences.FURNITURE_LIBRARY_TYPE;
-  }
-
   /**
    * Returns the name of this library.
    */

@@ -1,7 +1,7 @@
 /*
  * ObserverCamera.java 16 juin 07
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,32 +25,17 @@ import java.awt.geom.Ellipse2D;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Rectangle2D;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 
 /**
- * Observer camera characteristics in home.
+ * Observer camera characteritics in home.
  * @author Emmanuel Puybaret
  */
-public class ObserverCamera extends Camera implements Selectable {
-  /**
-   * The additional properties of an observer camera that may change. <code>PropertyChangeListener</code>s added 
-   * to a camera will be notified under a property name equal to the string value of one these properties.
-   * @since 3.4
-   */
-  public enum Property {WIDTH, DEPTH, HEIGHT}
-  
+public class ObserverCamera extends Camera {
   private static final long serialVersionUID = 1L;
 
-  private boolean fixedSize;
+  private transient Shape    shape;
+  private transient Shape    rectangleShape;
   
-  private transient Shape shapeCache;
-  private transient Shape rectangleShapeCache;
-
-  private transient PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
-
   /**
    * Creates a camera at given location and angle.
    */
@@ -59,115 +44,57 @@ public class ObserverCamera extends Camera implements Selectable {
   }
 
   /**
-   * Initializes new camera transient fields  
-   * and reads its properties from <code>in</code> stream with default reading method.
-   */
-  private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-    this.propertyChangeSupport = new PropertyChangeSupport(this);
-    in.defaultReadObject();
-  }
-
-  /**
-   * Adds the property change <code>listener</code> in parameter to this camera.
-   * @since 3.4
-   */
-  @Override
-  public void addPropertyChangeListener(PropertyChangeListener listener) {
-    this.propertyChangeSupport.addPropertyChangeListener(listener);
-    super.addPropertyChangeListener(listener);
-  }
-
-  /**
-   * Removes the property change <code>listener</code> in parameter from this camera.
-   * @since 3.4
-   */
-  @Override
-  public void removePropertyChangeListener(PropertyChangeListener listener) {
-    this.propertyChangeSupport.removePropertyChangeListener(listener);
-    super.removePropertyChangeListener(listener);
-  }
-
-  /**
-   * Sets whether camera size should depends on its elevation and will notify listeners
-   * bound to size properties of the size change.
-   * @since 3.4
-   */
-  public void setFixedSize(boolean fixedSize) {
-    if (this.fixedSize != fixedSize) {
-      float oldWidth = getWidth();
-      float oldDepth = getDepth();
-      float oldHeight = getHeight();
-      this.fixedSize = fixedSize;
-      this.shapeCache = null;
-      this.rectangleShapeCache = null;
-      this.propertyChangeSupport.firePropertyChange(Property.WIDTH.name(), oldWidth, getWidth());
-      this.propertyChangeSupport.firePropertyChange(Property.DEPTH.name(), oldDepth, getDepth());
-      this.propertyChangeSupport.firePropertyChange(Property.HEIGHT.name(), oldHeight, getHeight());
-    }
-  }
-  
-  /**
-   * Returns <code>true</code> if the camera size doesn't change according to its elevation.
-   * @since 3.4
-   */
-  public boolean isFixedSize() {
-    return this.fixedSize;
-  }
-  
-  /**
    * Sets the yaw angle in radians of this camera.
+   * This method should be called only from {@link Home}, which
+   * controls notifications when a camera changed.
    */
-  public void setYaw(float yaw) {
+  void setYaw(float yaw) {
     super.setYaw(yaw);
-    this.shapeCache = null;
-    this.rectangleShapeCache = null;
+    this.shape = null;
+    this.rectangleShape = null;
   }
   
   /**
-   * Sets the abscissa of this camera.
+   * Sets the abcissa of this camera.
+   * This method should be called only from {@link Home}, which
+   * controls notifications when a camera changed.
    */
   public void setX(float x) {
     super.setX(x);
-    this.shapeCache = null;
-    this.rectangleShapeCache = null;
+    this.shape = null;
+    this.rectangleShape = null;
   }
   
   /**
-   * Sets the ordinate of this camera.
+   * Sets the abcissa of this camera.
+   * This method should be called only from {@link Home}, which
+   * controls notifications when a camera changed.
    */
-  public void setY(float y) {
+  void setY(float y) {
     super.setY(y);
-    this.shapeCache = null;
-    this.rectangleShapeCache = null;
+    this.shape = null;
+    this.rectangleShape = null;
   }
   
   /**
    * Sets the elevation of this camera.
+   * This method should be called only from {@link Home}, which
+   * controls notifications when a camera changed.
    */
-  public void setZ(float z) {
-    float oldWidth = getWidth();
-    float oldDepth = getDepth();
-    float oldHeight = getHeight();
+  void setZ(float z) {
     super.setZ(z);
-    this.shapeCache = null;
-    this.rectangleShapeCache = null;
-    this.propertyChangeSupport.firePropertyChange(Property.WIDTH.name(), oldWidth, getWidth());
-    this.propertyChangeSupport.firePropertyChange(Property.DEPTH.name(), oldDepth, getDepth());
-    this.propertyChangeSupport.firePropertyChange(Property.HEIGHT.name(), oldHeight, getHeight());
+    this.shape = null;
+    this.rectangleShape = null;
   }
-  
+
   /**
    * Returns the width of this observer camera according to
    * human proportions with an eyes elevation at z. 
    */
   public float getWidth() {
-    if (this.fixedSize) {
-      return 46.6f;
-    } else {
-      // Adult width is 4 times the distance between head and eyes location    
-      float width = getZ() * 4 / 14;
-      return Math.min(Math.max(width, 20), 62.5f);
-    }
+    // Adult width is 4 times the distance between head and eyes location
+    float width = getZ() * 4 / 14;
+    return Math.min(Math.max(width, 20), 62.5f);
   }
   
   /**
@@ -175,13 +102,9 @@ public class ObserverCamera extends Camera implements Selectable {
    * human proportions with an eyes elevation at z. 
    */
   public float getDepth() {
-    if (this.fixedSize) {
-      return 18.6f;
-    } else {
-      // Adult depth is equal to the 2 / 5 of its width 
-      float depth = getZ() * 8 / 70;
-      return Math.min(Math.max(depth, 8), 25);
-    }
+    // Adult depth is equal to the 2 / 5 of its width 
+    float depth = getZ() * 8 / 70;
+    return Math.min(Math.max(depth, 8), 25);
   }
   
   /**
@@ -189,12 +112,8 @@ public class ObserverCamera extends Camera implements Selectable {
    * human proportions with an eyes elevation at z. 
    */
   public float getHeight() {
-    if (this.fixedSize) {
-      return 175f;
-    } else {
-      // Eyes are 14 / 15 of an adult height
-      return getZ() * 15 / 14;
-    }
+    // Eyes are 14 / 15 of an adult height
+    return getZ() * 15 / 14;
   }
   
   /**
@@ -229,66 +148,48 @@ public class ObserverCamera extends Camera implements Selectable {
    * with a given <code>margin</code>.
    */
   public boolean containsPoint(float x, float y, float margin) {
-    if (margin == 0) {
-      return getShape().contains(x, y);
-    } else {
-      return getShape().intersects(x - margin, y - margin, 2 * margin, 2 * margin);
-    }
+    return getShape().intersects(x - margin, y - margin, 2 * margin, 2 * margin);
   }
 
   /**
    * Returns the ellipse shape matching this camera.
    */
   private Shape getShape() {
-    if (this.shapeCache == null) {
+    if (this.shape == null) {
       // Create the ellipse that matches piece bounds
       Ellipse2D cameraEllipse = new Ellipse2D.Float(
           getX() - getWidth() / 2, getY() - getDepth() / 2,
           getWidth(), getDepth());
       // Apply rotation to the rectangle
-      AffineTransform rotation = AffineTransform.getRotateInstance(getYaw(), getX(), getY());
+      AffineTransform rotation = new AffineTransform();
+      rotation.setToRotation(getYaw(), getX(), getY());
       PathIterator it = cameraEllipse.getPathIterator(rotation);
       GeneralPath pieceShape = new GeneralPath();
       pieceShape.append(it, false);
       // Cache shape
-      this.shapeCache = pieceShape;
+      this.shape = pieceShape;
     }
-    return this.shapeCache;
+    return this.shape;
   }
 
   /**
    * Returns the rectangle shape matching this camera.
    */
   private Shape getRectangleShape() {
-    if (this.rectangleShapeCache == null) {
+    if (this.rectangleShape == null) {
       // Create the ellipse that matches piece bounds
       Rectangle2D cameraRectangle = new Rectangle2D.Float(
           getX() - getWidth() / 2, getY() - getDepth() / 2,
           getWidth(), getDepth());
       // Apply rotation to the rectangle
-      AffineTransform rotation = AffineTransform.getRotateInstance(getYaw(), getX(), getY());
+      AffineTransform rotation = new AffineTransform();
+      rotation.setToRotation(getYaw(), getX(), getY());
       PathIterator it = cameraRectangle.getPathIterator(rotation);
       GeneralPath cameraRectangleShape = new GeneralPath();
       cameraRectangleShape.append(it, false);
       // Cache shape
-      this.rectangleShapeCache = cameraRectangleShape;
+      this.rectangleShape = cameraRectangleShape;
     }
-    return this.rectangleShapeCache;
-  }
-
-  /**
-   * Moves this camera of (<code>dx</code>, <code>dy</code>) units.
-   */
-  public void move(float dx, float dy) {
-    setX(getX() + dx);
-    setY(getY() + dy);
-  }
-  
-  /**
-   * Returns a clone of this camera.
-   */
-  @Override
-  public ObserverCamera clone() {
-    return (ObserverCamera)super.clone();
+    return this.rectangleShape;
   }
 }

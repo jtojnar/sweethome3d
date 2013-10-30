@@ -1,7 +1,7 @@
 /*
  * DimensionLine.java 17 sept 2007
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,36 +22,22 @@ package com.eteks.sweethome3d.model;
 import java.awt.Shape;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Line2D;
-import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.Serializable;
 
 /**
  * A dimension line in plan.
  * @author Emmanuel Puybaret
  */
-public class DimensionLine implements Serializable, Selectable, Elevatable {
-  /**
-   * The properties of a dimension line that may change. <code>PropertyChangeListener</code>s added 
-   * to a dimension line will be notified under a property name equal to the string value of one these properties.
-   */
-  public enum Property {X_START, Y_START, X_END, Y_END, OFFSET, LENGTH_STYLE, LEVEL} 
-   
+public class DimensionLine implements Serializable {
   private static final long serialVersionUID = 1L;
   
-  private float     xStart;
-  private float     yStart;
-  private float     xEnd;
-  private float     yEnd;
-  private float     offset;
-  private TextStyle lengthStyle;
-  private Level     level;
+  private float xStart;
+  private float yStart;
+  private float xEnd;
+  private float yEnd;
+  private float offset;
 
-  private transient PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
   private transient Shape shapeCache;
 
   /**
@@ -67,26 +53,11 @@ public class DimensionLine implements Serializable, Selectable, Elevatable {
   }
   
   /**
-   * Initializes new dimension line transient fields  
-   * and reads its properties from <code>in</code> stream with default reading method.
+   * Creates a dimension line from an existing one.
+   * @param dimensionLine the dimension line from which data are copied
    */
-  private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-    this.propertyChangeSupport = new PropertyChangeSupport(this);
-    in.defaultReadObject();
-  }
-
-  /**
-   * Adds the property change <code>listener</code> in parameter to this dimension line.
-   */
-  public void addPropertyChangeListener(PropertyChangeListener listener) {
-    this.propertyChangeSupport.addPropertyChangeListener(listener);
-  }
-
-  /**
-   * Removes the property change <code>listener</code> in parameter from this dimension line.
-   */
-  public void removePropertyChangeListener(PropertyChangeListener listener) {
-    this.propertyChangeSupport.removePropertyChangeListener(listener);
+  public DimensionLine(DimensionLine dimensionLine) {
+    this(dimensionLine.xStart, dimensionLine.yStart, dimensionLine.xEnd, dimensionLine.yEnd, dimensionLine.offset);
   }
 
   /**
@@ -97,16 +68,13 @@ public class DimensionLine implements Serializable, Selectable, Elevatable {
   }
 
   /**
-   * Sets the start point abscissa of this dimension line. Once this dimension line 
-   * is updated, listeners added to this dimension line will receive a change notification.
+   * Sets the start point abscissa of this dimension line.
+   * This method should be called from {@link Home}, which
+   * controls notifications when a dimension line changed.
    */
-  public void setXStart(float xStart) {
-    if (xStart != this.xStart) {
-      float oldXStart = this.xStart;
-      this.xStart = xStart;
-      this.shapeCache = null;
-      this.propertyChangeSupport.firePropertyChange(Property.X_START.name(), oldXStart, xStart);
-    }
+  void setXStart(float xStart) {
+    this.xStart = xStart;
+    this.shapeCache = null;
   }
 
   /**
@@ -117,16 +85,13 @@ public class DimensionLine implements Serializable, Selectable, Elevatable {
   }
 
   /**
-   * Sets the start point ordinate of this dimension line. Once this dimension line 
-   * is updated, listeners added to this dimension line will receive a change notification.
+   * Sets the start point ordinate of this dimension line.
+   * This method should be called from {@link Home}, which
+   * controls notifications when a dimension line changed.
    */
-  public void setYStart(float yStart) {
-    if (yStart != this.yStart) {
-      float oldYStart = this.yStart;
-      this.yStart = yStart;
-      this.shapeCache = null;
-      this.propertyChangeSupport.firePropertyChange(Property.Y_START.name(), oldYStart, yStart);
-    }
+  void setYStart(float yStart) {
+    this.yStart = yStart;
+    this.shapeCache = null;
   }
 
   /**
@@ -137,16 +102,13 @@ public class DimensionLine implements Serializable, Selectable, Elevatable {
   }
 
   /**
-   * Sets the end point abscissa of this dimension line. Once this dimension line 
-   * is updated, listeners added to this dimension line will receive a change notification.
+   * Sets the end point abscissa of this dimension line.
+   * This method should be called from {@link Home}, which
+   * controls notifications when a dimension line changed.
    */
-  public void setXEnd(float xEnd) {
-    if (xEnd != this.xEnd) {
-      float oldXEnd = this.xEnd;
-      this.xEnd = xEnd;
-      this.shapeCache = null;
-      this.propertyChangeSupport.firePropertyChange(Property.X_END.name(), oldXEnd, xEnd);
-    }
+  void setXEnd(float xEnd) {
+    this.xEnd = xEnd;
+    this.shapeCache = null;
   }
 
   /**
@@ -157,16 +119,13 @@ public class DimensionLine implements Serializable, Selectable, Elevatable {
   }
 
   /**
-   * Sets the end point ordinate of this dimension line. Once this dimension line 
-   * is updated, listeners added to this dimension line will receive a change notification.
+   * Sets the end point ordinate of this dimension line.
+   * This method should be called from {@link Home}, which
+   * controls notifications when a dimension line changed.
    */
-  public void setYEnd(float yEnd) {
-    if (yEnd != this.yEnd) {
-      float oldYEnd = this.yEnd;
-      this.yEnd = yEnd;
-      this.shapeCache = null;
-      this.propertyChangeSupport.firePropertyChange(Property.Y_END.name(), oldYEnd, yEnd);
-    }
+  void setYEnd(float yEnd) {
+    this.yEnd = yEnd;
+    this.shapeCache = null;
   }
 
   /**
@@ -177,73 +136,15 @@ public class DimensionLine implements Serializable, Selectable, Elevatable {
   }
 
   /**
-   * Sets the offset of this dimension line.  Once this dimension line 
-   * is updated, listeners added to this dimension line will receive a change notification.
+   * Sets the offset of this dimension line.
+   * This method should be called from {@link Home}, which
+   * controls notifications when a dimension line changed.
    */
-  public void setOffset(float offset) {
-    if (offset != this.offset) {
-      float oldOffset = this.offset;
-      this.offset = offset;
-      this.shapeCache = null;
-      this.propertyChangeSupport.firePropertyChange(Property.Y_END.name(), oldOffset, offset);
-    }
+  void setOffset(float offset) {
+    this.offset = offset;
+    this.shapeCache = null;
   }
 
-  /**
-   * Returns the length of this dimension line.
-   */
-  public float getLength() {
-    return (float)Point2D.distance(getXStart(), getYStart(), getXEnd(), getYEnd());
-  }
-
-  /**
-   * Returns the text style used to display dimension line length.
-   */
-  public TextStyle getLengthStyle() {
-    return this.lengthStyle;  
-  }
-
-  /**
-   * Sets the text style used to display dimension line length.
-   * Once this dimension line is updated, listeners added to it will receive a change notification.
-   */
-  public void setLengthStyle(TextStyle lengthStyle) {
-    if (lengthStyle != this.lengthStyle) {
-      TextStyle oldLengthStyle = this.lengthStyle;
-      this.lengthStyle = lengthStyle;
-      this.propertyChangeSupport.firePropertyChange(Property.LENGTH_STYLE.name(), oldLengthStyle, lengthStyle);
-    }
-  }
-
-  /**
-   * Returns the level which this dimension line belongs to. 
-   * @since 3.4
-   */
-  public Level getLevel() {
-    return this.level;
-  }
-
-  /**
-   * Sets the level of this dimension line. Once this dimension line is updated, 
-   * listeners added to this dimension line will receive a change notification.
-   * @since 3.4
-   */
-  public void setLevel(Level level) {
-    if (level != this.level) {
-      Level oldLevel = this.level;
-      this.level = level;
-      this.propertyChangeSupport.firePropertyChange(Property.LEVEL.name(), oldLevel, level);
-    }
-  }
-
-  /**
-   * Returns <code>true</code> if this dimension line is at the given level.
-   * @since 3.4
-   */
-  public boolean isAtLevel(Level level) {
-    return this.level == level;
-  }
-  
   /**
    * Returns the points of the rectangle surrounding 
    * this dimension line and its extension lines.
@@ -326,11 +227,7 @@ public class DimensionLine implements Serializable, Selectable, Elevatable {
    * with a given <code>margin</code>.
    */
   private boolean containsShapeAtWithMargin(Shape shape, float x, float y, float margin) {
-    if (margin == 0) {
-      return shape.contains(x, y);
-    } else {
-      return shape.intersects(x - margin, y - margin, 2 * margin, 2 * margin);
-    }
+    return shape.intersects(x - margin, y - margin, 2 * margin, 2 * margin);
   }
 
   /**
@@ -353,30 +250,5 @@ public class DimensionLine implements Serializable, Selectable, Elevatable {
       this.shapeCache = dimensionLineShape;
     }
     return this.shapeCache;
-  }
-  
-  /**
-   * Moves this dimension line of (<code>dx</code>, <code>dy</code>) units.
-   */
-  public void move(float dx, float dy) {
-    setXStart(getXStart() + dx);
-    setYStart(getYStart() + dy);
-    setXEnd(getXEnd() + dx);
-    setYEnd(getYEnd() + dy);
-  }
-  
-  /**
-   * Returns a clone of this dimension line.
-   */
-  @Override
-  public DimensionLine clone() {
-    try {
-      DimensionLine clone = (DimensionLine)super.clone();
-      clone.propertyChangeSupport = new PropertyChangeSupport(clone);
-      clone.level = null;
-      return clone;
-    } catch (CloneNotSupportedException ex) {
-      throw new IllegalStateException("Super class isn't cloneable"); 
-    }
   }
 }

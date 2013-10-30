@@ -1,7 +1,7 @@
 /*
  * EditorView.java 06 juin 2010
  *
- * Furniture Library Editor, Copyright (c) 2010 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2010 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ public interface EditorView extends View {
   /**
    * The actions proposed by this view.
    */
-  public enum ActionType {NEW_LIBRARY, OPEN, MERGE, SAVE, SAVE_AS, PREFERENCES, EXIT, 
+  public enum ActionType {NEW_LIBRARY, OPEN, SAVE, SAVE_AS, PREFERENCES, EXIT, 
                           IMPORT_FURNITURE, MODIFY_FURNITURE, DELETE, SELECT_ALL, ABOUT}
 
   /**
