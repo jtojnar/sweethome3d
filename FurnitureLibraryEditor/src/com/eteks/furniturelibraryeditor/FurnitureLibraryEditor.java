@@ -27,8 +27,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.swing.Action;
@@ -236,17 +234,8 @@ public class FurnitureLibraryEditor {
           }
         }
       };
-    // Update frame image and title 
-    Image [] frameImages = {new ImageIcon(FurnitureLibraryEditor.class.getResource("resources/frameIcon.png")).getImage(),
-                            new ImageIcon(FurnitureLibraryEditor.class.getResource("resources/frameIcon32x32.png")).getImage()};
-    try {
-      // Call Java 1.6 setIconImages by reflection
-      furnitureFrame.getClass().getMethod("setIconImages", List.class)
-          .invoke(furnitureFrame, Arrays.asList(frameImages));
-    } catch (Exception ex) {
-      // Call setIconImage available in previous versions
-      furnitureFrame.setIconImage(frameImages [0]);
-    }
+    furnitureFrame.setIconImage(new ImageIcon(
+        FurnitureLibraryEditor.class.getResource("resources/frameIcon.png")).getImage());
     furnitureFrame.setLocationByPlatform(true);
     furnitureFrame.pack();
     furnitureFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -270,7 +259,7 @@ public class FurnitureLibraryEditor {
     }
     updateFrameTitle(furnitureFrame, furnitureLibrary, getUserPreferences(), getContentManager());
     // Update title when the name or the modified state of library changes
-    furnitureLibrary.addPropertyChangeListener(FurnitureLibrary.Property.LOCATION, new PropertyChangeListener () {
+    furnitureLibrary.addPropertyChangeListener(FurnitureLibrary.Property.NAME, new PropertyChangeListener () {
         public void propertyChange(PropertyChangeEvent ev) {
           updateFrameTitle(furnitureFrame, furnitureLibrary, getUserPreferences(), getContentManager());
         }
@@ -304,13 +293,13 @@ public class FurnitureLibraryEditor {
                                 FurnitureLibrary furnitureLibrary,
                                 UserPreferences  preferences,
                                 ContentManager   contentManager) {
-    String furnitureLibraryLocation = furnitureLibrary.getLocation();
+    String furnitureLibraryName = furnitureLibrary.getName();
     String furnitureLibraryDisplayedName;
-    if (furnitureLibraryLocation == null) {
+    if (furnitureLibraryName == null) {
       furnitureLibraryDisplayedName = preferences.getLocalizedString(FurnitureLibraryEditor.class, "untitled"); 
     } else {
       furnitureLibraryDisplayedName = contentManager.getPresentationName(
-          furnitureLibraryLocation, ContentManager.ContentType.FURNITURE_LIBRARY);
+          furnitureLibraryName, ContentManager.ContentType.FURNITURE_LIBRARY);
     }
     
     String title = furnitureLibraryDisplayedName;
@@ -323,8 +312,8 @@ public class FurnitureLibraryEditor {
       if (OperatingSystem.isMacOSXLeopardOrSuperior()) {
         frame.getRootPane().putClientProperty("Window.documentModified", furnitureLibraryModified);
         
-        if (furnitureLibraryLocation != null) {        
-          File furnitureLibraryFile = new File(furnitureLibraryLocation);
+        if (furnitureLibraryName != null) {        
+          File furnitureLibraryFile = new File(furnitureLibraryName);
           if (furnitureLibraryFile.exists()) {
             // Update the icon in window title bar for library files
             frame.getRootPane().putClientProperty("Window.documentFile", furnitureLibraryFile);

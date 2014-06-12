@@ -1,7 +1,7 @@
 /*
  * ProportionalLayout.java 18 sept 08
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,9 +33,6 @@ import java.awt.LayoutManager2;
  * @author Emmanuel Puybaret
  */
 public class ProportionalLayout implements LayoutManager2 {
-  /**
-   * The two locations where components managed by a {@link ProportionalLayout} instance can be placed.
-   */
   public enum Constraints {TOP, BOTTOM}
 
   private Component topComponent;

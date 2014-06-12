@@ -24,8 +24,8 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Locale;
+import java.util.ResourceBundle;
 
-import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JList;
@@ -47,22 +47,18 @@ import com.eteks.sweethome3d.io.DefaultUserPreferences;
 import com.eteks.sweethome3d.model.Camera;
 import com.eteks.sweethome3d.model.CatalogTexture;
 import com.eteks.sweethome3d.model.Home;
-import com.eteks.sweethome3d.model.HomeEnvironment;
 import com.eteks.sweethome3d.model.ObserverCamera;
-import com.eteks.sweethome3d.model.RecorderException;
 import com.eteks.sweethome3d.model.TextureImage;
 import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.model.Wall;
 import com.eteks.sweethome3d.swing.ColorButton;
+import com.eteks.sweethome3d.swing.Home3DAttributesController;
 import com.eteks.sweethome3d.swing.Home3DAttributesPanel;
 import com.eteks.sweethome3d.swing.HomeComponent3D;
+import com.eteks.sweethome3d.swing.HomeController;
 import com.eteks.sweethome3d.swing.HomePane;
-import com.eteks.sweethome3d.swing.ObserverCameraPanel;
 import com.eteks.sweethome3d.swing.PlanComponent;
-import com.eteks.sweethome3d.swing.SwingViewFactory;
 import com.eteks.sweethome3d.swing.TextureChoiceComponent;
-import com.eteks.sweethome3d.viewcontroller.Home3DAttributesController;
-import com.eteks.sweethome3d.viewcontroller.HomeController;
 
 /**
  * Tests camera changes in home.
@@ -72,25 +68,17 @@ public class HomeCameraTest extends ComponentTestFixture {
   public void testHomeCamera() throws ComponentSearchException, InterruptedException, 
       NoSuchFieldException, IllegalAccessException, InvocationTargetException {
     Locale.setDefault(Locale.FRANCE);
-    UserPreferences preferences = new DefaultUserPreferences() {
-        @Override
-        public void write() throws RecorderException {
-          // Ignore writing
-        }
-      };
+    UserPreferences preferences = new DefaultUserPreferences();
     Home home = new Home();
-    home.getCompass().setVisible(false);
-    final HomeController controller = 
-        new HomeController(home, preferences, new SwingViewFactory());
-    JComponent homeView = (JComponent)controller.getView();
+    final HomeController controller = new HomeController(home, preferences);
     PlanComponent planComponent = (PlanComponent)TestUtilities.findComponent(
-        homeView, PlanComponent.class);
+         controller.getView(), PlanComponent.class);
     HomeComponent3D component3D = (HomeComponent3D)TestUtilities.findComponent(
-        homeView, HomeComponent3D.class);
+        controller.getView(), HomeComponent3D.class);
 
     // 1. Create a frame that displays a home view 
     JFrame frame = new JFrame("Home Camera Test");    
-    frame.add(homeView);
+    frame.add(controller.getView());
     frame.pack();
 
     // Show home plan frame
@@ -107,16 +95,16 @@ public class HomeCameraTest extends ComponentTestFixture {
     assertSame("Default camera isn't top camera", 
         home.getTopCamera(), home.getCamera());
     // Check default camera location and angles
-    assertCoordinatesAndAnglesEqualCameraLocationAndAngles(500, 1500, 1010, 
+    assertCoordinatesAndAnglesEqualCameraLocationAndAngles(500, 1500, 1000, 
         (float)Math.PI, (float)Math.PI / 4, home.getCamera());
     
     // 2. Create one wall between points (50, 50) and (150, 50) at a bigger scale
-    runAction(controller, HomePane.ActionType.CREATE_WALLS, tester);
-    runAction(controller, HomePane.ActionType.ZOOM_IN, tester);
-    tester.actionKeyPress(TestUtilities.getMagnetismToggleKey());
+    runAction(controller, HomePane.ActionType.CREATE_WALLS);
+    runAction(controller, HomePane.ActionType.ZOOM_IN);
+    tester.actionKeyPress(KeyEvent.VK_SHIFT);
     tester.actionClick(planComponent, 50, 50);
     tester.actionClick(planComponent, 150, 50, InputEvent.BUTTON1_MASK, 2);
-    tester.actionKeyRelease(TestUtilities.getMagnetismToggleKey());
+    tester.actionKeyRelease(KeyEvent.VK_SHIFT);
     // Check wall length is 100 * plan scale
     Wall wall = home.getWalls().iterator().next();
     assertTrue("Incorrect wall length " + 100 / planComponent.getScale() 
@@ -125,7 +113,7 @@ public class HomeCameraTest extends ComponentTestFixture {
     float xWallMiddle = (wall.getXEnd() + wall.getXStart()) / 2;
     float yWallMiddle = (wall.getYEnd() + wall.getYStart()) / 2;
     // Check camera location and angles
-    assertCoordinatesAndAnglesEqualCameraLocationAndAngles(xWallMiddle, yWallMiddle + 1000, 1125, 
+    assertCoordinatesAndAnglesEqualCameraLocationAndAngles(xWallMiddle, yWallMiddle + 1000, 1000, 
         (float)Math.PI, (float)Math.PI / 4, home.getCamera());
     
     // 3. Transfer focus to 3D view with TAB key 
@@ -135,48 +123,42 @@ public class HomeCameraTest extends ComponentTestFixture {
     // Add 1° to camera pitch
     tester.actionKeyStroke(KeyEvent.VK_PAGE_UP);
     // Check camera location and angles
-    assertCoordinatesAndAnglesEqualCameraLocationAndAngles(xWallMiddle, 1052.5009f, 1098.4805f, 
-        (float)Math.PI, (float)Math.PI / 4 - (float)Math.PI / 120, home.getCamera());
+    assertCoordinatesAndAnglesEqualCameraLocationAndAngles(xWallMiddle, 1009.0617f, 1017.3002f, 
+        (float)Math.PI, (float)Math.PI / 4 + (float)Math.PI / 180, home.getCamera());
     
-    // 4. Remove 1° from camera yaw 
+    // 4. Remove 10° from camera yaw 
     tester.actionKeyStroke(KeyEvent.VK_LEFT);
     // Check camera location and angles
-    assertCoordinatesAndAnglesEqualCameraLocationAndAngles(147.02121f, 1051.095f, 1098.4805f, 
-        (float)Math.PI - (float)Math.PI / 60, (float)Math.PI / 4 - (float)Math.PI / 120, home.getCamera());
-    // Add 10° to camera yaw 
+    assertCoordinatesAndAnglesEqualCameraLocationAndAngles(263.9243f, 994.1371f, 1017.3002f, 
+        (float)Math.PI - 10 * (float)Math.PI / 180, (float)Math.PI / 4 + (float)Math.PI / 180, home.getCamera());
+    // Add 1° to camera yaw 
     tester.actionKeyPress(KeyEvent.VK_SHIFT);
     tester.actionKeyStroke(KeyEvent.VK_RIGHT);
     tester.actionKeyRelease(KeyEvent.VK_SHIFT);
     // Check camera location and angles
-    assertCoordinatesAndAnglesEqualCameraLocationAndAngles(-119.94972f, 1030.084f, 1098.4805f, 
-        (float)Math.PI - (float)Math.PI / 60 + (float)Math.PI / 12, (float)Math.PI / 4 - (float)Math.PI / 120, home.getCamera());
+    assertCoordinatesAndAnglesEqualCameraLocationAndAngles(247.0138f, 996.967f, 1017.3002f, 
+        (float)Math.PI - 9 * (float)Math.PI / 180, (float)Math.PI / 4 + (float)Math.PI / 180, home.getCamera());
     
-    // 5. Move camera 10cm forward
+    // 5. Move camera 1cm forward
     tester.actionKeyPress(KeyEvent.VK_SHIFT);
     tester.actionKeyStroke(KeyEvent.VK_UP);
     tester.actionKeyRelease(KeyEvent.VK_SHIFT);
     // Check camera location and angles
-    assertCoordinatesAndAnglesEqualCameraLocationAndAngles(-95.4424f, 914.7864f, 986.62274f, 
-        (float)Math.PI - (float)Math.PI / 60 + (float)Math.PI / 12, (float)Math.PI / 4 - (float)Math.PI / 120, home.getCamera());
-    // Move camera 1 backward 
+    assertCoordinatesAndAnglesEqualCameraLocationAndAngles(246.4704f, 993.5365f, 1013.7034f, 
+        (float)Math.PI - 9 * (float)Math.PI / 180, (float)Math.PI / 4 + (float)Math.PI / 180, home.getCamera());
+    // Move camera 10 backward 
     tester.actionKeyStroke(KeyEvent.VK_DOWN);
     // Check camera location and angles
-    assertCoordinatesAndAnglesEqualCameraLocationAndAngles(-100.3438f, 937.8459f, 1008.99426f, 
-        (float)Math.PI - (float)Math.PI / 60 + (float)Math.PI / 12, (float)Math.PI / 4 - (float)Math.PI / 120, home.getCamera());
+    assertCoordinatesAndAnglesEqualCameraLocationAndAngles(251.9039f, 1027.8417f, 1049.6704f, 
+        (float)Math.PI - 9 * (float)Math.PI / 180, (float)Math.PI / 4 + (float)Math.PI / 180, home.getCamera());
     
     // 6. View from observer
-    runAction(controller, HomePane.ActionType.VIEW_FROM_OBSERVER, tester);
+    runAction(controller, HomePane.ActionType.VIEW_FROM_OBSERVER);
     tester.waitForIdle();
     ObserverCamera observerCamera = home.getObserverCamera();
     // Check camera is the observer camera
     assertSame("Camera isn't observer camera", observerCamera, home.getCamera());
     // Check default camera location and angles
-    assertCoordinatesAndAnglesEqualCameraLocationAndAngles(50, 50, 170, 
-        7 * (float)Math.PI / 4, (float)Math.PI / 16, home.getCamera());
-    // Change camera location and angles
-    observerCamera.setX(100);
-    observerCamera.setY(100);
-    observerCamera.setYaw(3 * (float)Math.PI / 4);
     assertCoordinatesAndAnglesEqualCameraLocationAndAngles(100, 100, 170, 
         3 * (float)Math.PI / 4, (float)Math.PI / 16, home.getCamera());
     // Check observer camera is selected
@@ -184,7 +166,7 @@ public class HomeCameraTest extends ComponentTestFixture {
     assertTrue("Camera isn't selected", home.getSelectedItems().contains(home.getCamera()));
 
     // Try to select wall and observer camera 
-    runAction(controller, HomePane.ActionType.SELECT, tester);
+    runAction(controller, HomePane.ActionType.SELECT);
     tester.actionClick(planComponent, 50, 50);
     tester.actionKeyPress(KeyEvent.VK_SHIFT);
     tester.actionClick(planComponent, (int)(140 * planComponent.getScale()), 
@@ -245,7 +227,7 @@ public class HomeCameraTest extends ComponentTestFixture {
     tester.actionKeyRelease(KeyEvent.VK_ALT);
     tester.actionMouseRelease();
     // Check camera location changed
-    assertCoordinatesAndAnglesEqualCameraLocationAndAngles(108.657f, 111.4631f, 170, 
+    assertCoordinatesAndAnglesEqualCameraLocationAndAngles(130.6284f, 141.8525f, 170, 
         2.5156f, 0.1639f, home.getCamera());
 
     // 10. Change observer camera yaw with mouse in 3D view
@@ -253,24 +235,28 @@ public class HomeCameraTest extends ComponentTestFixture {
     tester.actionMouseMove(component3D, new ComponentLocation(new Point(20, 20)));
     tester.actionMouseRelease();
     // Check camera yaw changed
-    assertCoordinatesAndAnglesEqualCameraLocationAndAngles(108.657f, 111.4631f, 170, 
-        2.5656f, 0.1639f, home.getCamera());
+    assertCoordinatesAndAnglesEqualCameraLocationAndAngles(130.6284f, 141.8525f, 170, 
+        3.2156f, 0.1639f, home.getCamera());
     
     // Change camera pitch with mouse in 3D view
     tester.actionMousePress(component3D, new ComponentLocation(new Point(20, 20)));
     tester.actionMouseMove(component3D, new ComponentLocation(new Point(20, 30)));
     tester.actionMouseRelease();
     // Check camera yaw changed
-    assertCoordinatesAndAnglesEqualCameraLocationAndAngles(108.657f, 111.4631f, 170, 
-        2.5656f, 0.2139f, home.getCamera());
+    assertCoordinatesAndAnglesEqualCameraLocationAndAngles(130.6284f, 141.8525f, 170, 
+        3.2156f, 0.2339f, home.getCamera());
     
     // 11. Edit 3D view modal dialog box
-    JDialog attributesDialog = showHome3DAttributesPanel(preferences, controller, frame, tester);
+    JDialog attributesDialog = showHome3DAttributesPanel(controller, frame, tester);
     // Retrieve Home3DAttributesPanel components
     Home3DAttributesPanel panel = (Home3DAttributesPanel)TestUtilities.findComponent(
         attributesDialog, Home3DAttributesPanel.class);
     Home3DAttributesController panelController = 
         (Home3DAttributesController)TestUtilities.getField(panel, "controller");
+    JSpinner observerFieldOfViewSpinner = 
+        (JSpinner)TestUtilities.getField(panel, "observerFieldOfViewSpinner");
+    JSpinner observerHeightSpinner = 
+        (JSpinner)TestUtilities.getField(panel, "observerHeightSpinner");
     ColorButton groundColorButton =  
         (ColorButton)TestUtilities.getField(panel, "groundColorButton");
     ColorButton skyColorButton = 
@@ -280,11 +266,17 @@ public class HomeCameraTest extends ComponentTestFixture {
     JSlider wallsTransparencySlider = 
         (JSlider)TestUtilities.getField(panel, "wallsTransparencySlider");
     // Check edited values
-    int oldGroundColor = home.getEnvironment().getGroundColor();
-    TextureImage oldGroundTexture = home.getEnvironment().getGroundTexture();
-    int oldSkyColor = home.getEnvironment().getSkyColor();
-    int oldLightColor = home.getEnvironment().getLightColor();
-    float oldWallsAlpha = home.getEnvironment().getWallsAlpha();
+    float oldCameraFieldOfView = observerCamera.getFieldOfView();
+    float oldCameraHeight = observerCamera.getHeight();
+    int oldGroundColor = home.getGroundColor();
+    TextureImage oldGroundTexture = home.getGroundTexture();
+    int oldSkyColor = home.getSkyColor();
+    int oldLightColor = home.getLightColor();
+    float oldWallsAlpha = home.getWallsAlpha();
+    assertEquals("Wrong field of view", (int)Math.round(Math.toDegrees(oldCameraFieldOfView)), 
+        observerFieldOfViewSpinner.getValue());
+    assertEquals("Wrong height", (float)Math.round(oldCameraHeight * 100) / 100, 
+        observerHeightSpinner.getValue());
     assertEquals("Wrong ground color", oldGroundColor, 
         groundColorButton.getColor().intValue());
     assertEquals("Wrong ground texture", oldGroundTexture, 
@@ -297,6 +289,8 @@ public class HomeCameraTest extends ComponentTestFixture {
         wallsTransparencySlider.getValue());
     
     // 12. Change dialog box values
+    observerFieldOfViewSpinner.setValue(90);
+    observerHeightSpinner.setValue(300f);
     groundColorButton.setColor(0xFFFFFF);
     skyColorButton.setColor(0x000000);
     brightnessSlider.setValue(128);
@@ -304,22 +298,22 @@ public class HomeCameraTest extends ComponentTestFixture {
     // Click on Ok in dialog box
     doClickOnOkInDialog(attributesDialog, tester);
     // Check home attributes are modified accordingly
-    assert3DAttributesEqualHomeAttributes(0xFFFFFF, null, 
-        0x000000, 0x808080, 1 / 255f * 128f, home);
+    assert3DAttributesEqualHomeAttributes((float)Math.toRadians(90), 300f, 
+        0xFFFFFF, null, 0x000000, 0x808080, 1 / 255f * 128f, home);
     
     // 13. Undo changes
-    runAction(controller, HomePane.ActionType.UNDO, tester);
+    runAction(controller, HomePane.ActionType.UNDO);
     // Check home attributes have previous values
-    assert3DAttributesEqualHomeAttributes(oldGroundColor, null, 
-        oldSkyColor, oldLightColor, oldWallsAlpha, home);
+    assert3DAttributesEqualHomeAttributes(oldCameraFieldOfView, oldCameraHeight, 
+        oldGroundColor, null, oldSkyColor, oldLightColor, oldWallsAlpha, home);
     // Redo
-    runAction(controller, HomePane.ActionType.REDO, tester);
+    runAction(controller, HomePane.ActionType.REDO);
     // Check home attributes are modified accordingly
-    assert3DAttributesEqualHomeAttributes(0xFFFFFF, null, 
-        0x000000, 0x808080, 1 / 255f * 128f, home);
+    assert3DAttributesEqualHomeAttributes((float)Math.toRadians(90), 300f, 
+        0xFFFFFF, null, 0x000000, 0x808080, 1 / 255f * 128f, home);
     
     // 14. Edit 3D view modal dialog box to change ground texture
-    attributesDialog = showHome3DAttributesPanel(preferences, controller, frame, tester);
+    attributesDialog = showHome3DAttributesPanel(controller, frame, tester);
     panel = (Home3DAttributesPanel)TestUtilities.findComponent(
         attributesDialog, Home3DAttributesPanel.class);
     panelController = (Home3DAttributesController)TestUtilities.getField(panel, "controller");
@@ -343,8 +337,8 @@ public class HomeCameraTest extends ComponentTestFixture {
         }
       });
     // Wait for 3D view to be shown
-    String groundTextureTitle = preferences.getLocalizedString(
-        Home3DAttributesController.class, "groundTextureTitle");
+    String groundTextureTitle = ResourceBundle.getBundle(
+        Home3DAttributesController.class.getName()).getString("groundTextureTitle");
     tester.waitForFrameShowing(new AWTHierarchy(), groundTextureTitle);
     // Check texture dialog box is displayed
     JDialog textureDialog = (JDialog)new BasicFinder().find(attributesDialog, 
@@ -370,54 +364,25 @@ public class HomeCameraTest extends ComponentTestFixture {
     doClickOnOkInDialog(attributesDialog, tester);
     
     // Check home attributes are modified accordingly
-    assert3DAttributesEqualHomeAttributes(0xFFFFFF, firstTexture, 
-        0x000000, 0x808080, 1 / 255f * 128f, home);
-    
-    // 15. Edit observer camera attributes
-    tester.actionClick(planComponent, new ComponentLocation(new Point(115, 115)), InputEvent.BUTTON1_MASK, 2);
-    String observerCameraTitle = preferences.getLocalizedString(
-        ObserverCameraPanel.class, "observerCamera.title");
-    tester.waitForFrameShowing(new AWTHierarchy(), observerCameraTitle);
-    // Check observer camera dialog box is displayed
-    JDialog observerCameraDialog = (JDialog)new BasicFinder().find(frame, 
-        new WindowMatcher(observerCameraTitle));
-    assertTrue("Observer camera dialog not showing", observerCameraDialog.isShowing());
-
-    ObserverCameraPanel observerCameraPanel = (ObserverCameraPanel)TestUtilities.findComponent(
-        observerCameraDialog, ObserverCameraPanel.class);
-    JSpinner fieldOfViewSpinner = 
-        (JSpinner)TestUtilities.getField(observerCameraPanel, "fieldOfViewSpinner");
-    JSpinner elevationSpinner = 
-        (JSpinner)TestUtilities.getField(observerCameraPanel, "elevationSpinner");
-    assertEquals("Wrong field of view", (int)Math.round(Math.toDegrees(observerCamera.getFieldOfView())), 
-        fieldOfViewSpinner.getValue());
-    assertEquals("Wrong elevation", (float)Math.round(observerCamera.getZ() * 100) / 100, 
-        elevationSpinner.getValue());
-    fieldOfViewSpinner.setValue(90);
-    elevationSpinner.setValue(300f);
-
-    // Click on OK in observer camera dialog box
-    doClickOnOkInDialog(observerCameraDialog, tester);
-    assertEquals("Wrong field of view", (float)Math.toRadians(90), observerCamera.getFieldOfView());
-    assertEquals("Wrong elevation", 300f, observerCamera.getZ());
+    assert3DAttributesEqualHomeAttributes((float)Math.toRadians(90), 300f, 
+        0xFFFFFF, firstTexture, 0x000000, 0x808080, 1 / 255f * 128f, home);
   }
 
   /**
    * Returns the dialog that displays home 3D attributes. 
    */
-  private JDialog showHome3DAttributesPanel(UserPreferences preferences,
-                                            final HomeController controller, 
+  private JDialog showHome3DAttributesPanel(final HomeController controller, 
                                             JFrame parent, JComponentTester tester) 
             throws ComponentSearchException {
     tester.invokeLater(new Runnable() { 
         public void run() {
           // Display dialog box later in Event Dispatch Thread to avoid blocking test thread
-          ((JComponent)controller.getView()).getActionMap().get(HomePane.ActionType.MODIFY_3D_ATTRIBUTES).actionPerformed(null);
+          runAction(controller, HomePane.ActionType.MODIFY_3D_ATTRIBUTES);
         }
       });
     // Wait for 3D view to be shown
-    tester.waitForFrameShowing(new AWTHierarchy(), preferences.getLocalizedString(
-        Home3DAttributesPanel.class, "home3DAttributes.title"));
+    tester.waitForFrameShowing(new AWTHierarchy(), ResourceBundle.getBundle(
+        Home3DAttributesPanel.class.getName()).getString("home3DAttributes.title"));
     // Check dialog box is displayed
     JDialog attributesDialog = (JDialog)new BasicFinder().find(parent, 
         new ClassMatcher (JDialog.class, true));
@@ -426,7 +391,7 @@ public class HomeCameraTest extends ComponentTestFixture {
   }
   
   /**
-   * Clicks on OK in dialog to close it.
+   * Cliks on OK in dialog to close it.
    */
   private void doClickOnOkInDialog(JDialog dialog, JComponentTester tester) 
             throws ComponentSearchException {
@@ -443,16 +408,11 @@ public class HomeCameraTest extends ComponentTestFixture {
 
   /**
    * Runs <code>actionPerformed</code> method matching <code>actionType</code> 
-   * in <code>controller</code> view. 
+   * in <code>HomePane</code>. 
    */
-  private void runAction(final HomeController controller,
-                         final HomePane.ActionType actionType,
-                         JComponentTester tester) {
-    tester.invokeAndWait(new Runnable() { 
-        public void run() {
-          ((JComponent)controller.getView()).getActionMap().get(actionType).actionPerformed(null);
-        }
-      });
+  private void runAction(HomeController controller,
+                         HomePane.ActionType actionType) {
+    controller.getView().getActionMap().get(actionType).actionPerformed(null);
   }
 
   /**
@@ -478,21 +438,24 @@ public class HomeCameraTest extends ComponentTestFixture {
   /**
    * Asserts the 3D attributes given in parameter match <code>home</code> 3D attributes.
    */
-  private void assert3DAttributesEqualHomeAttributes(int groundColor, 
-                                                     TextureImage groundTexture, 
+  private void assert3DAttributesEqualHomeAttributes(float cameraFieldOfView, 
+                                                     float cameraHeight, 
+                                                     int groundColor, 
+                                                     TextureImage groundTexture,
                                                      int skyColor, 
-                                                     int lightColor,
-                                                     float wallsAlpha, 
-                                                     Home home) {
-    HomeEnvironment homeEnvironment = home.getEnvironment();
-    assertEquals("Wrong ground color", groundColor, homeEnvironment.getGroundColor());
+                                                     int lightColor, 
+                                                     float wallsAlpha, Home home) {
+    ObserverCamera observerCamera = home.getObserverCamera();
+    assertEquals("Wrong field of view", cameraFieldOfView, observerCamera.getFieldOfView());
+    assertEquals("Wrong height", cameraHeight, observerCamera.getHeight());
+    assertEquals("Wrong ground color", groundColor, home.getGroundColor());
     if (groundTexture == null) {
-      assertEquals("Wrong ground texture", groundTexture, homeEnvironment.getGroundTexture());
+      assertEquals("Wrong ground texture", groundTexture, home.getGroundTexture());
     } else {
-      assertEquals("Wrong ground texture", groundTexture.getName(), homeEnvironment.getGroundTexture().getName());
+      assertEquals("Wrong ground texture", groundTexture.getName(), home.getGroundTexture().getName());
     }
-    assertEquals("Wrong sky color", skyColor, homeEnvironment.getSkyColor());
-    assertEquals("Wrong brightness", lightColor, homeEnvironment.getLightColor());
-    assertEquals("Wrong transparency", wallsAlpha, home.getEnvironment().getWallsAlpha());
+    assertEquals("Wrong sky color", skyColor, home.getSkyColor());
+    assertEquals("Wrong brightness", lightColor, home.getLightColor());
+    assertEquals("Wrong transparency", wallsAlpha, home.getWallsAlpha());
   }
 }

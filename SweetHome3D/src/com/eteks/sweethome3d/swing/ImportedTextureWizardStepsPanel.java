@@ -1,7 +1,7 @@
 /*
  * ImportedTextureWizardStepsPanel.java 01 oct. 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,15 +43,15 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.ResourceBundle;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
 import javax.swing.ComboBoxEditor;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
@@ -62,10 +62,8 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
 import javax.swing.TransferHandler;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -74,26 +72,23 @@ import javax.swing.event.DocumentListener;
 
 import com.eteks.sweethome3d.model.CatalogTexture;
 import com.eteks.sweethome3d.model.Content;
-import com.eteks.sweethome3d.model.LengthUnit;
+import com.eteks.sweethome3d.model.ContentManager;
 import com.eteks.sweethome3d.model.RecorderException;
 import com.eteks.sweethome3d.model.TexturesCategory;
 import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.tools.OperatingSystem;
 import com.eteks.sweethome3d.tools.TemporaryURLContent;
-import com.eteks.sweethome3d.viewcontroller.ContentManager;
-import com.eteks.sweethome3d.viewcontroller.ImportedTextureWizardController;
-import com.eteks.sweethome3d.viewcontroller.View;
 
 /**
  * Wizard panel for background image choice. 
  * @author Emmanuel Puybaret
  */
-public class ImportedTextureWizardStepsPanel extends JPanel implements View {
-  private final ImportedTextureWizardController controller;
+public class ImportedTextureWizardStepsPanel extends JPanel {
+  private ImportedTextureWizardController controller;
+  private ResourceBundle                  resource;
   private CardLayout                      cardLayout;
   private JLabel                          imageChoiceOrChangeLabel;
   private JButton                         imageChoiceOrChangeButton;
-  private JButton                         findImagesButton;
   private JLabel                          imageChoiceErrorLabel;
   private ScaledImageComponent            imageChoicePreviewComponent;
   private JLabel                          attributesLabel;
@@ -106,7 +101,8 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
   private JLabel                          heightLabel;
   private JSpinner                        heightSpinner;
   private ScaledImageComponent            attributesPreviewComponent;
-  private Executor                        imageLoader;
+  
+  private static Executor                 imageLoader = Executors.newSingleThreadExecutor();
   private static BufferedImage            waitImage;
 
   /**
@@ -115,78 +111,39 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
   public ImportedTextureWizardStepsPanel(CatalogTexture catalogTexture, 
                                          String textureName, 
                                          UserPreferences preferences, 
-                                         final ImportedTextureWizardController controller) {
+                                         ContentManager contentManager,
+                                         ImportedTextureWizardController controller) {
     this.controller = controller;
-    this.imageLoader = Executors.newSingleThreadExecutor();
-    createComponents(preferences, controller);
-    setMnemonics(preferences);
+    this.resource = ResourceBundle.getBundle(ImportedTextureWizardStepsPanel.class.getName());
+    createComponents(preferences, contentManager);
+    setMnemonics();
     layoutComponents();
-    updateController(catalogTexture, preferences);
+    updateController(catalogTexture);
     if (textureName != null) {
-      updateController(textureName, controller.getContentManager(), preferences, true);
+      updateController(textureName, contentManager, preferences, true);
     }
-    
-    controller.addPropertyChangeListener(ImportedTextureWizardController.Property.STEP, 
-        new PropertyChangeListener() {
-          public void propertyChange(PropertyChangeEvent evt) {
-            updateStep(controller);
-          }
-        });
   }
 
   /**
    * Creates components displayed by this panel.
    */
   private void createComponents(final UserPreferences preferences, 
-                                final ImportedTextureWizardController controller) {
+                                final ContentManager contentManager) {
     // Get unit name matching current unit 
-    String unitName = preferences.getLengthUnit().getName();
+    String unitName = preferences.getUnit().getName();
 
     // Image choice panel components
     this.imageChoiceOrChangeLabel = new JLabel(); 
     this.imageChoiceOrChangeButton = new JButton();
     this.imageChoiceOrChangeButton.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent ev) {
-          String imageName = showImageChoiceDialog(preferences, controller.getContentManager());
+          String imageName = showImageChoiceDialog(contentManager);
           if (imageName != null) {
-            updateController(imageName, controller.getContentManager(), preferences, false);
+            updateController(imageName, contentManager, preferences, false);
           }
         }
       });
-    try {
-      this.findImagesButton = new JButton(SwingTools.getLocalizedLabelText(preferences, 
-          ImportedTextureWizardStepsPanel.class, "findImagesButton.text"));
-      final String findImagesUrl = preferences.getLocalizedString(
-          ImportedTextureWizardStepsPanel.class, "findImagesButton.url");
-      this.findImagesButton.addActionListener(new ActionListener() {
-          public void actionPerformed(ActionEvent ev) {
-            boolean documentShown = false;
-            try { 
-              // Display Find models page in browser
-              documentShown = SwingTools.showDocumentInBrowser(new URL(findImagesUrl)); 
-            } catch (MalformedURLException ex) {
-              // Document isn't shown
-            }
-            if (!documentShown) {
-              // If the document wasn't shown, display a message 
-              // with a copiable URL in a message box 
-              JTextArea findImagesMessageTextArea = new JTextArea(preferences.getLocalizedString(
-                  ImportedTextureWizardStepsPanel.class, "findImagesMessage.text"));
-              String findImagesTitle = preferences.getLocalizedString(
-                  ImportedTextureWizardStepsPanel.class, "findImagesMessage.title");
-              findImagesMessageTextArea.setEditable(false);
-              findImagesMessageTextArea.setOpaque(false);
-              JOptionPane.showMessageDialog(SwingUtilities.getRootPane(ImportedTextureWizardStepsPanel.this), 
-                  findImagesMessageTextArea, findImagesTitle, 
-                  JOptionPane.INFORMATION_MESSAGE);
-            }
-          }
-        });
-    } catch (IllegalArgumentException ex) {
-      // Don't create findImagesButton if its text or url isn't defined
-    }
-    this.imageChoiceErrorLabel = new JLabel(preferences.getLocalizedString(
-        ImportedTextureWizardStepsPanel.class, "imageChoiceErrorLabel.text"));
+    this.imageChoiceErrorLabel = new JLabel(resource.getString("imageChoiceErrolLabel.text"));
     // Make imageChoiceErrorLabel visible only if an error occurred during image content loading
     this.imageChoiceErrorLabel.setVisible(false);
     this.imageChoicePreviewComponent = new ScaledImageComponent();
@@ -199,49 +156,30 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
         
         @Override
         public boolean importData(JComponent comp, Transferable transferedFiles) {
-          boolean success = false;
+          boolean success = true;
           try {
             List<File> files = (List<File>)transferedFiles.getTransferData(DataFlavor.javaFileListFlavor);
-            for (File file : files) {
-              final String textureName = file.getAbsolutePath();
-              // Try to import the first file that would be accepted by content manager
-              if (controller.getContentManager().isAcceptable(textureName, ContentManager.ContentType.IMAGE)) {
-                EventQueue.invokeLater(new Runnable() {
-                    public void run() {
-                      updateController(textureName, controller.getContentManager(), preferences, false);
-                    }
-                  });
-                success = true;
-                break;
-              }
-            }
+            String textureName = files.get(0).getAbsolutePath();
+            updateController(textureName, contentManager, preferences, false);
           } catch (UnsupportedFlavorException ex) {
-            // No success
+            success = false;
           } catch (IOException ex) {
-            // No success
+            success = false;
           }
           if (!success) {
-            EventQueue.invokeLater(new Runnable() {
-                public void run() {
-                  JOptionPane.showMessageDialog(SwingUtilities.getRootPane(ImportedTextureWizardStepsPanel.this), 
-                      preferences.getLocalizedString(ImportedTextureWizardStepsPanel.class, "imageChoiceErrorLabel.text"));
-                }
-              });
+            JOptionPane.showMessageDialog(ImportedTextureWizardStepsPanel.this, 
+                resource.getString("imageChoiceError"));
           }
           return success;
         }
       });
-    this.imageChoicePreviewComponent.setBorder(SwingTools.getDropableComponentBorder());
+    this.imageChoicePreviewComponent.setBorder(BorderFactory.createLoweredBevelBorder());
     
     // Attributes panel components
-    this.attributesLabel = new JLabel(preferences.getLocalizedString(
-        ImportedTextureWizardStepsPanel.class, "attributesLabel.text"));
-    this.nameLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
-        ImportedTextureWizardStepsPanel.class, "nameLabel.text"));
+    this.attributesLabel = new JLabel(this.resource.getString("attributesLabel.text"));
+    this.nameLabel = new JLabel(this.resource.getString("nameLabel.text"));
     this.nameTextField = new JTextField(10);
-    if (!OperatingSystem.isMacOSXLeopardOrSuperior()) {
-      SwingTools.addAutoSelectionOnFocusGain(this.nameTextField);
-    }
+    final Color defaultNameTextFieldColor = this.nameTextField.getForeground();
     DocumentListener nameListener = new DocumentListener() {
         public void changedUpdate(DocumentEvent ev) {
           nameTextField.getDocument().removeDocumentListener(this);
@@ -258,18 +196,18 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
         }
       };
     this.nameTextField.getDocument().addDocumentListener(nameListener);
-    controller.addPropertyChangeListener(ImportedTextureWizardController.Property.NAME,
+    this.controller.addPropertyChangeListener(ImportedTextureWizardController.Property.NAME,
         new PropertyChangeListener() {
           public void propertyChange(PropertyChangeEvent ev) {
             // If name changes update name text field
             if (!nameTextField.getText().trim().equals(controller.getName())) {
               nameTextField.setText(controller.getName());
             }
+            updateNameTextFieldForeground(defaultNameTextFieldColor);
           }
         });
 
-    this.categoryLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences,
-        ImportedTextureWizardStepsPanel.class, "categoryLabel.text")); 
+    this.categoryLabel = new JLabel(this.resource.getString("categoryLabel.text")); 
     this.categoryComboBox = new JComboBox(preferences.getTexturesCatalog().getCategories().toArray());
     this.categoryComboBox.setEditable(true); 
     final ComboBoxEditor defaultEditor = this.categoryComboBox.getEditor();
@@ -280,27 +218,22 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
           name = name.trim();
           // If category is empty, replace it by the last selected item
           if (name.length() == 0) {
-            Object selectedItem = categoryComboBox.getSelectedItem();
-            setItem(selectedItem);
-            return selectedItem;
-          } else {
-            TexturesCategory category = new TexturesCategory(name);
-            // Search an existing category
-            List<TexturesCategory> categories = preferences.getTexturesCatalog().getCategories();
-            int categoryIndex = Collections.binarySearch(categories, category);
-            if (categoryIndex >= 0) {
-              return categories.get(categoryIndex);
-            }
-            // If no existing category was found, return a new one          
-            return category;
+            setItem(categoryComboBox.getSelectedItem());
           }
+          TexturesCategory category = new TexturesCategory(name);
+          // Search an existing category
+          List<TexturesCategory> categories = preferences.getTexturesCatalog().getCategories();
+          int categoryIndex = Collections.binarySearch(categories, category);
+          if (categoryIndex >= 0) {
+            return categories.get(categoryIndex);
+          }
+          // If no existing category was found, return a new one          
+          return category;
         }
       
         public void setItem(Object value) {
-          if (value != null) {
-            TexturesCategory category = (TexturesCategory)value;          
-            defaultEditor.setItem(category.getName());
-          } 
+          TexturesCategory category = (TexturesCategory)value;
+          defaultEditor.setItem(category.getName());
         }
 
         public void addActionListener(ActionListener l) {
@@ -331,7 +264,7 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
           controller.setCategory((TexturesCategory)ev.getItem());
         }
       });
-    controller.addPropertyChangeListener(ImportedTextureWizardController.Property.CATEGORY,
+    this.controller.addPropertyChangeListener(ImportedTextureWizardController.Property.CATEGORY,
         new PropertyChangeListener() {
           public void propertyChange(PropertyChangeEvent ev) {
             // If category changes update category combo box
@@ -339,15 +272,15 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
             if (category != null) {
               categoryComboBox.setSelectedItem(category);
             }
+            updateNameTextFieldForeground(defaultNameTextFieldColor);
           }
         });
+    this.categoryComboBox.setSelectedIndex(0);
 
-    this.widthLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences,
-        ImportedTextureWizardStepsPanel.class, "widthLabel.text", unitName)); 
-    float minimumLength = preferences.getLengthUnit().getMinimumLength();
-    float maximumLength = preferences.getLengthUnit().getMaximumLength();
+    this.widthLabel = new JLabel(
+        String.format(this.resource.getString("widthLabel.text"), unitName)); 
     final NullableSpinner.NullableSpinnerLengthModel widthSpinnerModel = 
-        new NullableSpinner.NullableSpinnerLengthModel(preferences, minimumLength, maximumLength);
+        new NullableSpinner.NullableSpinnerLengthModel(preferences, 0.1f, 1000f);
     this.widthSpinner = new NullableSpinner(widthSpinnerModel);
     widthSpinnerModel.addChangeListener(new ChangeListener () {
         public void stateChanged(ChangeEvent ev) {
@@ -357,7 +290,7 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
           widthSpinnerModel.addChangeListener(this);
         }
       });
-    controller.addPropertyChangeListener(ImportedTextureWizardController.Property.WIDTH,
+    this.controller.addPropertyChangeListener(ImportedTextureWizardController.Property.WIDTH,
         new PropertyChangeListener() {
           public void propertyChange(PropertyChangeEvent ev) {
             // If width changes update width spinner
@@ -365,10 +298,10 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
           }
         });
     
-    this.heightLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences,
-            ImportedTextureWizardStepsPanel.class, "heightLabel.text", unitName)); 
+    this.heightLabel = new JLabel(
+        String.format(this.resource.getString("heightLabel.text"), unitName)); 
     final NullableSpinner.NullableSpinnerLengthModel heightSpinnerModel = 
-        new NullableSpinner.NullableSpinnerLengthModel(preferences, minimumLength, maximumLength);
+        new NullableSpinner.NullableSpinnerLengthModel(preferences, 0.1f, 1000f);
     this.heightSpinner = new NullableSpinner(heightSpinnerModel);
     heightSpinnerModel.addChangeListener(new ChangeListener () {
         public void stateChanged(ChangeEvent ev) {
@@ -378,7 +311,7 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
           heightSpinnerModel.addChangeListener(this);
         }
       });
-    controller.addPropertyChangeListener(ImportedTextureWizardController.Property.HEIGHT,
+    this.controller.addPropertyChangeListener(ImportedTextureWizardController.Property.HEIGHT,
         new PropertyChangeListener() {
           public void propertyChange(PropertyChangeEvent ev) {
             // If height changes update height spinner
@@ -393,31 +326,27 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
           updateAttributesPreviewImage();
         }
       };
-    controller.addPropertyChangeListener(ImportedTextureWizardController.Property.IMAGE, imageAttributesListener);
-    controller.addPropertyChangeListener(ImportedTextureWizardController.Property.WIDTH, imageAttributesListener);
-    controller.addPropertyChangeListener(ImportedTextureWizardController.Property.HEIGHT, imageAttributesListener);
+    this.controller.addPropertyChangeListener(ImportedTextureWizardController.Property.IMAGE, imageAttributesListener);
+    this.controller.addPropertyChangeListener(ImportedTextureWizardController.Property.WIDTH, imageAttributesListener);
+    this.controller.addPropertyChangeListener(ImportedTextureWizardController.Property.HEIGHT, imageAttributesListener);
   }
 
   /**
    * Sets components mnemonics and label / component associations.
    */
-  private void setMnemonics(UserPreferences preferences) {
+  private void setMnemonics() {
     if (!OperatingSystem.isMacOSX()) {
-      if (this.findImagesButton != null) {
-        this.findImagesButton.setMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
-            ImportedTextureWizardStepsPanel.class, "findImagesButton.mnemonic")).getKeyCode());
-      }
-      this.nameLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
-          ImportedTextureWizardStepsPanel.class, "nameLabel.mnemonic")).getKeyCode());
+      this.nameLabel.setDisplayedMnemonic(
+          KeyStroke.getKeyStroke(this.resource.getString("nameLabel.mnemonic")).getKeyCode());
       this.nameLabel.setLabelFor(this.nameTextField);
-      this.categoryLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
-          ImportedTextureWizardStepsPanel.class, "categoryLabel.mnemonic")).getKeyCode());
+      this.categoryLabel.setDisplayedMnemonic(
+          KeyStroke.getKeyStroke(this.resource.getString("categoryLabel.mnemonic")).getKeyCode());
       this.categoryLabel.setLabelFor(this.categoryComboBox);
-      this.widthLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
-          ImportedTextureWizardStepsPanel.class, "widthLabel.mnemonic")).getKeyCode());
+      this.widthLabel.setDisplayedMnemonic(
+          KeyStroke.getKeyStroke(this.resource.getString("widthLabel.mnemonic")).getKeyCode());
       this.widthLabel.setLabelFor(this.widthSpinner);
-      this.heightLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
-          ImportedTextureWizardStepsPanel.class, "heightLabel.mnemonic")).getKeyCode());
+      this.heightLabel.setDisplayedMnemonic(
+          KeyStroke.getKeyStroke(this.resource.getString("heightLabel.mnemonic")).getKeyCode());
       this.heightLabel.setLabelFor(this.heightSpinner);
     }
   }
@@ -431,23 +360,14 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
     
     JPanel imageChoiceTopPanel = new JPanel(new GridBagLayout());
     imageChoiceTopPanel.add(this.imageChoiceOrChangeLabel, new GridBagConstraints(
-        0, 0, 2, 1, 0, 0, GridBagConstraints.LINE_START, 
+        0, 0, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
         GridBagConstraints.HORIZONTAL, new Insets(5, 0, 5, 0), 0, 0));
     this.imageChoicePreviewComponent.setPreferredSize(new Dimension(150, 150));
-    if (this.findImagesButton != null) {
-      imageChoiceTopPanel.add(this.imageChoiceOrChangeButton, new GridBagConstraints(
-          0, 1, 1, 1, 1, 0, GridBagConstraints.LINE_END, 
-          GridBagConstraints.NONE, new Insets(0, 0, 0, 10), 0, 0));
-      imageChoiceTopPanel.add(this.findImagesButton, new GridBagConstraints(
-          1, 1, 1, 1, 1, 0, GridBagConstraints.LINE_START, 
-          GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
-    } else {
-      imageChoiceTopPanel.add(this.imageChoiceOrChangeButton, new GridBagConstraints(
-          0, 1, 2, 1, 1, 0, GridBagConstraints.CENTER, 
-          GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
-    }
+    imageChoiceTopPanel.add(this.imageChoiceOrChangeButton, new GridBagConstraints(
+        0, 1, 1, 1, 0, 0, GridBagConstraints.CENTER, 
+        GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
     imageChoiceTopPanel.add(this.imageChoiceErrorLabel, new GridBagConstraints(
-        0, 2, 2, 1, 0, 0, GridBagConstraints.LINE_START, 
+        0, 2, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
         GridBagConstraints.NONE, new Insets(5, 0, 0, 0), 0, 0));
     
     JPanel imageChoicePanel = new JPanel(new ProportionalLayout());
@@ -497,10 +417,9 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
   }
   
   /**
-   * Switches to the component card matching current step.   
+   * Switches to the component card matching <code>step</code>.   
    */
-  public void updateStep(ImportedTextureWizardController controller) {
-    ImportedTextureWizardController.Step step = controller.getStep();
+  public void setStep(final ImportedTextureWizardController.Step step) {
     this.cardLayout.show(this, step.name());    
     switch (step) {
       case IMAGE:
@@ -513,21 +432,30 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
   }
 
   /**
+   * Updates name text field foreground color depending on the validity
+   * of the piece name.
+   */
+  private void updateNameTextFieldForeground(Color defaultNameTextFieldColor) {
+    nameTextField.setForeground(controller.isTextureNameValid() 
+        ? defaultNameTextFieldColor
+        : Color.RED);
+  }
+  
+  /**
    * Updates controller initial values from <code>textureImage</code>. 
    */
-  private void updateController(final CatalogTexture catalogTexture,
-                                final UserPreferences preferences) {
+  private void updateController(final CatalogTexture catalogTexture) {
     if (catalogTexture == null) {
-      setImageChoiceTexts(preferences);
+      setImageChoiceTexts();
       updatePreviewComponentsImage(null);
     } else {
-      setImageChangeTexts(preferences);
+      setImageChangeTexts();
       // Read image in imageLoader executor
-      this.imageLoader.execute(new Runnable() {
+      imageLoader.execute(new Runnable() {
           public void run() {
             BufferedImage image = null;
             try {
-              image = readImage(preferences, catalogTexture.getImage());
+              image = readImage(catalogTexture.getImage());
             } catch (IOException ex) {
               // image is null
             }
@@ -543,7 +471,7 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
                     controller.setHeight(catalogTexture.getHeight());
                   } else {
                     controller.setImage(null);
-                    setImageChoiceTexts(preferences);
+                    setImageChoiceTexts();
                     imageChoiceErrorLabel.setVisible(true);
                   }
                 } 
@@ -562,7 +490,7 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
                                 final UserPreferences preferences,
                                 final boolean ignoreException) {
     // Read image in imageLoader executor
-    this.imageLoader.execute(new Runnable() {
+    imageLoader.execute(new Runnable() {
         public void run() {
           Content imageContent = null;
           try {
@@ -578,9 +506,8 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
             if (!ignoreException) {
               EventQueue.invokeLater(new Runnable() {
                   public void run() {
-                    JOptionPane.showMessageDialog(SwingUtilities.getRootPane(ImportedTextureWizardStepsPanel.this), 
-                        preferences.getLocalizedString(
-                            ImportedTextureWizardStepsPanel.class, "imageChoiceError", imageName));
+                    JOptionPane.showMessageDialog(ImportedTextureWizardStepsPanel.this, 
+                        String.format(resource.getString("imageChoiceError"), imageName));
                   }
                 });
             }
@@ -589,7 +516,7 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
 
           BufferedImage image = null;
           try {
-            image = readImage(preferences, imageContent);
+            image = readImage(imageContent);
           } catch (IOException ex) {
             // image is null
           }
@@ -601,14 +528,13 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
               public void run() {
                 if (readImage != null) {
                   controller.setImage(readContent);
-                  setImageChangeTexts(preferences);
+                  setImageChangeTexts();
                   imageChoiceErrorLabel.setVisible(false);
                   // Initialize attributes with default values
                   controller.setName(contentManager.getPresentationName(imageName,
                       ContentManager.ContentType.IMAGE));
                   // Use user category as default category and create it if it doesn't exist
-                  TexturesCategory userCategory = new TexturesCategory(preferences.getLocalizedString(
-                      ImportedTextureWizardStepsPanel.class, "userCategory"));
+                  TexturesCategory userCategory = new TexturesCategory(resource.getString("userCategory"));
                   for (TexturesCategory category : preferences.getTexturesCatalog().getCategories()) {
                     if (category.equals(userCategory)) {
                       userCategory = category;
@@ -617,19 +543,16 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
                   }
                   controller.setCategory(userCategory);
                   float defaultWidth = 20;
-                  LengthUnit lengthUnit = preferences.getLengthUnit();
-                  if (lengthUnit == LengthUnit.INCH
-                      || lengthUnit == LengthUnit.INCH_DECIMALS) {
-                    defaultWidth = LengthUnit.inchToCentimeter(8);
+                  if (preferences.getUnit() == UserPreferences.Unit.INCH) {
+                    defaultWidth = UserPreferences.Unit.inchToCentimeter(8);
                   }
                   controller.setWidth(defaultWidth);
                   controller.setHeight(defaultWidth / readImage.getWidth() * readImage.getHeight());
-                } else if (isShowing()) {
+                } else {
                   controller.setImage(null);
-                  setImageChoiceTexts(preferences);
+                  setImageChoiceTexts();
                   JOptionPane.showMessageDialog(ImportedTextureWizardStepsPanel.this, 
-                      preferences.getLocalizedString(
-                          ImportedTextureWizardStepsPanel.class, "imageChoiceFormatError"));
+                      resource.getString("imageChoiceFormatError"));
                 }
               }
             });
@@ -641,13 +564,12 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
    * Reads image from <code>imageContent</code>. 
    * Caution : this method must be thread safe because it's called from image loader executor. 
    */
-  private BufferedImage readImage(UserPreferences preferences,
-                                  Content imageContent) throws IOException {
+  private BufferedImage readImage(Content imageContent) throws IOException {
     try {
       // Display a waiting image while loading
       if (waitImage == null) {
-        waitImage = ImageIO.read(ImportedTextureWizardStepsPanel.class.getResource(
-            preferences.getLocalizedString(ImportedTextureWizardStepsPanel.class, "waitIcon")));
+        waitImage = ImageIO.read(ImportedTextureWizardStepsPanel.class.
+            getResource(resource.getString("waitIcon")));
       }
       updatePreviewComponentsImage(waitImage);
       
@@ -680,15 +602,12 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
    * Sets the texts of label and button of image choice panel with
    * change texts. 
    */
-  private void setImageChangeTexts(UserPreferences preferences) {
-    this.imageChoiceOrChangeLabel.setText(preferences.getLocalizedString(
-        ImportedTextureWizardStepsPanel.class, "imageChangeLabel.text")); 
-    this.imageChoiceOrChangeButton.setText(SwingTools.getLocalizedLabelText(preferences,
-        ImportedTextureWizardStepsPanel.class, "imageChangeButton.text"));
+  private void setImageChangeTexts() {
+    this.imageChoiceOrChangeLabel.setText(this.resource.getString("imageChangeLabel.text")); 
+    this.imageChoiceOrChangeButton.setText(this.resource.getString("imageChangeButton.text"));
     if (!OperatingSystem.isMacOSX()) {
       this.imageChoiceOrChangeButton.setMnemonic(
-          KeyStroke.getKeyStroke(preferences.getLocalizedString(
-              ImportedTextureWizardStepsPanel.class, "imageChangeButton.mnemonic")).getKeyCode());
+          KeyStroke.getKeyStroke(this.resource.getString("imageChangeButton.mnemonic")).getKeyCode());
     }
   }
 
@@ -696,26 +615,21 @@ public class ImportedTextureWizardStepsPanel extends JPanel implements View {
    * Sets the texts of label and button of image choice panel with
    * choice texts. 
    */
-  private void setImageChoiceTexts(UserPreferences preferences) {
-    this.imageChoiceOrChangeLabel.setText(preferences.getLocalizedString(
-        ImportedTextureWizardStepsPanel.class, "imageChoiceLabel.text")); 
-    this.imageChoiceOrChangeButton.setText(SwingTools.getLocalizedLabelText(preferences,
-        ImportedTextureWizardStepsPanel.class, "imageChoiceButton.text"));
+  private void setImageChoiceTexts() {
+    this.imageChoiceOrChangeLabel.setText(this.resource.getString("imageChoiceLabel.text")); 
+    this.imageChoiceOrChangeButton.setText(this.resource.getString("imageChoiceButton.text"));
     if (!OperatingSystem.isMacOSX()) {
       this.imageChoiceOrChangeButton.setMnemonic(
-          KeyStroke.getKeyStroke(preferences.getLocalizedString(
-              ImportedTextureWizardStepsPanel.class, "imageChoiceButton.mnemonic")).getKeyCode());
+          KeyStroke.getKeyStroke(this.resource.getString("imageChoiceButton.mnemonic")).getKeyCode());
     }
   }
   
   /**
    * Returns an image name chosen for a content chooser dialog.
    */
-  private String showImageChoiceDialog(UserPreferences preferences,
-                                       ContentManager contentManager) {
-    return contentManager.showOpenDialog(this, 
-        preferences.getLocalizedString(ImportedTextureWizardStepsPanel.class, "imageChoiceDialog.title"), 
-        ContentManager.ContentType.IMAGE);
+  private String showImageChoiceDialog(ContentManager contentManager) {
+    return contentManager.showOpenDialog( 
+        this.resource.getString("imageChoiceDialog.title"), ContentManager.ContentType.IMAGE);
   }
 
   /**

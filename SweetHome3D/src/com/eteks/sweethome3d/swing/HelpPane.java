@@ -1,7 +1,7 @@
 /*
  * HelpPane.java 20 juil. 07
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,15 +20,12 @@
 package com.eteks.sweethome3d.swing;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.ComponentOrientation;
 import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.DefaultFocusTraversalPolicy;
 import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
@@ -36,14 +33,19 @@ import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Locale;
+import java.util.ResourceBundle;
 
+import javax.jnlp.BasicService;
+import javax.jnlp.ServiceManager;
+import javax.jnlp.UnavailableServiceException;
 import javax.swing.Action;
 import javax.swing.ActionMap;
+import javax.swing.Box;
 import javax.swing.ImageIcon;
 import javax.swing.InputMap;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -56,88 +58,46 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultHighlighter;
-import javax.swing.text.Element;
-import javax.swing.text.Highlighter;
 
 import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.tools.OperatingSystem;
-import com.eteks.sweethome3d.viewcontroller.HelpController;
-import com.eteks.sweethome3d.viewcontroller.HelpView;
 
 /**
  * A pane displaying Sweet Home 3D help.
  * @author Emmanuel Puybaret
  */
-public class HelpPane extends JRootPane implements HelpView {
+public class HelpPane extends JRootPane {
   private enum ActionType {SHOW_PREVIOUS, SHOW_NEXT, SEARCH, CLOSE}
 
-  private final UserPreferences preferences;
-  private JFrame                frame;
-  private JLabel                searchLabel;
-  private JTextField            searchTextField;
-  private JEditorPane           helpEditorPane;
+  private JFrame      frame;
+  private JLabel      searchLabel;
+  private JTextField  searchTextField;
+  private JEditorPane helpEditorPane;
   
-  public HelpPane(UserPreferences preferences, 
-                  final HelpController controller) {
-    this.preferences = preferences;
-    createActions(preferences, controller);
-    createComponents(preferences, controller);
-    setMnemonics(preferences);
+  public HelpPane(UserPreferences preferences, HelpController controller) {
+    createActions(controller);
+    createComponents();
+    setMnemonics();
     layoutComponents();
     addLanguageListener(preferences);
     if (controller != null) {
       addHyperlinkListener(controller);
       installKeyboardActions();
     }
-    
-    setPage(controller.getHelpPage());
-    controller.addPropertyChangeListener(HelpController.Property.HELP_PAGE, 
-        new PropertyChangeListener() {
-          public void propertyChange(PropertyChangeEvent ev) {
-            setPage(controller.getHelpPage());
-            highlightText(controller.getHighlightedText());
-          }
-        });
-    controller.addPropertyChangeListener(HelpController.Property.BROWSER_PAGE, 
-        new PropertyChangeListener() {
-          public void propertyChange(PropertyChangeEvent ev) {
-            SwingTools.showDocumentInBrowser(controller.getBrowserPage());
-          }
-        });
   }
 
   /** 
    * Creates actions bound to <code>controller</code>.
    */
-  private void createActions(UserPreferences preferences, 
-                             final HelpController controller) {
+  private void createActions(final HelpController controller) {
+    ResourceBundle resource = ResourceBundle.getBundle(HelpPane.class.getName());    
     ActionMap actions = getActionMap();    
     try {
-      final ControllerAction showPreviousAction = new ControllerAction(
-          preferences, HelpPane.class, ActionType.SHOW_PREVIOUS.name(), controller, "showPrevious");
-      showPreviousAction.setEnabled(controller.isPreviousPageEnabled());
-      controller.addPropertyChangeListener(HelpController.Property.PREVIOUS_PAGE_ENABLED, 
-          new PropertyChangeListener() {
-            public void propertyChange(PropertyChangeEvent ev) {
-              showPreviousAction.setEnabled(controller.isPreviousPageEnabled());
-            }
-          });
-      actions.put(ActionType.SHOW_PREVIOUS, showPreviousAction);
-      
-      final ControllerAction showNextAction = new ControllerAction(
-          preferences, HelpPane.class, ActionType.SHOW_NEXT.name(), controller, "showNext");
-      showNextAction.setEnabled(controller.isNextPageEnabled());
-      controller.addPropertyChangeListener(HelpController.Property.NEXT_PAGE_ENABLED, 
-          new PropertyChangeListener() {
-            public void propertyChange(PropertyChangeEvent ev) {
-              showNextAction.setEnabled(controller.isNextPageEnabled());
-            }
-          });
-      actions.put(ActionType.SHOW_NEXT, showNextAction);
-      
-      actions.put(ActionType.SEARCH, new ResourceAction(preferences, HelpPane.class, ActionType.SEARCH.name()) {
+      actions.put(ActionType.SHOW_PREVIOUS, new ControllerAction(
+          resource, ActionType.SHOW_PREVIOUS.toString(), controller, "showPrevious"));
+      actions.put(ActionType.SHOW_NEXT, new ControllerAction(
+          resource, ActionType.SHOW_NEXT.toString(), controller, "showNext"));
+      actions.put(ActionType.SEARCH, new ResourceAction(resource, ActionType.SEARCH.toString()) {
           @Override
           public void actionPerformed(ActionEvent ev) {
             final Cursor previousCursor = getCursor();
@@ -156,7 +116,7 @@ public class HelpPane extends JRootPane implements HelpView {
       throw new RuntimeException(ex);
     }
     actions.put(ActionType.CLOSE, new ResourceAction(
-          preferences, HelpPane.class, ActionType.CLOSE.name(), true) {
+            resource, ActionType.CLOSE.toString(), true) {
         @Override
         public void actionPerformed(ActionEvent ev) {
           frame.setVisible(false);
@@ -187,29 +147,35 @@ public class HelpPane extends JRootPane implements HelpView {
     public void propertyChange(PropertyChangeEvent ev) {
       // If help pane was garbage collected, remove this listener from preferences
       HelpPane helpPane = this.helpPane.get();
-      UserPreferences preferences = (UserPreferences)ev.getSource();
       if (helpPane == null) {
-        preferences.removePropertyChangeListener(
+        ((UserPreferences)ev.getSource()).removePropertyChangeListener(
             UserPreferences.Property.LANGUAGE, this);
       } else {
-        // Update frame title and search label with new locale
+        // Update actions from current default locale
+        ResourceBundle resource = ResourceBundle.getBundle(HelpPane.class.getName());
+        ActionMap actions = helpPane.getActionMap();    
+        for (ActionType actionType : ActionType.values()) {
+          ((ResourceAction)actions.get(actionType)).setResource(resource);
+        }
+        // Update frame title and search label
         if (helpPane.frame != null) {
-          helpPane.frame.setTitle(preferences.getLocalizedString(HelpPane.class, "helpFrame.title"));
+          helpPane.frame.setTitle(resource.getString("helpFrame.title"));
           helpPane.frame.applyComponentOrientation(
               ComponentOrientation.getOrientation(Locale.getDefault()));
         }
-        helpPane.searchLabel.setText(SwingTools.getLocalizedLabelText(preferences, HelpPane.class, "searchLabel.text"));
+        helpPane.searchLabel.setText(resource.getString("searchLabel.text"));
         helpPane.searchTextField.setText("");
-        helpPane.setMnemonics(preferences);
+        helpPane.setMnemonics();
       }
     }
   }
   
   /**
    * Creates the components displayed by this view.
-  */
-  private void createComponents(UserPreferences preferences, final HelpController controller) {
-    this.searchLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, HelpPane.class, "searchLabel.text"));
+   */
+  private void createComponents() {
+    ResourceBundle resource = ResourceBundle.getBundle(HelpPane.class.getName());
+    this.searchLabel = new JLabel(resource.getString("searchLabel.text"));
     this.searchTextField = new JTextField(12);
     // Under Mac OS 10.5 use client properties to use search text field look and feel
     if (OperatingSystem.isMacOSXLeopardOrSuperior()) {
@@ -222,7 +188,6 @@ public class HelpPane extends JRootPane implements HelpView {
     this.searchTextField.getDocument().addDocumentListener(new DocumentListener() {
         public void changedUpdate(DocumentEvent ev) {
           getActionMap().get(ActionType.SEARCH).setEnabled(searchTextField.getText().trim().length() > 0);
-          controller.setHighlightedText(searchTextField.getText());
         }
     
         public void insertUpdate(DocumentEvent ev) {
@@ -239,14 +204,6 @@ public class HelpPane extends JRootPane implements HelpView {
     this.helpEditorPane.setEditable(false);
     this.helpEditorPane.setContentType("text/html");
     this.helpEditorPane.putClientProperty(JEditorPane.W3C_LENGTH_UNITS, Boolean.TRUE);
-    this.helpEditorPane.setHighlighter(new DefaultHighlighter());
-    PropertyChangeListener highlightingTextListener = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent ev) {
-          highlightText(controller.getHighlightedText());
-        }
-      };
-    controller.addPropertyChangeListener(HelpController.Property.HIGHLIGHTED_TEXT, highlightingTextListener);
-    this.helpEditorPane.addPropertyChangeListener("page", highlightingTextListener);
     
     setFocusTraversalPolicy(new DefaultFocusTraversalPolicy() {
         @Override
@@ -257,55 +214,13 @@ public class HelpPane extends JRootPane implements HelpView {
   }
 
   /**
-   * Highlights the words of the given text in HTML pane.
-   */
-  private void highlightText(String highlightedText) {
-    DefaultHighlighter.DefaultHighlightPainter highlightPainter = 
-        new DefaultHighlighter.DefaultHighlightPainter(new Color(255, 204, 51));
-    this.helpEditorPane.getHighlighter().removeAllHighlights();
-    if (highlightedText != null) {
-      ArrayList<String> highlightedWords = new ArrayList<String>();
-      for (String highlightedWord : highlightedText.split("\\s")) {
-        if (highlightedWord.length() > 0) {
-          highlightedWords.add(highlightedWord);
-        }
-      }                            
-      highlightWords(this.helpEditorPane.getDocument().getDefaultRootElement(), 
-          highlightedWords.toArray(new String [highlightedWords.size()]), highlightPainter);
-    }
-  }
-
-  private void highlightWords(Element element, 
-                              String [] highlightedWords, 
-                              Highlighter.HighlightPainter highlightPainter) {
-    if (element.isLeaf()) {
-      int startOffset = element.getStartOffset();
-      try {
-        String text = element.getDocument().getText(element.getStartOffset(), 
-            element.getEndOffset() - startOffset).toLowerCase();
-        for (String highlightedWord : highlightedWords) {
-          for (int index = 0; index < text.length() - 1 &&  (index = text.indexOf(highlightedWord, index)) >= 0; index += highlightedWord.length() + 1) {
-            this.helpEditorPane.getHighlighter().addHighlight(
-                startOffset + index, startOffset + index + highlightedWord.length(), highlightPainter);
-          }
-        }
-      } catch (BadLocationException ex) {
-        // Ignore unexpected exception
-      }
-    } else {
-      for (int i = 0, n = element.getElementCount(); i < n; i++) {
-        highlightWords(element.getElement(i), highlightedWords, highlightPainter);
-      }
-    }
-  }
-
-  /**
    * Sets components mnemonics and label / component associations.
    */
-  private void setMnemonics(UserPreferences preferences) {
+  private void setMnemonics() {
     if (!OperatingSystem.isMacOSX()) {
-      this.searchLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(
-          preferences.getLocalizedString(HelpPane.class, "searchLabel.mnemonic")).getKeyCode());
+      ResourceBundle resource = ResourceBundle.getBundle(HelpPane.class.getName());
+      this.searchLabel.setDisplayedMnemonic(
+          KeyStroke.getKeyStroke(resource.getString("searchLabel.mnemonic")).getKeyCode());
       this.searchLabel.setLabelFor(this.searchTextField);
     }
   }
@@ -316,42 +231,33 @@ public class HelpPane extends JRootPane implements HelpView {
   private void layoutComponents() {
     final JToolBar toolBar = new JToolBar();
     toolBar.setFloatable(false);
-    // Change layout because BoxLayout glue doesn't work well under Linux
-    toolBar.setLayout(new GridBagLayout());
     ActionMap actions = getActionMap();    
-    final JButton previousButton = new JButton(actions.get(ActionType.SHOW_PREVIOUS));
-    final JButton nextButton = new JButton(actions.get(ActionType.SHOW_NEXT));
-    toolBar.add(previousButton);
-    toolBar.add(nextButton);
-    layoutToolBarButtons(toolBar, previousButton, nextButton);
+    toolBar.add(actions.get(ActionType.SHOW_PREVIOUS));
+    toolBar.add(actions.get(ActionType.SHOW_NEXT));
+    updateToolBarButtonsStyle(toolBar);
     toolBar.addPropertyChangeListener("componentOrientation", 
         new PropertyChangeListener () {
           public void propertyChange(PropertyChangeEvent evt) {
-            layoutToolBarButtons(toolBar, previousButton, nextButton);
+            updateToolBarButtonsStyle(toolBar);
           }
         });
-    toolBar.add(new JLabel(),
-        new GridBagConstraints(2, 0, 1, 1, 1, 0, GridBagConstraints.CENTER, 
-            GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+    toolBar.add(Box.createHorizontalStrut(5));
     
+    toolBar.add(Box.createGlue());
     if (!OperatingSystem.isMacOSXLeopardOrSuperior()) {
-      toolBar.add(this.searchLabel,
-          new GridBagConstraints(3, 0, 1, 1, 0, 0, GridBagConstraints.CENTER, 
-              GridBagConstraints.NONE, new Insets(0, 0, 0, 5), 0, 0));
+      toolBar.add(this.searchLabel);
+      toolBar.add(Box.createHorizontalStrut(2));
     }
-    toolBar.add(this.searchTextField,
-        new GridBagConstraints(4, 0, 1, 1, 0, 0, GridBagConstraints.CENTER, 
-            GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
+    toolBar.add(this.searchTextField);
     this.searchTextField.setMaximumSize(this.searchTextField.getPreferredSize());
     // Ignore search button under Mac OS X 10.5 (it's included in the search field)
     if (!OperatingSystem.isMacOSXLeopardOrSuperior()) {
-      toolBar.add(new JButton(actions.get(ActionType.SEARCH)),
-          new GridBagConstraints(5, 0, 1, 1, 0, 0, GridBagConstraints.CENTER, 
-              GridBagConstraints.NONE, new Insets(0, 5, 0, 0), 0, 0));          
+      toolBar.add(Box.createHorizontalStrut(2));
+      toolBar.add(actions.get(ActionType.SEARCH));
     }
     // Remove focusable property on buttons
     for (int i = 0, n = toolBar.getComponentCount(); i < n; i++) {      
-      Component component = toolBar.getComponent(i);
+      Component component = toolBar.getComponentAtIndex(i);
       if (component instanceof JButton) {
         component.setFocusable(false);
       }
@@ -362,43 +268,27 @@ public class HelpPane extends JRootPane implements HelpView {
   }
 
   /**
-   * Updates buttons layout and under Mac OS X 10.5 use segmented buttons with properties 
+   * Under Mac OS X 10.5 use segmented buttons with properties 
    * depending on toolbar orientation.
    */
-  private void layoutToolBarButtons(JToolBar toolBar, 
-                                    JButton previousButton,
-                                    JButton nextButton) {
-    int buttonPadY;
-    int buttonsTopBottomInset;
-    if (OperatingSystem.isMacOSXLeopardOrSuperior() 
-        && OperatingSystem.isJavaVersionGreaterOrEqual("1.7")) {
-      // Ensure the top and bottom of segmented buttons are correctly drawn 
-      buttonPadY = 6;
-      buttonsTopBottomInset = -2;
-    } else {
-      buttonPadY = 0;
-      buttonsTopBottomInset = 0;
-    }
-    ComponentOrientation orientation = toolBar.getComponentOrientation();
-    GridBagLayout layout = (GridBagLayout)toolBar.getLayout();
-    GridBagConstraints firstButtonConstraints = new GridBagConstraints(
-        0, 0, 1, 1, 0, 0, GridBagConstraints.CENTER, 
-        GridBagConstraints.NONE, new Insets(buttonsTopBottomInset, 0, buttonsTopBottomInset, 0), 0, buttonPadY);
-    GridBagConstraints secondButtonContraints = new GridBagConstraints(
-        1, 0, 1, 1, 0, 0, GridBagConstraints.CENTER, 
-        GridBagConstraints.NONE, new Insets(buttonsTopBottomInset, 0, buttonsTopBottomInset, 5), 0, buttonPadY);
-    layout.setConstraints(orientation.isLeftToRight() ? previousButton : nextButton, 
-        firstButtonConstraints);
-    layout.setConstraints(orientation.isLeftToRight() ? nextButton : previousButton, 
-        secondButtonContraints);
+  private void updateToolBarButtonsStyle(JToolBar toolBar) {
     // Use segmented buttons under Mac OS X 10.5
     if (OperatingSystem.isMacOSXLeopardOrSuperior()) {
+      // Retrieve component orientation because Mac OS X 10.5 miserably doesn't it take into account 
+      ComponentOrientation orientation = toolBar.getComponentOrientation();
+      JComponent previousButton = (JComponent)toolBar.getComponentAtIndex(0);
       previousButton.putClientProperty("JButton.buttonType", "segmentedTextured");
-      previousButton.putClientProperty("JButton.segmentPosition", "first");
+      previousButton.putClientProperty("JButton.segmentPosition", 
+          orientation == ComponentOrientation.LEFT_TO_RIGHT 
+            ? "first"
+            : "last");
+      JComponent nextButton = (JComponent)toolBar.getComponentAtIndex(1);
       nextButton.putClientProperty("JButton.buttonType", "segmentedTextured");
-      nextButton.putClientProperty("JButton.segmentPosition", "last");
+      nextButton.putClientProperty("JButton.segmentPosition", 
+          orientation == ComponentOrientation.LEFT_TO_RIGHT 
+            ? "last"
+            : "first");
     }
-    toolBar.revalidate();
   }
     
   /**
@@ -442,10 +332,11 @@ public class HelpPane extends JRootPane implements HelpView {
             setRootPane(HelpPane.this);
           }
         };
+      ResourceBundle resource = ResourceBundle.getBundle(HelpPane.class.getName());
       // Update frame image and title 
-      this.frame.setIconImage(new ImageIcon(HelpPane.class.getResource(
-          this.preferences.getLocalizedString(HelpPane.class, "helpFrame.icon"))).getImage());
-      this.frame.setTitle(this.preferences.getLocalizedString(HelpPane.class, "helpFrame.title"));
+      this.frame.setIconImage(new ImageIcon(
+          HelpPane.class.getResource(resource.getString("helpFrame.icon"))).getImage());
+      this.frame.setTitle(resource.getString("helpFrame.title"));
       this.frame.applyComponentOrientation(ComponentOrientation.getOrientation(Locale.getDefault()));
       // Compute frame size and location
       computeFrameBounds(this.frame);
@@ -468,17 +359,44 @@ public class HelpPane extends JRootPane implements HelpView {
     Insets screenInsets = getToolkit().getScreenInsets(getGraphicsConfiguration());
     screenSize.width -= screenInsets.left + screenInsets.right;
     screenSize.height -= screenInsets.top + screenInsets.bottom;
-    frame.setSize(Math.min(2 * screenSize.width / 3, 800), screenSize.height * 4 / 5);
+    frame.setSize(2 * screenSize.width / 3, screenSize.height * 4 / 5);
   }
   
   /**
    * Displays <code>url</code> in this pane.
    */
-  private void setPage(URL url) {
+  public void setPage(URL url) {
     try {
       this.helpEditorPane.setPage(url);
     } catch (IOException ex) {
       throw new RuntimeException(ex);
     }
+  }
+
+  /**
+   * Displays <code>url</code> in standard browser.
+   */
+  public void setBrowserPage(URL url) {
+    try { 
+      // Lookup the javax.jnlp.BasicService object 
+      BasicService service = (BasicService)ServiceManager.lookup("javax.jnlp.BasicService"); 
+      service.showDocument(url); 
+    } catch (UnavailableServiceException ex) {
+      // Too bad : service is unavailable 
+    }
+  }
+
+  /**
+   * Sets whether previous button should be enabled or not.
+   */
+  public void setPreviousEnabled(boolean enabled) {
+    getActionMap().get(ActionType.SHOW_PREVIOUS).setEnabled(enabled);
+  }
+
+  /**
+   * Sets whether next button should be enabled or not.
+   */
+  public void setNextEnabled(boolean enabled) {
+    getActionMap().get(ActionType.SHOW_NEXT).setEnabled(enabled);
   }
 }

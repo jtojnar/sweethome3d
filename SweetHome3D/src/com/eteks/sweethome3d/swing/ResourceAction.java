@@ -1,7 +1,7 @@
 /*
  * ResourceAction.java 8 juil. 2006
  *
- * Sweet Home 3D, Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,8 @@ package com.eteks.sweethome3d.swing;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.lang.ref.WeakReference;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -30,7 +31,6 @@ import javax.swing.ImageIcon;
 import javax.swing.KeyStroke;
 import javax.swing.event.SwingPropertyChangeSupport;
 
-import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.tools.OperatingSystem;
 
 /**
@@ -39,127 +39,84 @@ import com.eteks.sweethome3d.tools.OperatingSystem;
  */
 public class ResourceAction extends AbstractAction {
   public static final String POPUP = "Popup";
-  public static final String TOGGLE_BUTTON_MODEL = "ToggleButtonModel";
+  
+  private String actionPrefix;
   
   /**
    * Creates a disabled action with properties retrieved from a resource bundle 
    * in which key starts with <code>actionPrefix</code>.
-   * @param preferences   user preferences used to retrieve localized properties of the action 
-   * @param resourceClass the class used as a context to retrieve localized properties of the action
+   * @param resource a resource bundle
    * @param actionPrefix  prefix used in resource bundle to search action properties
    */
-  public ResourceAction(UserPreferences preferences, 
-                        Class<?> resourceClass, 
-                        String actionPrefix) {
-    this(preferences, resourceClass, actionPrefix, false);
+  public ResourceAction(ResourceBundle resource, String actionPrefix) {
+    this(resource, actionPrefix, false);
   }
   
   /**
    * Creates an action with properties retrieved from a resource bundle 
    * in which key starts with <code>actionPrefix</code>.
-   * @param preferences   user preferences used to retrieve localized description of the action
-   * @param resourceClass the class used as a context to retrieve localized properties of the action
+   * @param resource a resource bundle
    * @param actionPrefix  prefix used in resource bundle to search action properties
    * @param enabled <code>true</code> if the action should be enabled at creation.
    */
-  public ResourceAction(UserPreferences preferences, 
-                        Class<?> resourceClass, 
-                        String actionPrefix, 
-                        boolean enabled) {
-    readActionProperties(preferences, resourceClass, actionPrefix);    
+  public ResourceAction(ResourceBundle resource, String actionPrefix, boolean enabled) {
+    this.actionPrefix = actionPrefix;
+    readActionProperties(resource, actionPrefix);    
     setEnabled(enabled);
-    
-    preferences.addPropertyChangeListener(UserPreferences.Property.LANGUAGE, 
-        new LanguageChangeListener(this, resourceClass, actionPrefix));
   }
     
   /**
-   * Preferences property listener bound to this action with a weak reference to avoid
-   * strong link between preferences and this action.  
+   * Changes the resource from which properties action are read.
    */
-  private static class LanguageChangeListener implements PropertyChangeListener {
-    private final WeakReference<ResourceAction> resourceAction;
-    private final Class<?>                      resourceClass;
-    private final String                        actionPrefix;
-
-    public LanguageChangeListener(ResourceAction resourceAction,
-                                  Class<?> resourceClass,
-                                  String actionPrefix) {
-      this.resourceAction = new WeakReference<ResourceAction>(resourceAction);
-      this.resourceClass = resourceClass;
-      this.actionPrefix = actionPrefix;
-    }
-
-    public void propertyChange(PropertyChangeEvent ev) {
-      // If action was garbage collected, remove this listener from preferences
-      ResourceAction resourceAction = this.resourceAction.get();
-      if (resourceAction == null) {
-        ((UserPreferences)ev.getSource()).removePropertyChangeListener(
-            UserPreferences.Property.LANGUAGE, this);
-      } else {
-        resourceAction.readActionProperties((UserPreferences)ev.getSource(), 
-            this.resourceClass, this.actionPrefix);
-      }
-    }
+  public void setResource(ResourceBundle resource) {
+    readActionProperties(resource, this.actionPrefix);
   }
-  
+
   /**
-   * Reads from the properties of this action.
+   * Reads from <code>resource</code> bundle the properties of this action.
    */
-  private void readActionProperties(UserPreferences preferences, 
-                                    Class<?> resourceClass, 
-                                    String actionPrefix) {
+  private void readActionProperties(ResourceBundle resource, String actionPrefix) {
     String propertyPrefix = actionPrefix + ".";
-    putValue(NAME, getOptionalString(preferences, resourceClass, propertyPrefix + NAME, true));
+    putValue(NAME, getOptionalString(resource, propertyPrefix + NAME));
     putValue(DEFAULT, getValue(NAME));
-    putValue(POPUP, getOptionalString(preferences, resourceClass, propertyPrefix + POPUP, true));
+    putValue(POPUP, getOptionalString(resource, propertyPrefix + POPUP));
     
     putValue(SHORT_DESCRIPTION, 
-        getOptionalString(preferences, resourceClass, propertyPrefix + SHORT_DESCRIPTION, false));
+        getOptionalString(resource, propertyPrefix + SHORT_DESCRIPTION));
     putValue(LONG_DESCRIPTION, 
-        getOptionalString(preferences, resourceClass, propertyPrefix + LONG_DESCRIPTION, false));
+        getOptionalString(resource, propertyPrefix + LONG_DESCRIPTION));
     
-    String smallIcon = getOptionalString(preferences, resourceClass, propertyPrefix + SMALL_ICON, false);
+    String smallIcon = getOptionalString(resource, propertyPrefix + SMALL_ICON);
     if (smallIcon != null) {
-      putValue(SMALL_ICON, new ImageIcon(resourceClass.getResource(smallIcon)));
+      putValue(SMALL_ICON, new ImageIcon(getClass().getResource(smallIcon)));
     }
 
     String propertyKey = propertyPrefix + ACCELERATOR_KEY;
     // Search first if there's a key for this OS
-    String acceleratorKey = getOptionalString(preferences, 
-        resourceClass, propertyKey + "." + System.getProperty("os.name"), false);
+    String acceleratorKey = getOptionalString(resource, 
+        propertyKey + "." + System.getProperty("os.name"));
     if (acceleratorKey == null) {
       // Then search default value
-      acceleratorKey = getOptionalString(preferences, resourceClass, propertyKey, false);
+      acceleratorKey = getOptionalString(resource, propertyKey);
     }
     if (acceleratorKey !=  null) {
       putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(acceleratorKey));
     }
     
-    String mnemonicKey = getOptionalString(preferences, resourceClass, propertyPrefix + MNEMONIC_KEY, false);
+    String mnemonicKey = getOptionalString(resource, propertyPrefix + MNEMONIC_KEY);
     if (mnemonicKey != null) {
       putValue(MNEMONIC_KEY, Integer.valueOf(KeyStroke.getKeyStroke(mnemonicKey).getKeyCode()));
     }
   }
 
   /**
-   * Returns the value of <code>propertyKey</code> in <code>preferences</code>, 
+   * Returns the value of <code>propertyKey</code> in <code>resource</code>, 
    * or <code>null</code> if the property doesn't exist.
    */
-  private String getOptionalString(UserPreferences preferences, 
-                                   Class<?> resourceClass, 
-                                   String propertyKey,
-                                   boolean label) {
+  private String getOptionalString(ResourceBundle resource, String propertyKey) {
     try {
-      String localizedText = label 
-          ? SwingTools.getLocalizedLabelText(preferences, resourceClass, propertyKey)
-          : preferences.getLocalizedString(resourceClass, propertyKey);
-      if (localizedText != null && localizedText.length() > 0) {
-        return localizedText;
-      } else {
-        return null;
-      }
-    } catch (IllegalArgumentException ex) {
+      return resource.getString(propertyKey);
+    } catch (MissingResourceException ex) {
       return null;
     }
   }
@@ -227,17 +184,13 @@ public class ResourceAction extends AbstractAction {
     public final void setEnabled(boolean enabled) {
       this.action.setEnabled(enabled);
     }
-    
-    protected void firePropertyChange(String propertyName, Object oldValue, Object newValue) {
-      this.propertyChangeSupport.firePropertyChange(propertyName, oldValue, newValue);
-    }
   }
   
   /**
    * An action decorator for menu items.  
    */
-  public static class MenuItemAction extends AbstractDecoratedAction {
-    public MenuItemAction(Action action) {
+  public static class MenuAction extends AbstractDecoratedAction {
+    public MenuAction(Action action) {
       super(action);
     }
 
@@ -256,19 +209,9 @@ public class ResourceAction extends AbstractAction {
   /**
    * An action decorator for popup menu items.  
    */
-  public static class PopupMenuItemAction extends MenuItemAction {
-    public PopupMenuItemAction(Action action) {
+  public static class PopupAction extends MenuAction {
+    public PopupAction(Action action) {
       super(action);
-      // Add a listener on POPUP value changes because the value of the 
-      // POPUP key replaces the one matching NAME if it exists       
-      addPropertyChangeListener(new PropertyChangeListener() {
-          public void propertyChange(PropertyChangeEvent ev) {
-            if (POPUP.equals(ev.getPropertyName())
-                && (ev.getOldValue() != null || ev.getNewValue() != null)) {
-              firePropertyChange(NAME, ev.getOldValue(), ev.getNewValue());
-            }
-          }
-        });
     }
 
     public Object getValue(String key) {
@@ -303,24 +246,6 @@ public class ResourceAction extends AbstractAction {
       if (key.equals(NAME)) {        
         return null;
       } 
-      return super.getValue(key);
-    }
-  }
-
-  /**
-   * An action decorator for  buttons.  
-   */
-  public static class ButtonAction extends AbstractDecoratedAction {
-    public ButtonAction(Action action) {
-      super(action);
-    }
-
-    public Object getValue(String key) {
-      // Avoid mnemonics in Mac OS X menus
-      if (OperatingSystem.isMacOSX()
-          && key.equals(MNEMONIC_KEY)) {
-        return null;
-      }
       return super.getValue(key);
     }
   }

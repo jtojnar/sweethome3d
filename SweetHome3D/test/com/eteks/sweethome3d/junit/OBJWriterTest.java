@@ -21,10 +21,6 @@ package com.eteks.sweethome3d.junit;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
-import java.net.URISyntaxException;
-import java.net.URL;
 
 import javax.media.j3d.Transform3D;
 import javax.media.j3d.TransformGroup;
@@ -33,22 +29,18 @@ import javax.vecmath.Vector3f;
 import junit.framework.TestCase;
 
 import com.eteks.sweethome3d.io.DefaultUserPreferences;
-import com.eteks.sweethome3d.io.HomeFileRecorder;
-import com.eteks.sweethome3d.j3d.OBJLoader;
-import com.eteks.sweethome3d.j3d.OBJWriter;
 import com.eteks.sweethome3d.model.Home;
 import com.eteks.sweethome3d.model.HomePieceOfFurniture;
 import com.eteks.sweethome3d.model.RecorderException;
 import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.model.Wall;
-import com.eteks.sweethome3d.swing.SwingViewFactory;
-import com.eteks.sweethome3d.viewcontroller.HomeController;
-import com.eteks.sweethome3d.viewcontroller.ViewFactory;
+import com.eteks.sweethome3d.swing.HomeController3D;
+import com.eteks.sweethome3d.swing.OBJWriter;
 import com.sun.j3d.utils.geometry.Box;
 import com.sun.j3d.utils.geometry.Sphere;
 
 /**
- * Test {@link com.eteks.sweethome3d.j3d.OBJWriter OBJ writer} features.
+ * Test {@link com.eteks.sweethome3d.swing.OBJWriter OBJ writer} features.
  * @author Emmanuel Puybaret
  */
 public class OBJWriterTest extends TestCase {
@@ -84,32 +76,30 @@ public class OBJWriterTest extends TestCase {
   /**
    * Tests home export to OBJ format.
    */
-  public void testHomeExportToOBJ() throws RecorderException, IOException {
+  public void testHomeExportToOBJ() throws RecorderException {
     // 1. Create an empty home and a 3D controller
-    ViewFactory viewFactory = new SwingViewFactory();
     UserPreferences preferences = new DefaultUserPreferences();
     Home home = new Home();
-    HomeController homeController = 
-        new HomeController(home, preferences, viewFactory);
+    HomeController3D homeController3D = new HomeController3D(home, preferences, null, null);
     
     // 2. Add to home a wall and a piece of furniture
-    home.addWall(new Wall(0, 0, 0, 1000, 10, home.getWallHeight()));
+    home.addWall(new Wall(0, 0, 0, 1000, 10));
     HomePieceOfFurniture piece = new HomePieceOfFurniture(
         preferences.getFurnitureCatalog().getCategory(0).getPieceOfFurniture(0));
     home.addPieceOfFurniture(piece);
-    piece.setX(500);
-    piece.setY(500);
+    home.setPieceOfFurnitureLocation(piece, 500, 500);
     assertEquals("Incorrect wall count", 1, home.getWalls().size());
     assertEquals("Incorrect furniture count", 1, home.getFurniture().size());
 
     // 3. Export home to OBJ file
-    File dir = File.createTempFile("Tmp@#", ".obj1");
-    dir.delete();
-    assertTrue("Can't create temporary directory", dir.mkdir());    
+    File dir = new File("Tmp@#");
+    dir.mkdir();
     File objFile = new File(dir, "Test.obj");
     File mtlFile = new File(dir, "Test.mtl");
+    assertFalse(objFile + " exists", objFile.exists());
+    assertFalse(mtlFile + " exists", mtlFile.exists());
     
-    homeController.getView().exportToOBJ(objFile.toString());
+    homeController3D.exportToOBJ(objFile.toString());
     assertTrue(objFile + " wasn't created", objFile.exists());
     assertTrue(mtlFile + " wasn't created", mtlFile.exists());
     
@@ -121,61 +111,5 @@ public class OBJWriterTest extends TestCase {
     if (!dir.delete()) {
       fail("Couldn't delete test dir");
     }
-  }
-  
-  /**
-   * Tests if the content of an OBJ file is as expected after exporting a complex home
-   * (with holes for windows and staircase).
-   */
-  public void testExportToOBJContent() throws RecorderException, IOException, URISyntaxException {
-    // 1. Read an existing file
-    String testFile = new File(OBJWriterTest.class.getResource("resources/holes.sh3d").toURI()).getAbsolutePath();
-    Home home = new HomeFileRecorder().readHome(testFile);
-    
-    // 2. Export home to OBJ file
-    File dir = File.createTempFile("Tmp@#", ".obj2");
-    dir.delete();
-    assertTrue("Can't create temporary directory", dir.mkdir());    
-    File objFile = new File(dir, "holes.obj");
-    File mtlFile = new File(dir, "holes.mtl");
-    
-    ViewFactory viewFactory = new SwingViewFactory();
-    UserPreferences preferences = new DefaultUserPreferences() {
-      @Override
-      public String getLocalizedString(Class<?> resourceClass, String resourceKey, Object ... resourceParameters) {
-        if ("exportToOBJ.header".equals(resourceKey)) {
-          return ""; // Avoid header with a date to simplify comparison
-        } else {
-          return super.getLocalizedString(resourceClass, resourceKey, resourceParameters);
-        }
-      }
-    };
-    HomeController homeController = new HomeController(home, preferences, viewFactory);
-    homeController.getView().exportToOBJ(objFile.toString());
-    
-    assertEquals("Not same line count in OBJ file", 467, getLineCount(objFile.toURI().toURL()));
-    assertEquals("Not same line count in MTL file", 45, getLineCount(mtlFile.toURI().toURL()));
-    // Read file to check if its content is correct
-    new OBJLoader().load(objFile.getAbsolutePath());
-    
-    for (File file : dir.listFiles()) {
-      if (!file.delete()) {
-        fail("Couldn't delete test file " + file);
-      }
-    }
-    if (!dir.delete()) {
-      fail("Couldn't delete test dir");
-    }
-  }
-
-  /**
-   * Returns the line count in the given URL.
-   */
-  private int getLineCount(URL contentUrl) throws IOException {
-    LineNumberReader in = new LineNumberReader(new InputStreamReader(contentUrl.openStream(), "ISO-8859-1"));
-    while (in.readLine() != null) {
-    }
-    in.close();
-    return in.getLineNumber();
   }
 }

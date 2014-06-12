@@ -1,7 +1,7 @@
 /*
  * FurnitureTransferHandler.java 12 sept. 2006
  *
- * Sweet Home 3D, Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,20 +31,18 @@ import java.util.List;
 
 import javax.swing.JComponent;
 
+import com.eteks.sweethome3d.model.ContentManager;
 import com.eteks.sweethome3d.model.Home;
 import com.eteks.sweethome3d.model.HomePieceOfFurniture;
-import com.eteks.sweethome3d.model.Selectable;
-import com.eteks.sweethome3d.viewcontroller.ContentManager;
-import com.eteks.sweethome3d.viewcontroller.HomeController;
 
 /**
  * Home furniture transfer handler.
  * @author Emmanuel Puybaret
  */
 public class FurnitureTransferHandler extends LocatedTransferHandler {
-  private final Home                 home;
-  private final ContentManager       contentManager;
-  private final HomeController       homeController;
+  private Home                       home;
+  private ContentManager             contentManager;
+  private HomeController             homeController;
   private List<HomePieceOfFurniture> copiedFurniture;
   private String                     copiedCSV;
 
@@ -120,11 +118,10 @@ public class FurnitureTransferHandler extends LocatedTransferHandler {
 
   /**
    * Returns <code>true</code> if flavors contains 
-   * {@link HomeTransferableList#HOME_FLAVOR HOME_FLAVOR} flavor
-   * or <code>DataFlavor.javaFileListFlavor</code> flavor.
+   * {@link HomeTransferableList#HOME_FLAVOR LIST_FLAVOR} flavor.
    */
   @Override
-  public boolean canImportFlavor(DataFlavor [] flavors) {
+  public boolean canImport(JComponent destination, DataFlavor [] flavors) {
     List<DataFlavor> flavorList = Arrays.asList(flavors);
     return flavorList.contains(HomeTransferableList.HOME_FLAVOR)
         || flavorList.contains(DataFlavor.javaFileListFlavor);
@@ -135,11 +132,11 @@ public class FurnitureTransferHandler extends LocatedTransferHandler {
    */
   @Override
   public boolean importData(JComponent destination, Transferable transferable) {
-    if (canImportFlavor(transferable.getTransferDataFlavors())) {
+    if (canImport(destination, transferable.getTransferDataFlavors())) {
       try {
         List<DataFlavor> flavorList = Arrays.asList(transferable.getTransferDataFlavors());
         if (flavorList.contains(HomeTransferableList.HOME_FLAVOR)) {
-          List<Selectable> items = (List<Selectable>)transferable.
+          List<Object> items = (List<Object>)transferable.
               getTransferData(HomeTransferableList.HOME_FLAVOR);
           List<HomePieceOfFurniture> furniture = Home.getFurnitureSubList(items);
           if (isDrop()) {

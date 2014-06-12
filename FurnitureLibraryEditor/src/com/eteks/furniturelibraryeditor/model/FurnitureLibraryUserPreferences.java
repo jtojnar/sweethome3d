@@ -46,10 +46,8 @@ public abstract class FurnitureLibraryUserPreferences extends UserPreferences {
   public FurnitureLibraryUserPreferences() {
     this.propertyChangeSupport = new PropertyChangeSupport(this);
     this.editedProperties = new String [] {
-        FurnitureLibrary.FURNITURE_MODEL_PROPERTY,
         FurnitureLibrary.FURNITURE_ICON_PROPERTY,
         FurnitureLibrary.FURNITURE_NAME_PROPERTY,
-        FurnitureLibrary.FURNITURE_TAGS_PROPERTY,
         FurnitureLibrary.FURNITURE_CATEGORY_PROPERTY,
         FurnitureLibrary.FURNITURE_CREATOR_PROPERTY,
         FurnitureLibrary.FURNITURE_WIDTH_PROPERTY,
@@ -58,8 +56,6 @@ public abstract class FurnitureLibraryUserPreferences extends UserPreferences {
         FurnitureLibrary.FURNITURE_ELEVATION_PROPERTY,
         FurnitureLibrary.FURNITURE_MOVABLE_PROPERTY,
         FurnitureLibrary.FURNITURE_DOOR_OR_WINDOW_PROPERTY,
-        FurnitureLibrary.FURNITURE_DOOR_OR_WINDOW_CUT_OUT_SHAPE_PROPERTY,
-        FurnitureLibrary.FURNITURE_STAIRCASE_CUT_OUT_SHAPE_PROPERTY,
         FurnitureLibrary.FURNITURE_MODEL_ROTATION_PROPERTY};
     setUnit(LengthUnit.CENTIMETER);
     this.offlineFurnitureLibrary = true;
@@ -199,13 +195,5 @@ public abstract class FurnitureLibraryUserPreferences extends UserPreferences {
    */
   public boolean isContentMatchingFurnitureName() {
     return true;
-  }
-  
-  /**
-   * Returns <code>false</code>.
-   */
-  @Override
-  public boolean isCheckUpdatesEnabled() {
-    return false;
   }
 }

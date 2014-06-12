@@ -20,6 +20,7 @@
 package com.eteks.sweethome3d.junit;
 
 import java.awt.Dialog;
+import java.awt.FileDialog;
 import java.awt.print.PageFormat;
 import java.awt.print.PrinterJob;
 import java.io.File;
@@ -27,10 +28,10 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.ResourceBundle;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -42,25 +43,21 @@ import abbot.finder.AWTHierarchy;
 import abbot.finder.BasicFinder;
 import abbot.finder.ComponentSearchException;
 import abbot.finder.matchers.ClassMatcher;
+import abbot.tester.FileDialogTester;
 import abbot.tester.JComponentTester;
 import abbot.tester.JFileChooserTester;
 
+import com.eteks.sweethome3d.FileContentManager;
 import com.eteks.sweethome3d.io.DefaultUserPreferences;
 import com.eteks.sweethome3d.model.CatalogPieceOfFurniture;
 import com.eteks.sweethome3d.model.Home;
 import com.eteks.sweethome3d.model.HomePrint;
 import com.eteks.sweethome3d.model.UserPreferences;
-import com.eteks.sweethome3d.swing.FileContentManager;
+import com.eteks.sweethome3d.swing.HomeController;
 import com.eteks.sweethome3d.swing.HomePane;
 import com.eteks.sweethome3d.swing.HomePrintableComponent;
 import com.eteks.sweethome3d.swing.PageSetupPanel;
 import com.eteks.sweethome3d.swing.PrintPreviewPanel;
-import com.eteks.sweethome3d.swing.SwingViewFactory;
-import com.eteks.sweethome3d.tools.OperatingSystem;
-import com.eteks.sweethome3d.viewcontroller.ContentManager;
-import com.eteks.sweethome3d.viewcontroller.HomeController;
-import com.eteks.sweethome3d.viewcontroller.View;
-import com.eteks.sweethome3d.viewcontroller.ViewFactory;
 
 /**
  * Tests page setup and print preview panes in home.
@@ -70,29 +67,12 @@ public class PrintTest extends ComponentTestFixture {
   public void testPageSetupAndPrintPreview() throws ComponentSearchException, InterruptedException, 
       NoSuchFieldException, IllegalAccessException, InvocationTargetException, IOException {
     UserPreferences preferences = new DefaultUserPreferences();
-    ViewFactory viewFactory = new SwingViewFactory();
     Home home = new Home();
-    ContentManager contentManager = new FileContentManager(preferences) {
-        @Override
-        public String showSaveDialog(View parentView, String dialogTitle, ContentType contentType, String name) {
-          String os = System.getProperty("os.name");
-          if (OperatingSystem.isMacOSX()) {
-            // Let's pretend the OS isn't Mac OS X to get a JFileChooser instance that works better in test
-            System.setProperty("os.name", "dummy");
-          }
-          try {
-            return super.showSaveDialog(parentView, dialogTitle, contentType, name);
-          } finally {
-            System.setProperty("os.name", os);
-          }
-        }
-      };
-    final HomeController controller = 
-        new HomeController(home, preferences, viewFactory, contentManager);
+    final HomeController controller = new HomeController(home, preferences, new FileContentManager());
 
     // 1. Create a frame that displays a home view 
     JFrame frame = new JFrame("Home Print Test");    
-    frame.add((JComponent)controller.getView());
+    frame.add(controller.getView());
     frame.pack();
 
     // Show home frame
@@ -102,12 +82,8 @@ public class PrintTest extends ComponentTestFixture {
     // Add a piece of furniture to home
     List<CatalogPieceOfFurniture> selectedPieces = Arrays.asList(
         new CatalogPieceOfFurniture [] {preferences.getFurnitureCatalog().getCategories().get(0).getFurniture().get(0)}); 
-    controller.getFurnitureCatalogController().setSelectedFurniture(selectedPieces);
-    tester.invokeAndWait(new Runnable() { 
-      public void run() {
-        runAction(controller, HomePane.ActionType.ADD_HOME_FURNITURE);
-      }
-    });
+    preferences.getFurnitureCatalog().setSelectedFurniture(selectedPieces);
+    runAction(controller, HomePane.ActionType.ADD_HOME_FURNITURE);
     // Check home contains one piece
     assertEquals("Home doesn't contain any furniture", 1, home.getFurniture().size());
     
@@ -119,8 +95,8 @@ public class PrintTest extends ComponentTestFixture {
         }
       });
     // Wait for page setup to be shown
-    tester.waitForFrameShowing(new AWTHierarchy(), preferences.getLocalizedString(
-        PageSetupPanel.class, "pageSetup.title"));
+    tester.waitForFrameShowing(new AWTHierarchy(), ResourceBundle.getBundle(
+        PageSetupPanel.class.getName()).getString("pageSetup.title"));
     // Check dialog box is displayed
     JDialog pageSetupDialog = (JDialog)TestUtilities.findComponent(
         frame, JDialog.class);
@@ -172,8 +148,8 @@ public class PrintTest extends ComponentTestFixture {
         }
       });
     // Wait for print preview to be shown
-    tester.waitForFrameShowing(new AWTHierarchy(), preferences.getLocalizedString(
-        PrintPreviewPanel.class, "printPreview.title"));
+    tester.waitForFrameShowing(new AWTHierarchy(), ResourceBundle.getBundle(
+        PrintPreviewPanel.class.getName()).getString("printPreview.title"));
     // Check dialog box is displayed
     JDialog printPreviewDialog = (JDialog)new BasicFinder().find(frame, 
         new ClassMatcher (JDialog.class, true));
@@ -184,7 +160,7 @@ public class PrintTest extends ComponentTestFixture {
     JToolBar toolBar = 
         (JToolBar)TestUtilities.getField(printPreviewPanel, "toolBar");
     JButton previousButton = (JButton)toolBar.getComponent(0); 
-    final JButton nextButton = (JButton)toolBar.getComponent(1); 
+    JButton nextButton = (JButton)toolBar.getComponent(1); 
     HomePrintableComponent printableComponent = 
         (HomePrintableComponent)TestUtilities.getField(printPreviewPanel, "printableComponent");;
     // Check if buttons are enabled and if printable component displays the first page
@@ -194,11 +170,7 @@ public class PrintTest extends ComponentTestFixture {
     assertEquals("Wrong printable component page count", 2, printableComponent.getPageCount());
     
     // 6. Click on next page button
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          nextButton.doClick();
-        }
-      });
+    nextButton.doClick();
     // Check if buttons are enabled and if printable component displays the second page
     assertTrue("Previous button is enabled", previousButton.isEnabled());
     assertFalse("Next button is disabled", nextButton.isEnabled());
@@ -215,11 +187,10 @@ public class PrintTest extends ComponentTestFixture {
       });
     assertFalse("Print preview dialog still showing", printPreviewDialog.isShowing());
     
-    // 7. Check PDF creation
-    File tmpDirectory = File.createTempFile("print", "dir");
-    tmpDirectory.delete();    
-    assertTrue("Couldn't create tmp directory", tmpDirectory.mkdir());
-    String pdfFileBase = "test";
+    // 7. Check the created PDF file doesn't exist
+    String pdfFileBase = "testsdfghjk";
+    File pdfFile = new File(pdfFileBase + ".pdf");
+    assertFalse("PDF file already exists, delete it first", pdfFile.exists());
     // Show print to PDF dialog box
     tester.invokeLater(new Runnable() { 
         public void run() {
@@ -228,28 +199,38 @@ public class PrintTest extends ComponentTestFixture {
         }
       });
     // Wait for print to PDF file chooser to be shown
-    tester.waitForFrameShowing(new AWTHierarchy(), preferences.getLocalizedString(
-        HomePane.class, "printToPDFDialog.title"));
+    tester.waitForFrameShowing(new AWTHierarchy(), ResourceBundle.getBundle(
+        HomePane.class.getName()).getString("printToPDFDialog.title"));
     // Check dialog box is displayed
     final Dialog printToPdfDialog = (Dialog)new BasicFinder().find(frame, 
         new ClassMatcher (Dialog.class, true));
     assertTrue("Print to pdf dialog not showing", printToPdfDialog.isShowing());
     // Change file in print to PDF file chooser 
-    final JFileChooserTester fileChooserTester = new JFileChooserTester();
-    final JFileChooser fileChooser = (JFileChooser)new BasicFinder().find(printToPdfDialog, 
-        new ClassMatcher(JFileChooser.class));
-    fileChooserTester.actionSetDirectory(fileChooser, tmpDirectory.getAbsolutePath());
-    fileChooserTester.actionSetFilename(fileChooser, pdfFileBase);
-    // Select Ok option to hide dialog box
-    fileChooserTester.actionApprove(fileChooser);
-    assertFalse("Print to pdf dialog still showing", printToPdfDialog.isShowing());
+    if (printToPdfDialog instanceof FileDialog) {
+      final FileDialogTester fileDialogTester = new FileDialogTester();
+      fileDialogTester.actionSetDirectory(printToPdfDialog, System.getProperty("user.dir"));
+      fileDialogTester.actionSetFile(printToPdfDialog, pdfFileBase);
+      tester.invokeAndWait(new Runnable() {
+          public void run() {
+            // Select Ok option to hide dialog box in Event Dispatch Thread
+            fileDialogTester.actionAccept(printToPdfDialog);
+          }
+        });
+    } else {
+      final JFileChooserTester fileChooserTester = new JFileChooserTester();
+      final JFileChooser fileChooser = (JFileChooser)new BasicFinder().find(printToPdfDialog, 
+          new ClassMatcher(JFileChooser.class));
+      fileChooserTester.actionSetDirectory(fileChooser, System.getProperty("user.dir"));
+      fileChooserTester.actionSetFilename(fileChooser, pdfFileBase);
+      // Select Ok option to hide dialog box
+      fileChooserTester.actionApprove(fileChooser);
+    }
     // Wait PDF generation  
-    File pdfFile = new File(tmpDirectory, pdfFileBase + ".pdf");
-    Thread.sleep(2000);
-    assertTrue("PDF file " + pdfFile + " doesn't exist", pdfFile.exists());
+    Thread.sleep(1500);
+    assertFalse("Print to pdf dialog still showing", printToPdfDialog.isShowing());
+    assertTrue("PDF file doesn't exist", pdfFile.exists());
     assertTrue("PDF file is empty", pdfFile.length() > 0);
     pdfFile.delete();
-    tmpDirectory.delete();
   }
   
   /**
@@ -258,7 +239,7 @@ public class PrintTest extends ComponentTestFixture {
    */
   private void runAction(HomeController controller,
                          HomePane.ActionType actionType) {
-    ((JComponent)controller.getView()).getActionMap().get(actionType).actionPerformed(null);
+    controller.getView().getActionMap().get(actionType).actionPerformed(null);
   }
 
   /**

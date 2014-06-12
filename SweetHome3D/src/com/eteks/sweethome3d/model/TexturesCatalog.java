@@ -1,7 +1,7 @@
 /*
  * TexturesCatalog.java 5 oct. 2006
  * 
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -27,17 +27,28 @@ import java.util.List;
  * Textures catalog.
  * @author Emmanuel Puybaret
  */
-public class TexturesCatalog {
+public abstract class TexturesCatalog {
   private List<TexturesCategory>  categories = new ArrayList<TexturesCategory>();
-  private final CollectionChangeSupport<CatalogTexture> texturesChangeSupport = 
-                                      new CollectionChangeSupport<CatalogTexture>(this);
+  private boolean                 sorted;
+  private List<TextureListener>   textureListeners = new ArrayList<TextureListener>();
 
   /**
    * Returns the categories list sorted by name.
    * @return an unmodifiable list of categories.
    */
   public List<TexturesCategory> getCategories() {
+    checkCategoriesSorted();
     return Collections.unmodifiableList(this.categories);
+  }
+
+  /**
+   * Checks categories are sorted.
+   */
+  private void checkCategoriesSorted() {
+    if (!this.sorted) {
+      Collections.sort(this.categories);
+      this.sorted = true;
+    }
   }
 
   /**
@@ -51,59 +62,73 @@ public class TexturesCatalog {
    * Returns the category at a given <code>index</code>.
    */
   public TexturesCategory getCategory(int index) {
+    checkCategoriesSorted();
     return this.categories.get(index);
   }
 
   /**
    * Adds the texture <code>listener</code> in parameter to this catalog.
    */
-  public void addTexturesListener(CollectionListener<CatalogTexture> listener) {
-    this.texturesChangeSupport.addCollectionListener(listener);
+  public void addTextureListener(TextureListener listener) {
+    this.textureListeners.add(listener);
   }
 
   /**
    * Removes the texture <code>listener</code> in parameter from this catalog.
    */
-  public void removeTexturesListener(CollectionListener<CatalogTexture> listener) {
-    this.texturesChangeSupport.removeCollectionListener(listener);
+  public void removeTextureListener(TextureListener listener) {
+    this.textureListeners.remove(listener);
+  }
+
+  /**
+   * Adds a category to this catalog.
+   * @param category the textures category to add.
+   * @throws IllegalHomonymException if a category with same name as the one in
+   *           parameter already exists in this catalog.
+   */
+  private void add(TexturesCategory category) {
+    if (this.categories.contains(category)) {
+      throw new IllegalHomonymException(
+          category.getName() + " already exists in catalog");
+    }
+    this.categories.add(category);
+    this.sorted = false;
   }
 
   /**
    * Adds <code>texture</code> of a given <code>category</code> to this catalog.
-   * Once the <code>texture</code> is added, texture listeners added to this catalog will receive a
-   * {@link CollectionListener#collectionChanged(CollectionEvent) collectionChanged} notification.
    * @param category the category of the texture.
    * @param texture  a texture.
    */
   public void add(TexturesCategory category, CatalogTexture texture) {
-    int index = Collections.binarySearch(this.categories, category);
+    int index = this.categories.indexOf(category);
     // If category doesn't exist yet, add it to categories
-    if (index < 0) {
+    if (index == -1) {
       category = new TexturesCategory(category.getName());
-      this.categories.add(-index - 1, category);
+      add(category);
     } else {
       category = this.categories.get(index);
     }    
     // Add current texture to category list
     category.add(texture);
     
-    this.texturesChangeSupport.fireCollectionChanged(texture, 
-        category.getIndexOfTexture(texture), CollectionEvent.Type.ADD);
+    fireTextureChanged(texture, 
+        Collections.binarySearch(category.getTextures(), texture), TextureEvent.Type.ADD);
   }
 
   /**
    * Deletes the <code>texture</code> from this catalog.
    * If then texture category is empty, it will be removed from the categories of this catalog. 
    * Once the <code>texture</code> is deleted, texture listeners added to this catalog will receive a
-   * {@link CollectionListener#collectionChanged(CollectionEvent) collectionChanged} notification.
+   * {@link TextureListener#textureChanged(TextureEvent) textureChanged} notification.
    * @param texture a texture.
    */
   public void delete(CatalogTexture texture) {
     TexturesCategory category = texture.getCategory();
     // Remove texture from its category
     if (category != null) {
-      int textureIndex = category.getIndexOfTexture(texture);
-      if (textureIndex >= 0) {
+      int pieceIndex = Collections.binarySearch(category.getTextures(), texture);
+      if (pieceIndex >= 0) {
         category.delete(texture);
         
         if (category.getTexturesCount() == 0) {
@@ -112,11 +137,25 @@ public class TexturesCatalog {
           this.categories.remove(category);
         }
         
-        this.texturesChangeSupport.fireCollectionChanged(texture, textureIndex, CollectionEvent.Type.DELETE);
+        fireTextureChanged(texture, pieceIndex, TextureEvent.Type.DELETE);
         return;
       }
     }
 
     throw new IllegalArgumentException("catalog doesn't contain texture " + texture.getName());
+  }
+
+  private void fireTextureChanged(CatalogTexture texture, int index,
+                                  TextureEvent.Type eventType) {
+    if (!this.textureListeners.isEmpty()) {
+      TextureEvent textureEvent = new TextureEvent(this, texture, index, eventType);
+      // Work on a copy of furnitureListeners to ensure a listener 
+      // can modify safely listeners list
+      TextureListener [] listeners = this.textureListeners.
+        toArray(new TextureListener [this.textureListeners.size()]);
+      for (TextureListener listener : listeners) {
+        listener.textureChanged(textureEvent);
+      }
+    }
   }
 }

@@ -31,7 +31,6 @@ import java.util.List;
 import javax.swing.ActionMap;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
@@ -42,66 +41,60 @@ import abbot.tester.ComponentLocation;
 import abbot.tester.JComponentTester;
 
 import com.eteks.sweethome3d.io.DefaultUserPreferences;
-import com.eteks.sweethome3d.model.CollectionEvent;
-import com.eteks.sweethome3d.model.CollectionListener;
 import com.eteks.sweethome3d.model.DimensionLine;
+import com.eteks.sweethome3d.model.DimensionLineEvent;
+import com.eteks.sweethome3d.model.DimensionLineListener;
 import com.eteks.sweethome3d.model.Home;
 import com.eteks.sweethome3d.model.HomePieceOfFurniture;
-import com.eteks.sweethome3d.model.Selectable;
 import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.model.Wall;
+import com.eteks.sweethome3d.swing.HomeController;
 import com.eteks.sweethome3d.swing.HomePane;
 import com.eteks.sweethome3d.swing.PlanComponent;
-import com.eteks.sweethome3d.swing.SwingViewFactory;
 import com.eteks.sweethome3d.tools.OperatingSystem;
-import com.eteks.sweethome3d.viewcontroller.HomeController;
-import com.eteks.sweethome3d.viewcontroller.PlanController;
-import com.eteks.sweethome3d.viewcontroller.PlanView;
-import com.eteks.sweethome3d.viewcontroller.ViewFactory;
 
 /**
  * Tests wall and furniture management in 
  * {@link com.eteks.sweethome3d.swing.PlanComponent plan} component and 
- * its {@link com.eteks.sweethome3d.viewcontroller.PlanController controller}.
+ * its {@link com.eteks.sweethome3d.swing.PlanController controller}.
  * @author Emmanuel Puybaret
  */
 public class PlanComponentWithFurnitureTest extends ComponentTestFixture {
   public void testPlanComponentWithFurniture() throws InterruptedException {
     // 1. Create a frame that displays a home view and a tool bar
     // with Mode, Add furniture, Undo and Redo buttons
-    final TestFrame frame = new TestFrame();    
+    TestFrame frame = new TestFrame();    
     // Show home plan frame
     showWindow(frame);
     
     // 2. Use CREATE_WALLS mode
-    JComponentTester tester = new JComponentTester();
-    tester.click(frame.createWallsButton);
+    frame.createWallsButton.doClick();
     PlanComponent planComponent = (PlanComponent)
         frame.homeController.getPlanController().getView();
     // Click at (30, 30), (220, 30), (270, 80), (270, 170), (30, 170) 
     // then double click at (30, 30) with no magnetism
-    tester.actionKeyPress(TestUtilities.getMagnetismToggleKey());
+    JComponentTester tester = new JComponentTester();
+    tester.actionKeyPress(KeyEvent.VK_SHIFT);
     tester.actionClick(planComponent, 30, 30);
     tester.actionClick(planComponent, 220, 30);
     tester.actionClick(planComponent, 270, 80);
     tester.actionClick(planComponent, 270, 170);
     tester.actionClick(planComponent, 30, 170);
     tester.actionClick(planComponent, 30, 30, InputEvent.BUTTON1_MASK, 2);
-    tester.actionKeyRelease(TestUtilities.getMagnetismToggleKey());
+    tester.actionKeyRelease(KeyEvent.VK_SHIFT);
     // Check 5 walls were added to home plan
     assertEquals("Wrong walls count", 5, frame.home.getWalls().size());
 
     // 3. Use SELECTION mode
-    tester.click(frame.selectButton);
+    frame.selectButton.doClick();
     // Select the first piece in catalog tree
     JTree catalogTree = (JTree)
-        frame.homeController.getFurnitureCatalogController().getView();
+        frame.homeController.getCatalogController().getView();
     catalogTree.expandRow(0); 
     catalogTree.addSelectionInterval(1, 1);
     // Click on Add furniture button
-    tester.click(frame.addButton);
+    frame.addButton.doClick();
     // Check home contains one selected piece
-    tester.waitForIdle();
     assertEquals("Wrong piece count", 
         1, frame.home.getFurniture().size());
     assertEquals("Wrong selected items count", 
@@ -129,7 +122,7 @@ public class PlanComponentWithFurnitureTest extends ComponentTestFixture {
     pieceY += 200;
     assertLocationAndOrientationEqualPiece(pieceX, pieceY, 0, piece);
     
-    // 5. Press mouse button at top left point of selected piece 
+    // 5. Press mouse button at top left vertex of selected piece 
     tester.actionMousePress(planComponent, 
         new ComponentLocation(new Point(120, 120)));
     // Drag mouse to (-depthPixel / 2 - 1, widthPixel / 2) pixels from piece center
@@ -141,7 +134,7 @@ public class PlanComponentWithFurnitureTest extends ComponentTestFixture {
     assertLocationAndOrientationEqualPiece(
         pieceX, pieceY, (float)Math.PI * 3 / 2, piece);
 
-    // 6. Press mouse button at top left point of selected piece
+    // 6. Press mouse button at top left vertex of selected piece
     tester.actionMousePress(planComponent, new ComponentLocation(
         new Point(120 + widthPixel / 2 - depthPixel / 2, 
                   120 + depthPixel / 2 + widthPixel / 2)));
@@ -150,12 +143,12 @@ public class PlanComponentWithFurnitureTest extends ComponentTestFixture {
         new Point(121, 120))); 
     // Check piece angle is 0°
     assertLocationAndOrientationEqualPiece(pieceX, pieceY, 0, piece);
-    // Toggle magnetism
-    tester.actionKeyPress(TestUtilities.getMagnetismToggleKey());
+    // Press Shift key
+    tester.actionKeyPress(KeyEvent.VK_SHIFT);
     // Check piece angle is different from 0°
     assertFalse("Piece orientation shouldn't be magnetized", 
         Math.abs(piece.getAngle()) < 1E-10);
-    tester.actionKeyRelease(TestUtilities.getMagnetismToggleKey());    
+    tester.actionKeyRelease(KeyEvent.VK_SHIFT);    
     tester.actionKeyStroke(planComponent, KeyEvent.VK_ESCAPE);
     tester.actionMouseRelease(); 
     // Check piece angle is 3 * PI / 2 (=-90°)
@@ -167,8 +160,8 @@ public class PlanComponentWithFurnitureTest extends ComponentTestFixture {
     tester.actionClick(planComponent, 30, 160); 
     tester.actionKeyRelease(KeyEvent.VK_SHIFT);
     // Check selected items contains the piece of furniture and the fifth wall
-    List<Selectable> selectedItems = 
-        new ArrayList<Selectable>(frame.home.getSelectedItems());
+    List<Object> selectedItems = 
+      new ArrayList<Object>(frame.home.getSelectedItems());
     assertEquals("Wrong selected items count", 2, selectedItems.size());
     assertTrue("Piece of furniture not selected", selectedItems.contains(piece));
     // Remove piece form list to get the selected wall
@@ -189,27 +182,19 @@ public class PlanComponentWithFurnitureTest extends ComponentTestFixture {
     // Check the piece of furniture moved 20 cm along x axis
     assertLocationAndOrientationEqualPiece(
         pieceX + 20, pieceY, (float)Math.PI * 3 / 2, piece);
-    assertCoordinatesEqualWallPoints(40, 300, 40, 20, fifthWall);
+     assertCoordinatesEqualWallPoints(40, 300, 40, 20, fifthWall);
     
     // 9. Click twice on undo button
-    tester.invokeAndWait(new Runnable() {
-         public void run() {
-          frame.undoButton.doClick();
-          frame.undoButton.doClick();
-         }
-       });
+    frame.undoButton.doClick();
+    frame.undoButton.doClick();
     // Check piece orientation and location are canceled
     assertLocationAndOrientationEqualPiece(
         pieceX, pieceY, 0f, piece);
     assertCoordinatesEqualWallPoints(20, 300, 20, 20, fifthWall);
     
     // 10. Click twice on redo button
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          frame.redoButton.doClick();
-          frame.redoButton.doClick();
-        }
-      });
+    frame.redoButton.doClick();
+    frame.redoButton.doClick();
     // Check piece and wall location was redone
     assertLocationAndOrientationEqualPiece(
         pieceX + 20, pieceY, (float)Math.PI * 3 / 2, piece);
@@ -224,7 +209,7 @@ public class PlanComponentWithFurnitureTest extends ComponentTestFixture {
         selectedItems.contains(fifthWall));
     
     // 11. Click at point (pieceXPixel + depthPixel / 2, pieceYPixel - widthPixel / 2) 
-    //     at width and depth resize point of the piece
+    //     at width and depth resize vertex of the piece
     int pieceXPixel = Math.round((piece.getX() + 40) * planComponent.getScale());
     int pieceYPixel = Math.round((piece.getY() + 40) * planComponent.getScale());
     tester.actionClick(planComponent, pieceXPixel + depthPixel / 2, pieceYPixel - widthPixel / 2);
@@ -237,24 +222,23 @@ public class PlanComponentWithFurnitureTest extends ComponentTestFixture {
     Thread.sleep(1000); // Wait 1s to avoid double click
     tester.actionMousePress(planComponent, new ComponentLocation(new Point(
         pieceXPixel + depthPixel / 2, pieceYPixel - widthPixel / 2)));
-    tester.actionKeyPress(TestUtilities.getMagnetismToggleKey());
+    tester.actionKeyPress(KeyEvent.VK_SHIFT);
     tester.actionMouseMove(planComponent, new ComponentLocation(new Point(
         pieceXPixel + depthPixel / 2 + 4, pieceYPixel - widthPixel / 2 + 4))); 
     tester.actionMouseRelease();
-    tester.actionKeyRelease(TestUtilities.getMagnetismToggleKey());
+    tester.actionKeyRelease(KeyEvent.VK_SHIFT);
     // Check piece width and depth were resized (caution : piece angle is oriented at 90°)
     assertDimensionEqualPiece(pieceWidth - 4 / planComponent.getScale(), 
         pieceDepth + 4 / planComponent.getScale(), pieceHeight, piece);
 
     // 12. Click at point (pieceXPixel + depthPixel / 2, pieceYPixel + widthPixel / 2) 
-    //     at height resize point of the piece
+    //     at height resize vertex of the piece
     pieceXPixel = Math.round((piece.getX() + 40) * planComponent.getScale());
     pieceYPixel = Math.round((piece.getY() + 40) * planComponent.getScale());
-    widthPixel = Math.round((piece.getWidth()) * planComponent.getScale());
-    depthPixel = Math.round((piece.getDepth()) * planComponent.getScale());
     tester.actionMouseMove(planComponent, new ComponentLocation(new Point(
         pieceXPixel + depthPixel / 2, pieceYPixel + widthPixel / 2)));
     Thread.sleep(1000);
+    
     tester.actionMousePress(planComponent, new ComponentLocation(new Point(
         pieceXPixel + depthPixel / 2, pieceYPixel + widthPixel / 2)));
     // Drag mouse (2,4) pixels 
@@ -267,7 +251,7 @@ public class PlanComponentWithFurnitureTest extends ComponentTestFixture {
         Math.round((pieceHeight - 4 / planComponent.getScale()) * 2) / 2, piece);
 
     // 13. Click at point (pieceXPixel - depthPixel / 2, pieceYPixel - widthPixel / 2) 
-    //     at elevation point of the piece
+    //     at elevation vertex of the piece
     float pieceElevation = piece.getElevation();
     tester.actionMousePress(planComponent, new ComponentLocation(new Point(
         pieceXPixel - depthPixel / 2, pieceYPixel - widthPixel / 2)));
@@ -279,33 +263,25 @@ public class PlanComponentWithFurnitureTest extends ComponentTestFixture {
     assertElevationEqualPiece(pieceElevation + 4 / planComponent.getScale(), piece);
 
     // 14. Click three times on undo button
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          frame.undoButton.doClick();
-          frame.undoButton.doClick();
-          frame.undoButton.doClick();
-        }
-      });
+    frame.undoButton.doClick();
+    frame.undoButton.doClick();
+    frame.undoButton.doClick();
     // Check piece dimension and elevation are canceled
     assertDimensionEqualPiece(pieceWidth, pieceDepth, pieceHeight, piece);
     assertElevationEqualPiece(pieceElevation, piece);
     
     // Build an ordered list of dimensions added to home
     final ArrayList<DimensionLine> orderedDimensionLines = new ArrayList<DimensionLine>();
-    frame.home.addDimensionLinesListener(new CollectionListener<DimensionLine>() {
-      public void collectionChanged(CollectionEvent<DimensionLine> ev) {
-        if (ev.getType() == CollectionEvent.Type.ADD) {
-          orderedDimensionLines.add(ev.getItem());
+    frame.home.addDimensionLineListener(new DimensionLineListener () {
+      public void dimensionLineChanged(DimensionLineEvent ev) {
+        if (ev.getType() == DimensionLineEvent.Type.ADD) {
+          orderedDimensionLines.add(ev.getDimensionLine());
         }
       }
     });
     
     // 15. Use CREATE_DIMENSION_LINES mode
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          frame.createDimensionsButton.doClick();
-        }
-      });
+    frame.createDimensionsButton.doClick();
     // Draw a dimension in plan
     tester.actionClick(planComponent, 280, 81);
     tester.actionClick(planComponent, 281, 169, InputEvent.BUTTON1_MASK, 2);
@@ -325,7 +301,7 @@ public class PlanComponentWithFurnitureTest extends ComponentTestFixture {
     assertEqualsDimensionLine(42, 310, 498, 310, 20, orderedDimensionLines.get(1));
     
     // 16. Select the first dimension line
-    tester.click(frame.selectButton);
+    frame.selectButton.doClick();
     tester.actionClick(planComponent, 280, 90);
     assertEquals("Wrong selection", 1, frame.home.getSelectedItems().size());
     assertEquals("Selection doesn't contain the first dimension", 
@@ -333,7 +309,7 @@ public class PlanComponentWithFurnitureTest extends ComponentTestFixture {
     // Move its end point to (330, 167)
     tester.actionMousePress(planComponent, new ComponentLocation(new Point(280, 167)));
     tester.actionMouseMove(planComponent, new ComponentLocation(new Point(320, 167)));
-    // Check its coordinates with magnetism
+    // Check its coordinates while Shift key isn't pressed (with magnetism)
     assertEqualsDimensionLine(520, 122, 567.105f, 297.7985f, 0, firstDimensionLine);
     // Check its length with magnetism 
     float firstDimensionLineLength = (float)Point2D.distance(
@@ -341,42 +317,30 @@ public class PlanComponentWithFurnitureTest extends ComponentTestFixture {
         firstDimensionLine.getXEnd(), firstDimensionLine.getYEnd());
     assertTrue("Incorrect length 182 " + firstDimensionLineLength, 
         Math.abs(182 - firstDimensionLineLength) < 1E-4);
-    // Toggle magnetism
-    tester.actionKeyPress(TestUtilities.getMagnetismToggleKey());
-    // Check its coordinates with no magnetism
+    // Press Shift key
+    tester.actionKeyPress(KeyEvent.VK_SHIFT);
+    // Check its coordinates while Shift key is pressed (with no magnetism)
     assertEqualsDimensionLine(520, 122, 600, 298, 0, firstDimensionLine);
-    // Release magnetism key and mouse button
-    tester.actionKeyRelease(TestUtilities.getMagnetismToggleKey());    
+    // Release Shift key and mouse button
+    tester.actionKeyRelease(KeyEvent.VK_SHIFT);    
     tester.actionMouseRelease();
     assertEqualsDimensionLine(520, 122, 567.105f, 297.7985f, 0, firstDimensionLine);
     
     // 17. Click three times on undo button
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          frame.undoButton.doClick();
-          frame.undoButton.doClick();
-          frame.undoButton.doClick();
-        }
-      });
+    frame.undoButton.doClick();
+    frame.undoButton.doClick();
+    frame.undoButton.doClick();
     // Check home doesn't contain any dimension
     assertEquals("Home dimensions set isn't empty", 0, frame.home.getDimensionLines().size());
     
     // 18. Click twice on redo button
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          frame.redoButton.doClick();
-          frame.redoButton.doClick();
-        }
-      });
+    frame.redoButton.doClick();
+    frame.redoButton.doClick();
     // Check the size of the created dimension lines
     assertEqualsDimensionLine(520, 122, 520, 298f, 0, firstDimensionLine);
     assertEqualsDimensionLine(42, 310, 498, 310, 20, orderedDimensionLines.get(1));
     // Click again on redo button
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          frame.redoButton.doClick();
-        }
-      });
+    frame.redoButton.doClick();
     // Check the first dimension is selected
     assertEquals("Wrong selection", 1, frame.home.getSelectedItems().size());
     assertEquals("Selection doesn't contain the first dimension", 
@@ -400,7 +364,6 @@ public class PlanComponentWithFurnitureTest extends ComponentTestFixture {
     // Start items duplication 
     tester.actionKeyPress(OperatingSystem.isMacOSX() ? KeyEvent.VK_ALT : KeyEvent.VK_CONTROL);
     tester.actionMousePress(planComponent, new ComponentLocation(new Point(50, 170)));
-    tester.actionMouseMove(planComponent, new ComponentLocation(new Point(51, 170)));
     // Check selection changed
     assertFalse("Selection didn't change", selectedItems.equals(frame.home.getSelectedItems()));
     assertEquals("Selection doesn't contain 4 items", 4, frame.home.getSelectedItems().size());    
@@ -447,7 +410,7 @@ public class PlanComponentWithFurnitureTest extends ComponentTestFixture {
     tester.actionMouseRelease();
     tester.actionKeyRelease(OperatingSystem.isMacOSX() ? KeyEvent.VK_ALT : KeyEvent.VK_CONTROL);
     // Check the duplicated piece moved and the original piece didn't move
-    List<Selectable> movedItems = frame.home.getSelectedItems();
+    List<Object> movedItems = frame.home.getSelectedItems();
     assertEquals("Selection doesn't contain 4 items", 4, movedItems.size());    
     movedPiece = Home.getFurnitureSubList(movedItems).get(0);
     assertLocationAndOrientationEqualPiece(pieceX, 
@@ -463,11 +426,7 @@ public class PlanComponentWithFurnitureTest extends ComponentTestFixture {
     assertSame("Second moved wall not joined to first one", movedWall1, movedWall2.getWallAtStart());
     
     // 23. Undo duplication
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          frame.undoButton.doClick();
-        }
-      });
+    frame.undoButton.doClick();
     // Check piece and walls don't belong to home
     assertFalse("Piece still in home", frame.home.getFurniture().contains(movedPiece));
     assertFalse("First wall still in home", frame.home.getWalls().contains(movedWall1));
@@ -475,11 +434,7 @@ public class PlanComponentWithFurnitureTest extends ComponentTestFixture {
     // Check original items are selected
     assertTrue("Original items not selected", selectedItems.equals(frame.home.getSelectedItems()));
     // Redo
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          frame.redoButton.doClick();
-        }
-      });
+    frame.redoButton.doClick();
     // Check piece and walls belong to home
     assertTrue("Piece not in home", frame.home.getFurniture().contains(movedPiece));
     assertTrue("First wall not in home", frame.home.getWalls().contains(movedWall1));
@@ -572,17 +527,9 @@ public class PlanComponentWithFurnitureTest extends ComponentTestFixture {
     public TestFrame() {
       super("Home Plan Component Test");
       this.home = new Home();
-      this.home.getCompass().setVisible(false);
-      UserPreferences preferences = new DefaultUserPreferences();      
-      ViewFactory viewFactory = new SwingViewFactory() {
-          @Override
-          public PlanView createPlanView(Home home, UserPreferences preferences, PlanController controller) {
-            return new PlanComponent(home, preferences, controller);
-          }
-        };
-      this.homeController = new HomeController(home, preferences, viewFactory);
-      JComponent homeView = (JComponent)this.homeController.getView();
-      ActionMap actions = homeView.getActionMap();
+      UserPreferences preferences = new DefaultUserPreferences();
+      this.homeController = new HomeController(home, preferences);
+      ActionMap actions = this.homeController.getView().getActionMap();
       // Create buttons from HomePane actions map
       this.selectButton = new JToggleButton(actions.get(HomePane.ActionType.SELECT));
       this.createWallsButton = new JToggleButton(actions.get(HomePane.ActionType.CREATE_WALLS));
@@ -603,7 +550,7 @@ public class PlanComponentWithFurnitureTest extends ComponentTestFixture {
       toolBar.add(this.redoButton);
       // Display the tool bar and main view in this pane
       add(toolBar, BorderLayout.NORTH);
-      add(homeView, BorderLayout.CENTER);
+      add(homeController.getView(), BorderLayout.CENTER);
       pack();
     }
   }

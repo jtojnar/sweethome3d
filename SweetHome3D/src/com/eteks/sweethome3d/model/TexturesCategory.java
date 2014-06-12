@@ -1,7 +1,7 @@
 /*
  * TexturesCategory.java 5 oct. 2007
  * 
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -29,9 +29,9 @@ import java.util.List;
  * @author Emmanuel Puybaret
  */
 public class TexturesCategory implements Comparable<TexturesCategory> {
-  private final String         name;
+  private String                 name;
   private List<CatalogTexture> textures;
-  
+  private boolean                sorted;
   private static final Collator  COMPARATOR = Collator.getInstance();
 
   /**
@@ -55,7 +55,18 @@ public class TexturesCategory implements Comparable<TexturesCategory> {
    * @return an unmodifiable list of furniture.
    */
   public List<CatalogTexture> getTextures() {
+    checkFurnitureSorted();
     return Collections.unmodifiableList(this.textures);
+  }
+
+  /**
+   * Checks textures are sorted.
+   */
+  private void checkFurnitureSorted() {
+    if (!this.sorted) {
+      Collections.sort(this.textures);
+      this.sorted = true;
+    }
   }
 
   /**
@@ -69,28 +80,24 @@ public class TexturesCategory implements Comparable<TexturesCategory> {
    * Returns the texture at a given <code>index</code>.
    */
   public CatalogTexture getTexture(int index) {
+    checkFurnitureSorted();
     return this.textures.get(index);
-  }
-
-  /**
-   * Returns the index of the given <code>texture</code>.
-   * @since 3.6
-   */
-  public int getIndexOfTexture(CatalogTexture texture) {
-    return this.textures.indexOf(texture);
   }
 
   /**
    * Adds a texture to this category.
    * @param texture the texture to add.
+   * @throws IllegalHomonymException if a texture with same name as the one in
+   *           parameter already exists in this category.
    */
   void add(CatalogTexture texture) {
+    if (this.textures.contains(texture)) {
+      throw new IllegalHomonymException(
+          texture.getName() + " already in category " + this.name);
+    }
     texture.setCategory(this);
-    int index = Collections.binarySearch(this.textures, texture);
-    if (index < 0) {
-      index = -index - 1;
-    } 
-    this.textures.add(index, texture);    
+    this.textures.add(texture);    
+    this.sorted = false;
   }
 
   /**
@@ -98,7 +105,7 @@ public class TexturesCategory implements Comparable<TexturesCategory> {
    * @param texture the texture to remove.
    * @throws IllegalArgumentException if the texture doesn't exist in this category.
    */
-  void delete(CatalogTexture texture) {
+  public void delete(CatalogTexture texture) {
     int textureIndex = this.textures.indexOf(texture);
     if (textureIndex == -1) {
       throw new IllegalArgumentException(

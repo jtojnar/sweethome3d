@@ -33,18 +33,15 @@ import javax.swing.undo.UndoableEditSupport;
 import junit.framework.TestCase;
 
 import com.eteks.sweethome3d.io.DefaultUserPreferences;
-import com.eteks.sweethome3d.model.CollectionEvent;
-import com.eteks.sweethome3d.model.CollectionListener;
 import com.eteks.sweethome3d.model.Home;
-import com.eteks.sweethome3d.model.Selectable;
 import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.model.Wall;
-import com.eteks.sweethome3d.swing.SwingViewFactory;
-import com.eteks.sweethome3d.viewcontroller.PlanController;
-import com.eteks.sweethome3d.viewcontroller.ViewFactory;
+import com.eteks.sweethome3d.model.WallEvent;
+import com.eteks.sweethome3d.model.WallListener;
+import com.eteks.sweethome3d.swing.PlanController;
 
 /**
- * Tests {@link com.eteks.sweethome3d.viewcontroller.PlanController plan controller}.
+ * Tests {@link com.eteks.sweethome3d.swing.PlanController plan controller}.
  * @author Emmanuel Puybaret
  */
 public class PlanControllerTest extends TestCase {
@@ -67,19 +64,17 @@ public class PlanControllerTest extends TestCase {
     Home home = new Home();
     Locale.setDefault(Locale.FRANCE);
     UserPreferences preferences = new DefaultUserPreferences();
-    ViewFactory viewFactory = new SwingViewFactory();
     UndoableEditSupport undoSupport = new UndoableEditSupport();
     UndoManager undoManager = new UndoManager();
     undoSupport.addUndoableEditListener(undoManager);
-    PlanController planController = 
-        new PlanController(home, preferences, viewFactory, null, undoSupport);
+    PlanController planController = new PlanController(home, preferences, null, undoSupport);
     
     // Build an ordered list of walls added to home
     final ArrayList<Wall> orderedWalls = new ArrayList<Wall>();
-    home.addWallsListener(new CollectionListener<Wall> () {
-      public void collectionChanged(CollectionEvent<Wall> ev) {
-        if (ev.getType() == CollectionEvent.Type.ADD) {
-          orderedWalls.add(ev.getItem());
+    home.addWallListener(new WallListener () {
+      public void wallChanged(WallEvent ev) {
+        if (ev.getType() == WallEvent.Type.ADD) {
+          orderedWalls.add(ev.getWall());
         }
       }
     });
@@ -179,7 +174,7 @@ public class PlanControllerTest extends TestCase {
     assertCoordinatesEqualWallPoints(504, 300, 24, 300, wall3);
     assertCoordinatesEqualWallPoints(20, 20, 24, 300, wall4);
 
-    // 8. Click at (504, 40) 
+    // 8. Click at (504, 40) with Shift key depressed
     planController.moveMouse(504, 40);
     planController.pressMouse(504, 40, 1, true, false);
     planController.releaseMouse(504, 40);
@@ -256,7 +251,7 @@ public class PlanControllerTest extends TestCase {
    */
   private void assertSelectionContains(Home home, 
                                        Wall ... walls) {
-    List<Selectable> selectedItems = home.getSelectedItems();
+    List<Object> selectedItems = home.getSelectedItems();
     assertEquals(walls.length, selectedItems.size());
     for (Wall wall : walls) {
       assertTrue("Wall not selected", selectedItems.contains(wall));
