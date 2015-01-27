@@ -1,7 +1,7 @@
 /*
  * HomeFramePane.java 1 sept. 2006
  *
- * Sweet Home 3D, Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,15 +21,11 @@ package com.eteks.sweethome3d;
 
 import java.awt.Component;
 import java.awt.ComponentOrientation;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.EventQueue;
-import java.awt.Frame;
-import java.awt.Image;
+import java.awt.FocusTraversalPolicy;
 import java.awt.Insets;
-import java.awt.Rectangle;
-import java.awt.Window;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
@@ -38,7 +34,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -46,18 +42,16 @@ import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JRootPane;
-import javax.swing.Timer;
 
 import com.eteks.sweethome3d.model.CollectionEvent;
 import com.eteks.sweethome3d.model.CollectionListener;
 import com.eteks.sweethome3d.model.Home;
 import com.eteks.sweethome3d.model.HomeApplication;
 import com.eteks.sweethome3d.model.UserPreferences;
-import com.eteks.sweethome3d.swing.SwingTools;
+import com.eteks.sweethome3d.swing.HomePane;
 import com.eteks.sweethome3d.tools.OperatingSystem;
 import com.eteks.sweethome3d.viewcontroller.ContentManager;
 import com.eteks.sweethome3d.viewcontroller.HomeController;
-import com.eteks.sweethome3d.viewcontroller.HomeView;
 import com.eteks.sweethome3d.viewcontroller.View;
 
 /**
@@ -94,65 +88,75 @@ public class HomeFramePane extends JRootPane implements View {
       this.newHomeNumber = ++newHomeCount;
     }
     // Set controller view as content pane
-    HomeView homeView = this.controller.getHomeController().getView();
-    setContentPane((JComponent)homeView);
+    setContentPane((JComponent)controller.getHomeController().getView());
   }
 
   /**
    * Builds and shows the frame that displays this pane.
    */
   public void displayView() {
-    final JFrame homeFrame = new JFrame() {
+    JFrame homeFrame = new JFrame() {
       {
         // Replace frame rootPane by home controller view
         setRootPane(HomeFramePane.this);
       }
     };
     // Update frame image and title 
-    List<Image> frameImages = new ArrayList<Image>(3);
-    frameImages.add(new ImageIcon(HomeFramePane.class.getResource("resources/frameIcon.png")).getImage());
-    frameImages.add(new ImageIcon(HomeFramePane.class.getResource("resources/frameIcon32x32.png")).getImage());
+    homeFrame.setIconImage(new ImageIcon(
+        HomeFramePane.class.getResource("resources/frameIcon.png")).getImage());
+    updateFrameTitle(homeFrame, this.home, this.application.getUserPreferences());
     if (OperatingSystem.isMacOSXLeopardOrSuperior()) {
-      frameImages.add(new ImageIcon(HomeFramePane.class.getResource("resources/frameIcon128x128.png")).getImage());
+      // Force focus traversal policy to ensure dividers and components of this kind won't get focus 
+      HomeController homeController = this.controller.getHomeController();
+      final List<JComponent> focusableComponents = Arrays.asList(new JComponent [] {
+          (JComponent)homeController.getFurnitureCatalogController().getView(),
+          (JComponent)homeController.getFurnitureController().getView(),
+          (JComponent)homeController.getPlanController().getView(),
+          (JComponent)homeController.getHomeController3D().getView()});      
+      homeFrame.setFocusTraversalPolicy(new FocusTraversalPolicy() {
+          @Override
+          public Component getComponentAfter(Container container, Component component) {
+            return focusableComponents.get((focusableComponents.indexOf(component) + 1) % focusableComponents.size());
+          }
+    
+          @Override
+          public Component getComponentBefore(Container container, Component component) {
+            return focusableComponents.get((focusableComponents.indexOf(component) - 1) % focusableComponents.size());
+          }
+    
+          @Override
+          public Component getDefaultComponent(Container container) {
+            return focusableComponents.get(0);
+          }
+    
+          @Override
+          public Component getFirstComponent(Container container) {
+            return focusableComponents.get(0);
+          }
+    
+          @Override
+          public Component getLastComponent(Container container) {
+            return focusableComponents.get(focusableComponents.size() - 1);
+          }
+        });
     }
-    try {
-      // Call Java 1.6 setIconImages by reflection
-      homeFrame.getClass().getMethod("setIconImages", List.class).invoke(homeFrame, frameImages);
-    } catch (Exception ex) {
-      // Call setIconImage available in previous versions
-      homeFrame.setIconImage(frameImages.get(0));
-    }
-    if (OperatingSystem.isMacOSXLionOrSuperior()) {
-      MacOSXConfiguration.installToolBar(this);
-    }
-    updateFrameTitle(homeFrame, this.home, this.application);
     // Change component orientation
     applyComponentOrientation(ComponentOrientation.getOrientation(Locale.getDefault()));    
     // Compute frame size and location
     computeFrameBounds(this.home, homeFrame);
     // Enable windows to update their content while window resizing
     getToolkit().setDynamicLayout(true); 
-    // The best MVC solution should be to avoid the following statements 
+    // The best solution should be to avoid the 3 following statements 
     // but Mac OS X accepts to display the menu bar of a frame in the screen 
     // menu bar only if this menu bar depends directly on its root pane  
-    HomeView homeView = this.controller.getHomeController().getView();
-    if (homeView instanceof JRootPane) {
-      JRootPane homePane = (JRootPane)homeView;
-      setJMenuBar(homePane.getJMenuBar());
-      homePane.setJMenuBar(null);
-    }
-    
+    HomePane homeView = (HomePane)this.controller.getHomeController().getView();
+    setJMenuBar(homeView.getJMenuBar());
+    homeView.setJMenuBar(null);
     // Add listeners to model and frame    
     addListeners(this.home, this.application, this.controller.getHomeController(), homeFrame);
     
+    // Show frame
     homeFrame.setVisible(true);
-    // Request the frame to go to front again because closing waiting dialog meanwhile  
-    // could put in front the already opened frame  
-    EventQueue.invokeLater(new Runnable() {
-        public void run() {
-          homeFrame.toFront();
-        }
-      });
   }
   
   /**
@@ -213,7 +217,7 @@ public class HomeFramePane extends JRootPane implements View {
             this.mostRecentFocusOwner = mostRecentFocusOwner;
           }
         }
-
+        
         @Override
         public void windowActivated(WindowEvent ev) {                    
           // Java 3D 1.5 bug : let's request focus in window for the most recent focus owner when
@@ -243,15 +247,16 @@ public class HomeFramePane extends JRootPane implements View {
         };
       });
     // Update title when the name or the modified state of home changes
-    PropertyChangeListener frameTitleChangeListener = new PropertyChangeListener () {
+    home.addPropertyChangeListener(Home.Property.NAME, new PropertyChangeListener () {
         public void propertyChange(PropertyChangeEvent ev) {
-          updateFrameTitle(frame, home, application);
+          updateFrameTitle(frame, home, application.getUserPreferences());
         }
-      };
-    home.addPropertyChangeListener(Home.Property.NAME, frameTitleChangeListener);
-    home.addPropertyChangeListener(Home.Property.MODIFIED, frameTitleChangeListener);
-    home.addPropertyChangeListener(Home.Property.RECOVERED, frameTitleChangeListener);
-    home.addPropertyChangeListener(Home.Property.REPAIRED, frameTitleChangeListener);
+      });
+    home.addPropertyChangeListener(Home.Property.MODIFIED, new PropertyChangeListener () {
+        public void propertyChange(PropertyChangeEvent ev) {
+          updateFrameTitle(frame, home, application.getUserPreferences());
+        }
+      });
   }
 
   /**
@@ -276,7 +281,7 @@ public class HomeFramePane extends JRootPane implements View {
             UserPreferences.Property.LANGUAGE, this);
       } else {
         this.frame.get().applyComponentOrientation(ComponentOrientation.getOrientation(Locale.getDefault()));
-        homeFramePane.updateFrameTitle(this.frame.get(), homeFramePane.home, homeFramePane.application);
+        homeFramePane.updateFrameTitle(this.frame.get(), homeFramePane.home, preferences);
       }
     }
   }
@@ -298,18 +303,12 @@ public class HomeFramePane extends JRootPane implements View {
     if (x != null && y != null 
         && width != null && height != null 
         && screenWidth != null && screenHeight != null
-        && screenWidth <= screenSize.width
-        && screenHeight <= screenSize.height) {
-      final Rectangle frameBounds = new Rectangle(x, y, width, height);
+        && screenWidth >= screenSize.width
+        && screenHeight >= screenSize.height) {
+      // Reuse home bounds
+      frame.setBounds(x, y, width, height);
       if (maximized != null && maximized) {
-        if (OperatingSystem.isMacOSX() 
-            && OperatingSystem.isJavaVersionGreaterOrEqual("1.7")) {
-          // Display the frame at its maximum size because calling setExtendedState to maximize 
-          // the frame moves it to the bottom left at its minimum size  
-          Insets insets = frame.getInsets();
-          frame.setSize(screenSize.width + insets.left + insets.right, 
-              screenSize.height + insets.bottom);
-        } else if (OperatingSystem.isLinux()) {
+        if (OperatingSystem.isLinux()) {
           EventQueue.invokeLater(new Runnable() {
             public void run() {
               // Under Linux, maximize frame once it's displayed
@@ -319,71 +318,12 @@ public class HomeFramePane extends JRootPane implements View {
         } else {
           frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         }
-        // Add a listener that will set the normal size when the frame leaves the maximized state
-        frame.addWindowStateListener(new WindowAdapter() {
-            @Override
-            public void windowStateChanged(WindowEvent ev) {
-              if ((ev.getOldState() == JFrame.MAXIMIZED_BOTH 
-                    || (OperatingSystem.isMacOSX() 
-                        && OperatingSystem.isJavaVersionGreaterOrEqual("1.7")
-                        && ev.getOldState() == JFrame.NORMAL))
-                  && ev.getNewState() == JFrame.NORMAL) {
-                if (OperatingSystem.isMacOSXLionOrSuperior()) {
-                  // Set back frame size later once frame reduce animation is finished 
-                  new Timer(20, new ActionListener() {
-                      public void actionPerformed(ActionEvent ev) {
-                        if (frame.getHeight() < 40) {
-                          ((Timer)ev.getSource()).stop();
-                          frame.setBounds(frameBounds);
-                        }
-                      }
-                    }).start();
-                } else {
-                  frame.setBounds(frameBounds);
-                }
-                frame.removeWindowStateListener(this);
-              }
-            }
-          });
-      } else {
-        // Reuse home bounds
-        frame.setBounds(frameBounds);
-        frame.setLocationByPlatform(!SwingTools.isRectangleVisibleAtScreen(frameBounds));
       }
     } else {      
       frame.setLocationByPlatform(true);
       frame.pack();
       frame.setSize(Math.min(screenSize.width * 4 / 5, frame.getWidth()), 
               Math.min(screenSize.height * 4 / 5, frame.getHeight()));
-      if (OperatingSystem.isMacOSX() 
-          && OperatingSystem.isJavaVersionGreaterOrEqual("1.7")) {
-        // JFrame#setLocationByPlatform does nothing under Java 7
-        int minX = Integer.MAX_VALUE;
-        int minY = Integer.MAX_VALUE;
-        int maxX = Integer.MIN_VALUE;
-        int maxY = Integer.MIN_VALUE;
-        for (Frame applicationFrame : Frame.getFrames()) {
-          if (applicationFrame.isShowing() 
-              && applicationFrame.getBackground().getAlpha() != 0) {
-            minX = Math.min(minX, applicationFrame.getX());
-            minY = Math.min(minY, applicationFrame.getY());
-            maxX = Math.max(maxX, applicationFrame.getX());
-            maxY = Math.max(maxY, applicationFrame.getY());
-          }
-        }
-        
-        if (minX == Integer.MAX_VALUE || minX >= 23) {
-          x = 0;
-        } else {
-          x = maxX + 23;
-        }
-        if (minY == Integer.MAX_VALUE || minY >= 23) {
-          y = 0;
-        } else {
-          y = maxY + 23;
-        }
-        frame.setLocation(x, y);
-      }
     }
   }
 
@@ -399,15 +339,15 @@ public class HomeFramePane extends JRootPane implements View {
   }
   
   /**
-   * Updates <code>frame</code> title from <code>home</code> and <code>application</code> name.
+   * Updates <code>frame</code> title from <code>home</code> name.
    */
   private void updateFrameTitle(JFrame frame, 
                                 Home home,
-                                HomeApplication application) {
+                                UserPreferences preferences) {
     String homeName = home.getName();
     String homeDisplayedName;
     if (homeName == null) {
-      homeDisplayedName = application.getUserPreferences().getLocalizedString(HomeFramePane.class, "untitled"); 
+      homeDisplayedName = preferences.getLocalizedString(HomeFramePane.class, "untitled"); 
       if (newHomeNumber > 1) {
         homeDisplayedName += " " + newHomeNumber;
       }
@@ -416,17 +356,10 @@ public class HomeFramePane extends JRootPane implements View {
           homeName, ContentManager.ContentType.SWEET_HOME_3D);
     }
     
-    if (home.isRecovered()) {
-      homeDisplayedName += " " + application.getUserPreferences().getLocalizedString(HomeFramePane.class, "recovered");
-    } 
-    if (home.isRepaired()) {
-      homeDisplayedName += " " + application.getUserPreferences().getLocalizedString(HomeFramePane.class, "repaired");
-    }
-    
     String title = homeDisplayedName;
     if (OperatingSystem.isMacOSX()) {
       // Use black indicator in close icon for a modified home 
-      Boolean homeModified = Boolean.valueOf(home.isModified() || home.isRecovered());
+      Boolean homeModified = Boolean.valueOf(home.isModified());
       // Set Mac OS X 10.4 property for backward compatibility
       putClientProperty("windowModified", homeModified);
       
@@ -441,21 +374,9 @@ public class HomeFramePane extends JRootPane implements View {
           }
         }
       }
-
-      if (!frame.isVisible() 
-          && OperatingSystem.isMacOSXLionOrSuperior()) {
-        try {
-          // Call Mac OS X specific FullScreenUtilities.setWindowCanFullScreen(homeFrame, true) by reflection 
-          Class.forName("com.apple.eawt.FullScreenUtilities").
-              getMethod("setWindowCanFullScreen", new Class<?> [] {Window.class, boolean.class}).
-              invoke(null, frame, true);
-        } catch (Exception ex) {
-          // Full screen mode is not supported
-        }
-      }
     } else {
-      title += " - " + application.getName(); 
-      if (home.isModified() || home.isRecovered()) {
+      title += " - " + preferences.getLocalizedString(HomeFramePane.class, "applicationName"); 
+      if (home.isModified()) {
         title = "* " + title;
       }
     }

@@ -1,7 +1,7 @@
 /*
  * PageSetupPanel.java 27 aout 07
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,6 @@ import java.awt.print.Paper;
 import java.awt.print.PrinterJob;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.security.AccessControlException;
 
 import javax.swing.ActionMap;
 import javax.swing.ButtonGroup;
@@ -56,7 +55,6 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import com.eteks.sweethome3d.j3d.Component3DManager;
 import com.eteks.sweethome3d.model.HomePrint;
 import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.swing.NullableSpinner.NullableSpinnerNumberModel;
@@ -70,7 +68,7 @@ import com.eteks.sweethome3d.viewcontroller.View;
  * @author Emmanuel Puybaret
  */
 public class PageSetupPanel extends JPanel implements DialogView {
-  private static final int DEFAULT_SCALE = 100;
+  private static final int DEFAULT_SCALE = 10;
   
   private final PageSetupController controller;
   private PageFormat          pageFormat;
@@ -139,68 +137,14 @@ public class PageSetupPanel extends JPanel implements DialogView {
    */
   private void createComponents(UserPreferences preferences, 
                                 final PageSetupController controller) {
-    this.pageFormatButton = new JButton(SwingTools.getLocalizedLabelText(preferences, 
-        PageSetupPanel.class, "pageFormatButton.text"));
-    this.furniturePrintedCheckBox = new JCheckBox(SwingTools.getLocalizedLabelText(preferences, 
-        PageSetupPanel.class, "furniturePrintedCheckBox.text"));
-    this.planPrintedCheckBox = new JCheckBox(SwingTools.getLocalizedLabelText(preferences, 
-        PageSetupPanel.class, "planPrintedCheckBox.text")); 
-
-    // Create scale radio buttons and user's scale spinner
-    this.bestFitPlanScaleRadioButton = new JRadioButton(SwingTools.getLocalizedLabelText(preferences, 
-        PageSetupPanel.class, "bestFitPlanScaleRadioButton.text"));
-    this.userPlanScaleRadioButton = new JRadioButton(SwingTools.getLocalizedLabelText(preferences, 
-        PageSetupPanel.class, "userPlanScaleRadioButton.text"));
-    ButtonGroup scaleButtonsGroup = new ButtonGroup();
-    scaleButtonsGroup.add(this.bestFitPlanScaleRadioButton);
-    scaleButtonsGroup.add(this.userPlanScaleRadioButton);
-    final NullableSpinner.NullableSpinnerNumberModel userPlanScaleSpinnerModel = 
-        new NullableSpinner.NullableSpinnerNumberModel(10, 1, 10000, 10);
-    this.userPlanScaleSpinner = new AutoCommitSpinner(userPlanScaleSpinnerModel);
-
-    this.view3DPrintedCheckBox = new JCheckBox(SwingTools.getLocalizedLabelText(preferences, 
-        PageSetupPanel.class, "view3DPrintedCheckBox.text")); 
-
-    this.headerFormatLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
-        PageSetupPanel.class, "headerFormatLabel.text"));
-    this.headerFormatTextField = new JTextField(20);
-    if (!OperatingSystem.isMacOSXLeopardOrSuperior()) {
-      SwingTools.addAutoSelectionOnFocusGain(this.headerFormatTextField);
-    }
-    
-    this.footerFormatLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
-        PageSetupPanel.class, "footerFormatLabel.text"));
-    this.footerFormatTextField = new JTextField(20);
-    if (!OperatingSystem.isMacOSXLeopardOrSuperior()) {
-      SwingTools.addAutoSelectionOnFocusGain(this.footerFormatTextField);
-    }
-
-    // Create variables buttons tool bar
-    this.variablesLabel = new JLabel(preferences.getLocalizedString(
-        PageSetupPanel.class, "variablesLabel.text"));
-    this.variableButtonsToolBar = new JToolBar();
-    this.variableButtonsToolBar.setFloatable(false);
-    ActionMap actions = getActionMap();
-    this.variableButtonsToolBar.add(actions.get(HomePrintableComponent.Variable.PAGE_NUMBER));
-    this.variableButtonsToolBar.add(actions.get(HomePrintableComponent.Variable.PAGE_COUNT));
-    this.variableButtonsToolBar.add(actions.get(HomePrintableComponent.Variable.PLAN_SCALE));
-    this.variableButtonsToolBar.add(actions.get(HomePrintableComponent.Variable.DATE));
-    this.variableButtonsToolBar.add(actions.get(HomePrintableComponent.Variable.TIME));
-    this.variableButtonsToolBar.add(actions.get(HomePrintableComponent.Variable.HOME_PRESENTATION_NAME));
-    this.variableButtonsToolBar.add(actions.get(HomePrintableComponent.Variable.HOME_NAME));
-    for (int i = 0, n = this.variableButtonsToolBar.getComponentCount(); i < n; i++) {        
-      JComponent component = (JComponent)this.variableButtonsToolBar.getComponentAtIndex(i); 
-      // Remove focusable property on buttons
-      component.setFocusable(false);
-    }
-    
-    updateComponents(controller.getPrint());    
-
     final PropertyChangeListener printChangeListener = new PropertyChangeListener() {
       public void propertyChange(PropertyChangeEvent ev) {
         updateComponents(controller.getPrint());
       }
     };
+
+    this.pageFormatButton = new JButton(preferences.getLocalizedString(
+        PageSetupPanel.class, "pageFormatButton.text"));
     this.pageFormatButton.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent ev) {
           // Show the page setup dialog
@@ -209,13 +153,29 @@ public class PageSetupPanel extends JPanel implements DialogView {
           updateController(controller);
         }
       });
+    this.furniturePrintedCheckBox = new JCheckBox(preferences.getLocalizedString(
+        PageSetupPanel.class, "furniturePrintedCheckBox.text"));
     ItemListener itemListener = new ItemListener() {
         public void itemStateChanged(ItemEvent ev) {
           updateController(controller);
         }
       };
     this.furniturePrintedCheckBox.addItemListener(itemListener);
+    this.planPrintedCheckBox = new JCheckBox(preferences.getLocalizedString(
+        PageSetupPanel.class, "planPrintedCheckBox.text")); 
     this.planPrintedCheckBox.addItemListener(itemListener);
+
+    // Create scale radio buttons and user's scale spinner
+    this.bestFitPlanScaleRadioButton = new JRadioButton(preferences.getLocalizedString(
+        PageSetupPanel.class, "bestFitPlanScaleRadioButton.text"));
+    this.userPlanScaleRadioButton = new JRadioButton(preferences.getLocalizedString(
+        PageSetupPanel.class, "userPlanScaleRadioButton.text"));
+    ButtonGroup scaleButtonsGroup = new ButtonGroup();
+    scaleButtonsGroup.add(this.bestFitPlanScaleRadioButton);
+    scaleButtonsGroup.add(this.userPlanScaleRadioButton);
+    final NullableSpinner.NullableSpinnerNumberModel userPlanScaleSpinnerModel = 
+        new NullableSpinner.NullableSpinnerNumberModel(10, 1, 10000, 10);
+    this.userPlanScaleSpinner = new AutoCommitSpinner(userPlanScaleSpinnerModel);
     userPlanScaleSpinnerModel.addChangeListener(new ChangeListener() {
         public void stateChanged(ChangeEvent ev) {
           updateController(controller);
@@ -236,9 +196,17 @@ public class PageSetupPanel extends JPanel implements DialogView {
           }
         }
       });    
+
+    this.view3DPrintedCheckBox = new JCheckBox(preferences.getLocalizedString(
+        PageSetupPanel.class, "view3DPrintedCheckBox.text")); 
     this.view3DPrintedCheckBox.addItemListener(itemListener);
-    controller.addPropertyChangeListener(PageSetupController.Property.PRINT, printChangeListener);
-    
+
+    this.headerFormatLabel = new JLabel(preferences.getLocalizedString(
+        PageSetupPanel.class, "headerFormatLabel.text"));
+    this.headerFormatTextField = new JTextField(20);
+    if (!OperatingSystem.isMacOSX()) {
+      SwingTools.addAutoSelectionOnFocusGain(this.headerFormatTextField);
+    }
     DocumentListener documentListener = new DocumentListener() {
         public void changedUpdate(DocumentEvent ev) {
           controller.removePropertyChangeListener(PageSetupController.Property.PRINT, printChangeListener);
@@ -271,9 +239,38 @@ public class PageSetupPanel extends JPanel implements DialogView {
         }
       };
     this.headerFormatTextField.addFocusListener(textFieldFocusListener);
+    
+    this.footerFormatLabel = new JLabel(preferences.getLocalizedString(
+        PageSetupPanel.class, "footerFormatLabel.text"));
+    this.footerFormatTextField = new JTextField(20);
+    if (!OperatingSystem.isMacOSX()) {
+      SwingTools.addAutoSelectionOnFocusGain(this.footerFormatTextField);
+    }
     this.footerFormatTextField.getDocument().addDocumentListener(documentListener);
     this.footerFormatTextField.addFocusListener(textFieldFocusListener);
+
+    // Create variables buttons tool bar
+    this.variablesLabel = new JLabel(preferences.getLocalizedString(
+        PageSetupPanel.class, "variablesLabel.text"));
+    this.variableButtonsToolBar = new JToolBar();
+    this.variableButtonsToolBar.setFloatable(false);
+    ActionMap actions = getActionMap();
+    this.variableButtonsToolBar.add(actions.get(HomePrintableComponent.Variable.PAGE_NUMBER));
+    this.variableButtonsToolBar.add(actions.get(HomePrintableComponent.Variable.PAGE_COUNT));
+    this.variableButtonsToolBar.add(actions.get(HomePrintableComponent.Variable.PLAN_SCALE));
+    this.variableButtonsToolBar.add(actions.get(HomePrintableComponent.Variable.DATE));
+    this.variableButtonsToolBar.add(actions.get(HomePrintableComponent.Variable.TIME));
+    this.variableButtonsToolBar.add(actions.get(HomePrintableComponent.Variable.HOME_PRESENTATION_NAME));
+    this.variableButtonsToolBar.add(actions.get(HomePrintableComponent.Variable.HOME_NAME));
+    for (int i = 0, n = this.variableButtonsToolBar.getComponentCount(); i < n; i++) {        
+      JComponent component = (JComponent)this.variableButtonsToolBar.getComponentAtIndex(i); 
+      // Remove focusable property on buttons
+      component.setFocusable(false);
+    }
     
+    controller.addPropertyChangeListener(PageSetupController.Property.PRINT, printChangeListener);
+    updateComponents(controller.getPrint());    
+
     this.dialogTitle = preferences.getLocalizedString(PageSetupPanel.class, "pageSetup.title");
   }
   
@@ -282,33 +279,17 @@ public class PageSetupPanel extends JPanel implements DialogView {
    */
   private void updateComponents(HomePrint homePrint) {
     this.pageFormat = HomePrintableComponent.getPageFormat(homePrint);
-    boolean no3D;
-    try {
-      no3D = Boolean.getBoolean("com.eteks.sweethome3d.no3D");
-    } catch (AccessControlException ex) {
-      // If com.eteks.sweethome3d.no3D property can't be read, 
-      // security manager won't allow to access to Java 3D DLLs required to print 3D images too
-      no3D = true;
-    }
     // Check if off screen image is supported 
-    boolean offscreenCanvas3DSupported;
-    if (no3D) {
-      offscreenCanvas3DSupported = false;
-    } else { 
-      offscreenCanvas3DSupported = Component3DManager.getInstance().isOffScreenImageSupported();
-    }
+    boolean offscreenCanvas3DSupported = Component3DManager.getInstance().isOffScreenImageSupported();
     final NullableSpinnerNumberModel userPlanScaleSpinnerModel = 
         (NullableSpinner.NullableSpinnerNumberModel)this.userPlanScaleSpinner.getModel();
     if (homePrint != null) {
       this.furniturePrintedCheckBox.setSelected(homePrint.isFurniturePrinted());
       this.planPrintedCheckBox.setSelected(homePrint.isPlanPrinted());
       this.bestFitPlanScaleRadioButton.setEnabled(homePrint.isPlanPrinted());      
-      this.userPlanScaleRadioButton.setEnabled(homePrint.isPlanPrinted());
-      if (homePrint.getPlanScale() == null) {
-        this.bestFitPlanScaleRadioButton.setSelected(true);
-      } else {
-        this.userPlanScaleRadioButton.setSelected(true);
-      }
+      this.bestFitPlanScaleRadioButton.setSelected(homePrint.getPlanScale() == null);
+      this.userPlanScaleRadioButton.setEnabled(homePrint.isPlanPrinted());      
+      this.userPlanScaleRadioButton.setSelected(homePrint.getPlanScale() != null);      
       this.userPlanScaleSpinner.setEnabled(homePrint.isPlanPrinted() && homePrint.getPlanScale() != null);      
       this.view3DPrintedCheckBox.setSelected(homePrint.isView3DPrinted() && offscreenCanvas3DSupported);
       userPlanScaleSpinnerModel.setNullable(homePrint.getPlanScale() == null);
@@ -333,7 +314,6 @@ public class PageSetupPanel extends JPanel implements DialogView {
       this.footerFormatTextField.setText("");
     }
     this.view3DPrintedCheckBox.setEnabled(offscreenCanvas3DSupported);
-    this.view3DPrintedCheckBox.setVisible(!no3D);
   }
 
   /**
@@ -467,7 +447,7 @@ public class PageSetupPanel extends JPanel implements DialogView {
     if (SwingTools.showConfirmDialog((JComponent)parentView, 
             this, this.dialogTitle, this.pageFormatButton) == JOptionPane.OK_OPTION
         && this.controller != null) {
-      this.controller.modifyPageSetup();
+          this.controller.modifyPageSetup();
     }
   }
 }

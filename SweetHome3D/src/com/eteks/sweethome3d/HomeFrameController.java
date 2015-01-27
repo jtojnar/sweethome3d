@@ -1,7 +1,7 @@
 /*
  * HomeFrameController.java 1 sept. 2006
  *
- * Sweet Home 3D, Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@ package com.eteks.sweethome3d;
 
 import com.eteks.sweethome3d.model.Home;
 import com.eteks.sweethome3d.model.HomeApplication;
-import com.eteks.sweethome3d.plugin.HomePluginController;
 import com.eteks.sweethome3d.plugin.PluginManager;
 import com.eteks.sweethome3d.viewcontroller.ContentManager;
 import com.eteks.sweethome3d.viewcontroller.Controller;
@@ -71,7 +70,7 @@ public class HomeFrameController implements Controller {
   public HomeController getHomeController() {
     // Create sub controller lazily only once it's needed
     if (this.homeController == null) {
-      this.homeController = new HomePluginController(
+      this.homeController = new HomeController(
           this.home, this.application, this.viewFactory, this.contentManager, this.pluginManager);
     }
     return this.homeController;

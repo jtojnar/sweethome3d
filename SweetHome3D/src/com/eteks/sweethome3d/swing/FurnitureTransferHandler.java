@@ -1,7 +1,7 @@
 /*
  * FurnitureTransferHandler.java 12 sept. 2006
  *
- * Sweet Home 3D, Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -120,11 +120,10 @@ public class FurnitureTransferHandler extends LocatedTransferHandler {
 
   /**
    * Returns <code>true</code> if flavors contains 
-   * {@link HomeTransferableList#HOME_FLAVOR HOME_FLAVOR} flavor
-   * or <code>DataFlavor.javaFileListFlavor</code> flavor.
+   * {@link HomeTransferableList#HOME_FLAVOR LIST_FLAVOR} flavor.
    */
   @Override
-  public boolean canImportFlavor(DataFlavor [] flavors) {
+  public boolean canImport(JComponent destination, DataFlavor [] flavors) {
     List<DataFlavor> flavorList = Arrays.asList(flavors);
     return flavorList.contains(HomeTransferableList.HOME_FLAVOR)
         || flavorList.contains(DataFlavor.javaFileListFlavor);
@@ -135,7 +134,7 @@ public class FurnitureTransferHandler extends LocatedTransferHandler {
    */
   @Override
   public boolean importData(JComponent destination, Transferable transferable) {
-    if (canImportFlavor(transferable.getTransferDataFlavors())) {
+    if (canImport(destination, transferable.getTransferDataFlavors())) {
       try {
         List<DataFlavor> flavorList = Arrays.asList(transferable.getTransferDataFlavors());
         if (flavorList.contains(HomeTransferableList.HOME_FLAVOR)) {

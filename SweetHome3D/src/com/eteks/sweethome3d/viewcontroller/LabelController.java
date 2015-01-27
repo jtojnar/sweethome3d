@@ -1,7 +1,7 @@
 /*
  * LabelController.java 29 nov. 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ public class LabelController implements Controller {
   private final ViewFactory           viewFactory;
   private final UndoableEditSupport   undoSupport;
   private final PropertyChangeSupport propertyChangeSupport;
-  private DialogView                  labelView;
+  private DialogView                  pageSetupView;
 
   private String text;
   
@@ -98,7 +98,7 @@ public class LabelController implements Controller {
     if (selectedLabels.isEmpty()) {
       setText(null); // Nothing to edit
     } else {
-      // Search the common properties among selected labels
+      // Search the common properties among selected furniture
       Label firstLabel = selectedLabels.get(0);
       String text = firstLabel.getText();
       if (text != null) {
@@ -118,10 +118,10 @@ public class LabelController implements Controller {
    */
   public DialogView getView() {
     // Create view lazily only once it's needed
-    if (this.labelView == null) {
-      this.labelView = this.viewFactory.createLabelView(this.x == null, this.preferences, this);
+    if (this.pageSetupView == null) {
+      this.pageSetupView = this.viewFactory.createLabelView(this.x == null, this.preferences, this);
     }
-    return this.labelView;
+    return this.pageSetupView;
   }
   
   /**
@@ -167,23 +167,18 @@ public class LabelController implements Controller {
    * Controls the creation of a label.
    */
   public void createLabel() {
+    List<Selectable> oldSelection = this.home.getSelectedItems();
     String text = getText();
     
     if (text != null && text.trim().length() > 0) {
       // Apply modification
-      List<Selectable> oldSelection = this.home.getSelectedItems();
-      boolean basePlanLocked = this.home.isBasePlanLocked();    
-      boolean allLevelsSelection = this.home.isAllLevelsSelection();
       Label label = new Label(text, x, y);
-      // Unlock base plan if label is a part of it
-      boolean newBasePlanLocked = basePlanLocked && !isLabelPartOfBasePlan(label);
-      doAddLabel(this.home, label, newBasePlanLocked); 
+      doAddLabel(this.home, label); 
       if (this.undoSupport != null) {
         UndoableEdit undoableEdit = new LabelCreationUndoableEdit(
-            this.home, this.preferences, oldSelection, basePlanLocked, allLevelsSelection, label, newBasePlanLocked);
+            this.home, this.preferences, oldSelection, label);
         this.undoSupport.postEdit(undoableEdit);
       }
-      this.preferences.addAutoCompletionString("LabelText", text);
     }
   }
 
@@ -195,39 +190,29 @@ public class LabelController implements Controller {
     private final Home             home;
     private final UserPreferences  preferences;
     private final List<Selectable> oldSelection;
-    private final boolean          oldBasePlanLocked;
-    private final boolean          oldAllLevelsSelection;
     private final Label            label;
-    private final boolean          newBasePlanLocked;
 
     private LabelCreationUndoableEdit(Home home,
                                       UserPreferences preferences, 
                                       List<Selectable> oldSelection, 
-                                      boolean oldBasePlanLocked, 
-                                      boolean oldAllLevelsSelection,
-                                      Label label, 
-                                      boolean newBasePlanLocked) {
+                                      Label label) {
       this.home = home;
       this.preferences = preferences;
       this.oldSelection = oldSelection;
-      this.oldBasePlanLocked = oldBasePlanLocked;
-      this.oldAllLevelsSelection = oldAllLevelsSelection;
       this.label = label;
-      this.newBasePlanLocked = newBasePlanLocked;
     }
 
     @Override
     public void undo() throws CannotUndoException {
       super.undo();
-      doDeleteLabel(this.home, this.label, this.oldBasePlanLocked);
+      doDeleteLabel(this.home, this.label);
       this.home.setSelectedItems(this.oldSelection); 
-      this.home.setAllLevelsSelection(this.oldAllLevelsSelection);
     }
 
     @Override
     public void redo() throws CannotRedoException {
       super.redo();
-      doAddLabel(this.home, this.label, this.newBasePlanLocked); 
+      doAddLabel(this.home, this.label); 
     }
 
     @Override
@@ -239,28 +224,16 @@ public class LabelController implements Controller {
   /**
    * Adds label to home and selects it.
    */
-  private static void doAddLabel(Home home, 
-                                 Label label, 
-                                 boolean basePlanLocked) {
+  private static void doAddLabel(Home home, Label label) {
     home.addLabel(label);
-    home.setBasePlanLocked(basePlanLocked);
     home.setSelectedItems(Arrays.asList(new Selectable [] {label}));
-    home.setAllLevelsSelection(false);
   }
 
   /**
    * Deletes label from home.
    */
-  private static void doDeleteLabel(Home home, Label label, boolean basePlanLocked) {
+  private static void doDeleteLabel(Home home, Label label) {
     home.deleteLabel(label);
-    home.setBasePlanLocked(basePlanLocked);
-  }
-
-  /**
-   * Returns <code>true</code>.
-   */
-  protected boolean isLabelPartOfBasePlan(Label label) {
-    return true;
   }
 
   /**
@@ -283,8 +256,7 @@ public class LabelController implements Controller {
         UndoableEdit undoableEdit = new LabelModificationUndoableEdit(this.home, 
             this.preferences, oldSelection, modifiedLabels, text);
         this.undoSupport.postEdit(undoableEdit);
-      }      
-      this.preferences.addAutoCompletionString("LabelText", text);
+      }
     }
   }
   
@@ -345,16 +317,17 @@ public class LabelController implements Controller {
   }
 
   /**
-   * Restores label properties from the values stored in <code>modifiedLabels</code>.
+   * Restores furniture properties from the values stored in <code>modifiedLabels</code>.
    */
   private static void undoModifyLabels(ModifiedLabel [] modifiedLabels) {
     for (ModifiedLabel modifiedPiece : modifiedLabels) {
-      modifiedPiece.reset();
+      Label label = modifiedPiece.getLabel();
+      label.setText(modifiedPiece.getText());      
     }
   }
 
   /**
-   * Stores the current properties values of a modified label.
+   * Stores the current properties values of a modified label of furniture.
    */
   private static final class ModifiedLabel {
     private final Label  label;
@@ -369,8 +342,8 @@ public class LabelController implements Controller {
       return this.label;
     }
     
-    public void reset() {
-      this.label.setText(this.text);         
+    public String getText() {
+      return this.text;
     }
   }
 }

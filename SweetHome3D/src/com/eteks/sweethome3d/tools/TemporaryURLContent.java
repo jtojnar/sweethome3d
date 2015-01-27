@@ -1,7 +1,7 @@
 /*
  * TemporaryURLContent.java 9 juil 2007
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,21 +44,14 @@ public class TemporaryURLContent extends URLContent {
    * a given <code>content</code>.
    */
   public static TemporaryURLContent copyToTemporaryURLContent(Content content) throws IOException {
-    String extension = ".tmp";
-    if (content instanceof URLContent) {
-      String file = ((URLContent)content).getURL().getFile();
-      int lastIndex = file.lastIndexOf('.');
-      if (lastIndex > 0) {
-        extension = file.substring(lastIndex);
-      }
-    }
-    File tempFile = OperatingSystem.createTemporaryFile("temp", extension);
+    File tempFile = File.createTempFile("urlContent", "tmp");
+    tempFile.deleteOnExit();
     InputStream tempIn = null;
     OutputStream tempOut = null;
     try {
       tempIn = content.openStream();
       tempOut = new FileOutputStream(tempFile);
-      byte [] buffer = new byte [8192];
+      byte [] buffer = new byte [8096];
       int size; 
       while ((size = tempIn.read(buffer)) != -1) {
         tempOut.write(buffer, 0, size);
