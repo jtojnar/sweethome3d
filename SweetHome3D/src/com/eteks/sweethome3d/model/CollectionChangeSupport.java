@@ -1,7 +1,7 @@
 /*
  * CollectionChangeSupport.java 28 oct. 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,13 +27,10 @@ import java.util.List;
  * <code>T</code> is the type of item stored in the collection.
  * @author Emmanuel Puybaret
  */
-public class CollectionChangeSupport<T> {
+class CollectionChangeSupport<T> {
   private final Object                      source;
   private final List<CollectionListener<T>> collectionListeners;
   
-  /**
-   * Creates a collection change support.
-   */
   public CollectionChangeSupport(Object source) {
     this.source = source;
     this.collectionListeners = new ArrayList<CollectionListener<T>>(5);

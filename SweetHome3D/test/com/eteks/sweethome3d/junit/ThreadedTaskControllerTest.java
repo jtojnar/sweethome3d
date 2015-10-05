@@ -33,7 +33,6 @@ import javax.swing.JButton;
 import junit.framework.TestCase;
 import abbot.finder.ComponentSearchException;
 
-import com.eteks.sweethome3d.io.DefaultUserPreferences;
 import com.eteks.sweethome3d.swing.SwingViewFactory;
 import com.eteks.sweethome3d.viewcontroller.ThreadedTaskController;
 import com.eteks.sweethome3d.viewcontroller.ViewFactory;
@@ -44,7 +43,6 @@ import com.eteks.sweethome3d.viewcontroller.ViewFactory;
  */
 public class ThreadedTaskControllerTest extends TestCase {
   public void testThreadedTaskController() throws TimeoutException, InterruptedException {
-    DefaultUserPreferences preferences = new DefaultUserPreferences();
     ViewFactory viewFactory = new SwingViewFactory();
     // 1. Create a very simple short task that simply counts down latch
     final CountDownLatch shortTaskLatch = new CountDownLatch(1);
@@ -71,7 +69,7 @@ public class ThreadedTaskControllerTest extends TestCase {
         addPropertyChangeListener("activeWindow", activeWindowListener);
     // Check that a simple short task is correctly executed with no exception 
     // and doesn't create any visible dialog at screen
-    new ThreadedTaskController(shortTask, "Message", noExceptionHandler, preferences, viewFactory).executeTask(null);
+    new ThreadedTaskController(viewFactory, shortTask, "Message", noExceptionHandler).executeTask(null);
     shortTaskLatch.await(1000, TimeUnit.MILLISECONDS);
     assertEquals("Simple task wasn't executed", 0, shortTaskLatch.getCount());
     KeyboardFocusManager.getCurrentKeyboardFocusManager().
@@ -95,7 +93,7 @@ public class ThreadedTaskControllerTest extends TestCase {
     KeyboardFocusManager.getCurrentKeyboardFocusManager().
         addPropertyChangeListener("activeWindow", activeWindowListener);
     // Check that a long task creates a visible dialog at screen
-    new ThreadedTaskController(longTask, "Message", noExceptionHandler, preferences, viewFactory).executeTask(null);
+    new ThreadedTaskController(viewFactory, longTask, "Message", noExceptionHandler).executeTask(null);
     longTaskLatch.await(1500, TimeUnit.MILLISECONDS);
     assertEquals("Long task wasn't executed with a waiting dialog", 0, longTaskLatch.getCount());
     KeyboardFocusManager.getCurrentKeyboardFocusManager().
@@ -129,7 +127,7 @@ public class ThreadedTaskControllerTest extends TestCase {
     KeyboardFocusManager.getCurrentKeyboardFocusManager().
         addPropertyChangeListener("activeWindow", activeWindowListener);
     // Check that a long task creates a visible dialog at screen
-    new ThreadedTaskController(cancelledTask, "Message", noExceptionHandler, preferences, viewFactory).executeTask(null);
+    new ThreadedTaskController(viewFactory, cancelledTask, "Message", noExceptionHandler).executeTask(null);
     cancelledTaskLatch.await(1500, TimeUnit.MILLISECONDS);
     assertEquals("Task wasn't cancelled", 0, cancelledTaskLatch.getCount());
     KeyboardFocusManager.getCurrentKeyboardFocusManager().
@@ -151,7 +149,7 @@ public class ThreadedTaskControllerTest extends TestCase {
           }
         };
     // Check that a long task creates a visible dialog at screen
-    new ThreadedTaskController(failingTask, "Message", exceptionHandler, preferences, viewFactory).executeTask(null);
+    new ThreadedTaskController(viewFactory, failingTask, "Message", exceptionHandler).executeTask(null);
     failingTaskLatch.await(1000, TimeUnit.MILLISECONDS);
     assertEquals("Exception in task wasn't handled", 0, failingTaskLatch.getCount());
   }

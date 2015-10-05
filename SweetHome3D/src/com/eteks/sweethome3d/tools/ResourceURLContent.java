@@ -1,7 +1,7 @@
 /*
  * ResourceURLContent.java 9 juil. 2007
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ public class ResourceURLContent extends URLContent {
    * @param resourceClass the class relative to the resource name to load
    * @param resourceName  the name of the resource
    * @param multiPartResource  if <code>true</code> then the resource is a multi part resource 
-   *           stored in a folder with other required resources
+   *           stored in a directory with other required resources
    * @throws IllegalArgumentException if the resource doesn't match a valid resource.
    */
   public ResourceURLContent(Class<?> resourceClass,
@@ -63,7 +63,6 @@ public class ResourceURLContent extends URLContent {
   
   /**
    * Creates a content for <code>resourceName</code> relative to <code>resourceClassLoader</code>.
-   * <code>resourceName</code> is absolute and shouldn't start with a slash.
    * @param resourceClassLoader the class loader used to load the given resource name
    * @param resourceName  the name of the resource
    * @throws IllegalArgumentException if the resource doesn't match a valid resource.
@@ -119,7 +118,7 @@ public class ResourceURLContent extends URLContent {
 
   /**
    * Returns <code>true</code> if the resource is a multi part resource stored 
-   * in a folder with other required resources.
+   * in a directory with other required resources.
    */
   public boolean isMultiPartResource() {
     return this.multiPartResource;

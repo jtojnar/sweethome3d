@@ -1,7 +1,7 @@
 /*
  * DefaultTexturesCatalog.java 5 oct. 2007
  * 
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -19,18 +19,10 @@
  */
 package com.eteks.sweethome3d.io;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.AccessControlException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Enumeration;
+import java.net.URLClassLoader;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
@@ -38,13 +30,10 @@ import java.util.ResourceBundle;
 
 import com.eteks.sweethome3d.model.CatalogTexture;
 import com.eteks.sweethome3d.model.Content;
-import com.eteks.sweethome3d.model.Library;
+import com.eteks.sweethome3d.model.IllegalHomonymException;
 import com.eteks.sweethome3d.model.TexturesCatalog;
 import com.eteks.sweethome3d.model.TexturesCategory;
-import com.eteks.sweethome3d.model.UserPreferences;
-import com.eteks.sweethome3d.tools.OperatingSystem;
 import com.eteks.sweethome3d.tools.ResourceURLContent;
-import com.eteks.sweethome3d.tools.TemporaryURLContent;
 import com.eteks.sweethome3d.tools.URLContent;
 
 /**
@@ -52,406 +41,126 @@ import com.eteks.sweethome3d.tools.URLContent;
  * @author Emmanuel Puybaret
  */
 public class DefaultTexturesCatalog extends TexturesCatalog {
-  /**
-   * The keys of the properties values read in <code>.properties</code> files.
-   */
-  public enum PropertyKey {
-    /**
-     * The key for the ID of a texture (optional). 
-     * Two textures read in a texture catalog can't have the same ID
-     * and the second one will be ignored.   
-     */
-    ID("id"),
-    /**
-     * The key for the name of a texture (mandatory).
-     */
-    NAME("name"),
-    /**
-     * The key for the category's name of a texture (mandatory).
-     * A new category with this name will be created if it doesn't exist.
-     */
-    CATEGORY("category"),
-    /**
-     * The key for the image file of a texture (mandatory). 
-     * This image file can be either the path to an image relative to classpath
-     * or an absolute URL. It should be encoded in application/x-www-form-urlencoded format 
-     * if needed.
-     */
-    IMAGE("image"),
-    /**
-     * The key for the SHA-1 digest of the image file of a texture (optional). 
-     * This property is used to compare faster catalog resources with the ones of a read home,
-     * and should be encoded in Base64.  
-     */
-    IMAGE_DIGEST("imageDigest"),
-    /**
-     * The key for the width in centimeters of a texture (mandatory).
-     */
-    WIDTH("width"),
-    /**
-     * The key for the height in centimeters of a texture (mandatory).
-     */
-    HEIGHT("height"),
-    /**
-     * The key for the creator of a texture (optional).
-     * By default, creator is <code>null</code>.
-     */
-    CREATOR("creator");
-
-    private String keyPrefix;
-
-    private PropertyKey(String keyPrefix) {
-      this.keyPrefix = keyPrefix;
-    }
-    
-    /**
-     * Returns the key for the texture property of the given index.
-     */
-    public String getKey(int textureIndex) {
-      return keyPrefix + "#" + textureIndex;
-    }
-  }
-
-  /**
-   * The name of <code>.properties</code> family files in plugin textures catalog files. 
-   */
-  public static final String PLUGIN_TEXTURES_CATALOG_FAMILY = "PluginTexturesCatalog";
-
-  private static final String ADDITIONAL_TEXTURES_CATALOG_FAMILY  = "AdditionalTexturesCatalog";
-
-  private List<Library> libraries = new ArrayList<Library>();
+  private static final String NAME           = "name#";
+  private static final String CATEGORY       = "category#";
+  private static final String IMAGE          = "image#";
+  private static final String WIDTH          = "width#";
+  private static final String HEIGHT         = "height#";
   
+  private static final String PLUGIN_TEXTURES_CATALOG_FAMILY = "PluginTexturesCatalog";
+
+  private static final String HOMONYM_TEXTURE_FORMAT = "%s -%d-";
+
   /**
-   * Creates a default textures catalog read from resources.
+   * Creates a default textures catalog read from resources in <code>resourcePackage</code>.
    */
   public DefaultTexturesCatalog() {
-    this((File)null);
+    Map<TexturesCategory, Map<CatalogTexture, Integer>> textureHomonymsCounter = 
+        new HashMap<TexturesCategory, Map<CatalogTexture,Integer>>();
+    // Load DefaultTexturesCatalog property file from classpath 
+    ResourceBundle resource = ResourceBundle.getBundle(DefaultTexturesCatalog.class.getName());
+    readTextures(resource, null, textureHomonymsCounter);
   }
   
   /**
-   * Creates a default textures catalog read from resources and   
-   * textures plugin folder if <code>texturesPluginFolder</code> isn't <code>null</code>.
-   */
-  public DefaultTexturesCatalog(File texturesPluginFolder) {
-    this(null, texturesPluginFolder);
-  }
-  
-  /**
-   * Creates a default textures catalog read from resources and   
-   * textures plugin folder if <code>texturesPluginFolder</code> isn't <code>null</code>.
-   */
-  public DefaultTexturesCatalog(final UserPreferences preferences, 
-                                File texturesPluginFolder) {
-    this(preferences, texturesPluginFolder == null ? null : new File [] {texturesPluginFolder});
-  }
-  
-  /**
-   * Creates a default textures catalog read from resources and   
-   * textures plugin folders if <code>texturesPluginFolders</code> isn't <code>null</code>.
-   */
-  public DefaultTexturesCatalog(final UserPreferences preferences, 
-                                File [] texturesPluginFolders) {
-    List<String> identifiedTextures = new ArrayList<String>();
-
-    readDefaultTexturesCatalogs(preferences, identifiedTextures);
-
-    if (texturesPluginFolders != null) {
-      for (File texturesPluginFolder : texturesPluginFolders) {
-        // Try to load sh3t files from textures plugin folder
-        File [] pluginTexturesCatalogFiles = texturesPluginFolder.listFiles(new FileFilter () {
-          public boolean accept(File pathname) {
-            return pathname.isFile();
-          }
-        });
-        
-        if (pluginTexturesCatalogFiles != null) {
-          // Treat textures catalog files in reverse order of their version
-          Arrays.sort(pluginTexturesCatalogFiles, Collections.reverseOrder(OperatingSystem.getFileVersionComparator()));
-          for (File pluginTexturesCatalogFile : pluginTexturesCatalogFiles) {
-            // Try to load the properties file describing textures catalog from current file  
-            readPluginTexturesCatalog(pluginTexturesCatalogFile, identifiedTextures);
-          }
-        }
-      }
-    }
-  }
-
-  /**
-   * Creates a default textures catalog read only from resources in the given URLs.
+   * Creates a default textures catalog read from resources in the given URLs.
    */
   public DefaultTexturesCatalog(URL [] pluginTexturesCatalogUrls) {
-    this(pluginTexturesCatalogUrls, null);
-  }
-  
-  /**
-   * Creates a default textures catalog read only from resources in the given URLs.
-   * Texture image URLs will built from <code>texturesResourcesUrlBase</code> if it isn't <code>null</code>.
-   */
-  public DefaultTexturesCatalog(URL [] pluginTexturesCatalogUrls,
-                                URL    texturesResourcesUrlBase) {
-    List<String> identifiedTextures = new ArrayList<String>();
-    try {
-      SecurityManager securityManager = System.getSecurityManager();
-      if (securityManager != null) {
-        securityManager.checkCreateClassLoader();
-      }
-
-      for (URL pluginTexturesCatalogUrl : pluginTexturesCatalogUrls) {
-        try {
-          ResourceBundle resource = ResourceBundle.getBundle(PLUGIN_TEXTURES_CATALOG_FAMILY, Locale.getDefault(),
-              new URLContentClassLoader(pluginTexturesCatalogUrl));
-          this.libraries.add(0, new DefaultLibrary(pluginTexturesCatalogUrl.toExternalForm(), 
-              UserPreferences.TEXTURES_LIBRARY_TYPE, resource));
-          readTextures(resource, pluginTexturesCatalogUrl, texturesResourcesUrlBase, identifiedTextures);
-        } catch (MissingResourceException ex) {
-          // Ignore malformed textures catalog
-        } catch (IllegalArgumentException ex) {
-          // Ignore malformed textures catalog
-        }
-      }
-    } catch (AccessControlException ex) {
-      // Use only textures accessible through classpath
-      ResourceBundle resource = ResourceBundle.getBundle(PLUGIN_TEXTURES_CATALOG_FAMILY, Locale.getDefault());
-      readTextures(resource, null, texturesResourcesUrlBase, identifiedTextures);
-    }
-  }
-
-  /**
-   * Returns the furniture libraries at initialization.
-   * @since 4.0 
-   */
-  public List<Library> getLibraries() {
-    return Collections.unmodifiableList(this.libraries);
-  }
-
-  private static final Map<File,URL> pluginTexturesCatalogUrlUpdates = new HashMap<File,URL>(); 
-  
-  /**
-   * Reads plug-in textures catalog from the <code>pluginTexturesCatalogFile</code> file. 
-   */
-  private void readPluginTexturesCatalog(File pluginTexturesCatalogFile,
-                                         List<String> identifiedTextures) {
-    try {
-      final URL pluginTexturesCatalogUrl;;
-      long urlModificationDate = pluginTexturesCatalogFile.lastModified();
-      URL urlUpdate = pluginTexturesCatalogUrlUpdates.get(pluginTexturesCatalogFile);
-      if (pluginTexturesCatalogFile.canWrite()
-          && (urlUpdate == null 
-              || urlUpdate.openConnection().getLastModified() < urlModificationDate)) {
-        // Copy updated resource URL content to a temporary file to ensure textures used in home can safely 
-        // reference any file of the catalog file even if its content is changed afterwards
-        TemporaryURLContent contentCopy = TemporaryURLContent.copyToTemporaryURLContent(new URLContent(pluginTexturesCatalogFile.toURI().toURL()));
-        URL temporaryTexturesCatalogUrl = contentCopy.getURL();
-        pluginTexturesCatalogUrlUpdates.put(pluginTexturesCatalogFile, temporaryTexturesCatalogUrl);
-        pluginTexturesCatalogUrl = temporaryTexturesCatalogUrl;
-      } else if (urlUpdate != null) {
-        pluginTexturesCatalogUrl = urlUpdate;
-      } else {
-        pluginTexturesCatalogUrl = pluginTexturesCatalogFile.toURI().toURL();
-      }
-      
-      final ClassLoader urlLoader = new URLContentClassLoader(pluginTexturesCatalogUrl);
-      ResourceBundle resourceBundle = ResourceBundle.getBundle(PLUGIN_TEXTURES_CATALOG_FAMILY, Locale.getDefault(), urlLoader);      
-      this.libraries.add(0, new DefaultLibrary(pluginTexturesCatalogFile.getCanonicalPath(), 
-          UserPreferences.TEXTURES_LIBRARY_TYPE, resourceBundle));
-      readTextures(resourceBundle, pluginTexturesCatalogUrl, null, identifiedTextures);
-    } catch (MissingResourceException ex) {
-      // Ignore malformed textures catalog
-    } catch (IllegalArgumentException ex) {
-      // Ignore malformed textures catalog
-    } catch (IOException ex) {
-      // Ignore unaccessible catalog
-    }
-  }
-  
-  /**
-   * Reads the default textures described in properties files accessible through classpath.
-   */
-  private void readDefaultTexturesCatalogs(final UserPreferences preferences,
-                                           List<String> identifiedTextures) {
-    // Try to load com.eteks.sweethome3d.io.DefaultTexturesCatalog property file from classpath 
-    final String defaultTexturesCatalogFamily = DefaultTexturesCatalog.class.getName();
-    readTexturesCatalog(defaultTexturesCatalogFamily, 
-        preferences, identifiedTextures);
-
-    // Try to load com.eteks.sweethome3d.io.AdditionalTexturesCatalog property file from classpath 
-    String classPackage = defaultTexturesCatalogFamily.substring(0, defaultTexturesCatalogFamily.lastIndexOf("."));
-    readTexturesCatalog(classPackage + "." + ADDITIONAL_TEXTURES_CATALOG_FAMILY, 
-        preferences, identifiedTextures);
-  }
-  
-  /**
-   * Reads textures of a given catalog family from resources.
-   */
-  private void readTexturesCatalog(final String texturesCatalogFamily,
-                                   final UserPreferences preferences,
-                                   List<String> identifiedTextures) {
-    ResourceBundle resource;
-    if (preferences != null) {
-      // Adapt getLocalizedString to ResourceBundle
-      resource = new ResourceBundle() {
-          @Override
-          protected Object handleGetObject(String key) {
-            try {
-              return preferences.getLocalizedString(texturesCatalogFamily, key);
-            } catch (IllegalArgumentException ex) {
-              throw new MissingResourceException("Unknown key " + key, 
-                  texturesCatalogFamily + "_" + Locale.getDefault(), key);
-            }
-          }
-          
-          @Override
-          public Enumeration<String> getKeys() {
-            // Not needed
-            throw new UnsupportedOperationException();
-          }
-        };
-    } else {
+    Map<TexturesCategory, Map<CatalogTexture, Integer>> textureHomonymsCounter = 
+        new HashMap<TexturesCategory, Map<CatalogTexture,Integer>>();
+    
+    for (URL pluginTextureCatalogUrl : pluginTexturesCatalogUrls) {
       try {
-        resource = ResourceBundle.getBundle(texturesCatalogFamily);
+        // Try do load Furniture property file from current file  
+        readTextures(ResourceBundle.getBundle(PLUGIN_TEXTURES_CATALOG_FAMILY, Locale.getDefault(), 
+            new URLClassLoader(new URL [] {pluginTextureCatalogUrl})), 
+            pluginTextureCatalogUrl, textureHomonymsCounter);
       } catch (MissingResourceException ex) {
-        return;
+        // Ignore malformed plugin furniture catalog
       }
     }
-    readTextures(resource, null, null, identifiedTextures);
   }
-  
+
   /**
    * Reads each texture described in <code>resource</code> bundle.
    * Resources described in texture properties will be loaded from <code>texturesUrl</code> 
    * if it isn't <code>null</code>. 
    */
   private void readTextures(ResourceBundle resource, 
-                            URL texturesCatalogUrl,
-                            URL texturesResourcesUrlBase,
-                            List<String> identifiedTextures) {
-    CatalogTexture texture;
-    for (int i = 1; (texture = readTexture(resource, i, texturesCatalogUrl, texturesResourcesUrlBase)) != null; i++) {
-      if (texture.getId() != null) {
-        // Take into account only texture that have an ID
-        if (identifiedTextures.contains(texture.getId())) {
-          continue;
-        } else {
-          // Add id to identifiedTextures to be sure that two textures with a same ID
-          // won't be added twice to textures catalog (in case they are cited twice
-          // in different textures properties files)
-          identifiedTextures.add(texture.getId());
-        }
+                            URL texturesUrl,
+                            Map<TexturesCategory, Map<CatalogTexture, Integer>> textureHomonymsCounter) {
+    for (int i = 1;; i++) {
+      String name = null;
+      try {
+        name = resource.getString(NAME + i);
+      } catch (MissingResourceException ex) {
+        // Stop the loop when a key name# doesn't exist
+        break;
       }
-      TexturesCategory textureCategory = readTexturesCategory(resource, i);
-      add(textureCategory, texture);
-    }
-  }
-  
-  /**
-   * Returns the texture at the given <code>index</code> of a 
-   * localized <code>resource</code> bundle. 
-   * @param resource             a resource bundle 
-   * @param index                the index of the read texture
-   * @param texturesCatalogUrl  the URL from which texture resources will be loaded 
-   *            or <code>null</code> if it's read from current classpath.
-   * @param texturesResourcesUrlBase the URL used as a base to build the URL to texture resources  
-   *            or <code>null</code> if it's read from current classpath or <code>texturesCatalogUrl</code>
-   * @return the read texture or <code>null</code> if the piece at the given index doesn't exist.
-   * @throws MissingResourceException if mandatory keys are not defined.
-   */
-  /**
-   * Reads each texture described in <code>resource</code> bundle.
-   * Resources described in texture properties will be loaded from <code>texturesUrl</code> 
-   * if it isn't <code>null</code>. 
-   */
-  protected CatalogTexture readTexture(ResourceBundle resource,
-                                       int index,
-                                       URL texturesUrl,
-                                       URL texturesResourcesUrlBase) {
-    String name = null;
-    try {
-      name = resource.getString(PropertyKey.NAME.getKey(index));
-    } catch (MissingResourceException ex) {
-      // Return null if key name# doesn't exist
-      return null;
-    }
-    Content image  = getContent(resource, PropertyKey.IMAGE.getKey(index), PropertyKey.IMAGE_DIGEST.getKey(index), 
-        texturesUrl, texturesResourcesUrlBase);
-    float width = Float.parseFloat(resource.getString(PropertyKey.WIDTH.getKey(index)));
-    float height = Float.parseFloat(resource.getString(PropertyKey.HEIGHT.getKey(index)));
-    String creator = getOptionalString(resource, PropertyKey.CREATOR.getKey(index));
-    String id = getOptionalString(resource, PropertyKey.ID.getKey(index));
+      String category = resource.getString(CATEGORY + i);
+      Content image  = getContent(resource, IMAGE + i, texturesUrl);
+      float width = Float.parseFloat(resource.getString(WIDTH + i));
+      float height = Float.parseFloat(resource.getString(HEIGHT + i));
 
-    return new CatalogTexture(id, name, image, width, height, creator);
+      add(new TexturesCategory(category),
+          new CatalogTexture(name, image, width, height),
+          textureHomonymsCounter);
+    }
   }
   
   /**
-   * Returns the category of a texture at the given <code>index</code> of a 
-   * localized <code>resource</code> bundle. 
-   * @throws MissingResourceException if mandatory keys are not defined.
+   * Adds a <code>piece</code> to its category in catalog. If <code>piece</code> has an homonym
+   * in its category its name will be suffixed indicating its sequence.
    */
-  protected TexturesCategory readTexturesCategory(ResourceBundle resource, int index) {
-    String category = resource.getString(PropertyKey.CATEGORY.getKey(index));
-    return new TexturesCategory(category);
+  private void add(TexturesCategory textureCategory,
+                   CatalogTexture texture,
+                   Map<TexturesCategory, Map<CatalogTexture, Integer>> textureHomonymsCounter) {
+    try {        
+      add(textureCategory, texture);
+    } catch (IllegalHomonymException ex) {
+      // Search the counter of piece name
+      Map<CatalogTexture, Integer> categoryTextureHomonymsCounter = 
+        textureHomonymsCounter.get(textureCategory);
+      if (categoryTextureHomonymsCounter == null) {
+        categoryTextureHomonymsCounter = new HashMap<CatalogTexture, Integer>();
+        textureHomonymsCounter.put(textureCategory, categoryTextureHomonymsCounter);
+      }
+      Integer textureHomonymCounter = categoryTextureHomonymsCounter.get(texture);
+      if (textureHomonymCounter == null) {
+        textureHomonymCounter = 1;
+      }
+      categoryTextureHomonymsCounter.put(texture, ++textureHomonymCounter);
+      // Try to add texture again to catalog with a suffix indicating its sequence
+      texture = new CatalogTexture(String.format(HOMONYM_TEXTURE_FORMAT, texture.getName(), textureHomonymCounter), 
+          texture.getImage(), texture.getWidth(), texture.getHeight());
+      add(textureCategory, texture, textureHomonymsCounter);
+    }
   }
-    
+
   /**
    * Returns a valid content instance from the resource file or URL value of key.
    * @param resource a resource bundle
    * @param contentKey the key of a resource file
-   * @param texturesUrl the URL of the file containing the target resource if it's not <code>null</code> 
-   * @param resourceUrlBase the URL used as a base to build the URL to content file  
-   *            or <code>null</code> if it's read from current classpath or <code>texturesUrl</code>.
    * @throws IllegalArgumentException if the file value doesn't match a valid resource or URL.
    */
   private Content getContent(ResourceBundle resource, 
                              String         contentKey,
-                             String         contentDigestKey,
-                             URL            texturesUrl,
-                             URL            resourceUrlBase) {
+                             URL            texturesUrl) {
     String contentFile = resource.getString(contentKey);
-    URLContent content;
     try {
-      // Try first to interpret contentFile as an absolute URL 
-      // or an URL relative to resourceUrlBase if it's not null
-      URL url;
-      if (resourceUrlBase == null) {
-        url = new URL(contentFile);
-      } else {
-        url = contentFile.startsWith("?") 
-            ? new URL(resourceUrlBase + contentFile)
-            : new URL(resourceUrlBase, contentFile);
-      }
-      content = new URLContent(url);
+      // Try first to interpret contentFile as a URL
+      return new URLContent(new URL(contentFile));
     } catch (MalformedURLException ex) {
       if (texturesUrl == null) {
         // Otherwise find if it's a resource
-        content = new ResourceURLContent(DefaultTexturesCatalog.class, contentFile);
+        return new ResourceURLContent(DefaultFurnitureCatalog.class, contentFile);
       } else {
         try {
-          content = new ResourceURLContent(new URL("jar:" + texturesUrl + "!" + contentFile), false);
+          return new URLContent(new URL("jar:" + texturesUrl + "!" + contentFile));
         } catch (MalformedURLException ex2) {
           throw new IllegalArgumentException("Invalid URL", ex2);
         }
       }
-    }
-    String contentDigest = getOptionalString(resource, contentDigestKey);
-    if (contentDigest != null && contentDigest.length() > 0) {
-      try {
-        ContentDigestManager.getInstance().setContentDigest(content, Base64.decode(contentDigest));
-      } catch (IOException ex) {
-        // Ignore wrong digest
-      }
-    }
-    return content; 
-  }
-
-  /**
-   * Returns the value of <code>propertyKey</code> in <code>resource</code>, 
-   * or <code>null</code> if the property doesn't exist.
-   */
-  private String getOptionalString(ResourceBundle resource, 
-                                   String propertyKey) {
-    try {
-      return resource.getString(propertyKey);
-    } catch (MissingResourceException ex) {
-      return null;
     }
   }
 }

@@ -1,7 +1,7 @@
 /*
  * Home3DAttributesPanel.java 25 juin 07
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,21 +19,26 @@
  */
 package com.eteks.sweethome3d.swing;
 
-import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.ResourceBundle;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JComponent;
+import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSlider;
+import javax.swing.JSpinner;
 import javax.swing.KeyStroke;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -49,26 +54,27 @@ import com.eteks.sweethome3d.viewcontroller.View;
  */
 public class Home3DAttributesPanel extends JPanel implements DialogView {
   private final Home3DAttributesController controller;
-  private JRadioButton  groundColorRadioButton;
-  private ColorButton   groundColorButton;
-  private JRadioButton  groundTextureRadioButton;
-  private JComponent    groundTextureComponent;
-  private JRadioButton  skyColorRadioButton;
-  private ColorButton   skyColorButton;
-  private JRadioButton  skyTextureRadioButton;
-  private JComponent    skyTextureComponent;
-  private JLabel        brightnessLabel;
-  private JSlider       brightnessSlider;
-  private JLabel        darkBrightnessLabel;
-  private JLabel        brightBrightnessLabel;
-  private JLabel        wallsTransparencyLabel;
-  private JLabel        opaqueWallsTransparencyLabel;
-  private JLabel        invisibleWallsTransparencyLabel;
-  private JSlider       wallsTransparencySlider;
-  private String        dialogTitle;
+  private JLabel                           observerFieldOfViewLabel;
+  private JSpinner                         observerFieldOfViewSpinner;
+  private JLabel                           observerHeightLabel;
+  private JSpinner                         observerHeightSpinner;
+  private ResourceBundle                   resource;
+  private JRadioButton                     groundColorRadioButton;
+  private ColorButton                      groundColorButton;
+  private JRadioButton                     groundTextureRadioButton;
+  private JComponent                       groundTextureComponent;
+  private JRadioButton                     skyColorRadioButton;
+  private ColorButton                      skyColorButton;
+  private JRadioButton                     skyTextureRadioButton;
+  private JComponent                       skyTextureComponent;
+  private JLabel                           brightnessLabel;
+  private JSlider                          brightnessSlider;
+  private JLabel                           wallsTransparencyLabel;
+  private JSlider                          wallsTransparencySlider;
 
   /**
-   * Creates a panel that displays home 3D attributes data.
+   * Creates a panel that displays home 3D attributes data according to the units 
+   * set in <code>preferences</code>.
    * @param preferences user preferences
    * @param controller the controller of this panel
    */
@@ -76,9 +82,11 @@ public class Home3DAttributesPanel extends JPanel implements DialogView {
                                Home3DAttributesController controller) {
     super(new GridBagLayout());
     this.controller = controller;
+    this.resource = ResourceBundle.getBundle(
+        Home3DAttributesPanel.class.getName());
     createComponents(preferences, controller);
-    setMnemonics(preferences);
-    layoutComponents(preferences);
+    setMnemonics();
+    layoutComponents();
   }
 
   /**
@@ -86,9 +94,47 @@ public class Home3DAttributesPanel extends JPanel implements DialogView {
    */
   private void createComponents(UserPreferences preferences,
                                 final Home3DAttributesController controller) {
+    // Get unit name matching current unit 
+    String unitName = preferences.getLengthUnit().getName();
+    
+    // Create observer field of view label and spinner bound to OBSERVER_FIELD_OF_VIEW_IN_DEGREES controller property
+    this.observerFieldOfViewLabel = new JLabel(this.resource.getString("observerFieldOfViewLabel.text"));
+    final SpinnerNumberModel observerFieldOfViewSpinnerModel = new SpinnerNumberModel(10, 10, 120, 1);
+    this.observerFieldOfViewSpinner = new AutoCommitSpinner(observerFieldOfViewSpinnerModel);
+    observerFieldOfViewSpinnerModel.setValue(controller.getObserverFieldOfViewInDegrees());
+    observerFieldOfViewSpinnerModel.addChangeListener(new ChangeListener() {
+        public void stateChanged(ChangeEvent ev) {
+          controller.setObserverFieldOfViewInDegrees(
+              ((Number)observerFieldOfViewSpinnerModel.getValue()).intValue());
+        }
+      });
+    controller.addPropertyChangeListener(Home3DAttributesController.Property.OBSERVER_FIELD_OF_VIEW_IN_DEGREES, 
+        new PropertyChangeListener() {
+          public void propertyChange(PropertyChangeEvent ev) {
+            observerFieldOfViewSpinnerModel.setValue(controller.getObserverFieldOfViewInDegrees());
+          }
+        });
+    
+    // Create observer height label and spinner bound to OBSERVER_HEIGHT controller property
+    this.observerHeightLabel = new JLabel(String.format(this.resource.getString("observerHeightLabel.text"), unitName));
+    final NullableSpinner.NullableSpinnerLengthModel observerHeightSpinnerModel = 
+        new NullableSpinner.NullableSpinnerLengthModel(preferences, 10f, 1000f);
+    this.observerHeightSpinner = new AutoCommitSpinner(observerHeightSpinnerModel);
+    observerHeightSpinnerModel.setLength((float)Math.round(controller.getObserverHeight() * 100) / 100);
+    observerHeightSpinnerModel.addChangeListener(new ChangeListener() {
+        public void stateChanged(ChangeEvent ev) {
+          controller.setObserverHeight(observerHeightSpinnerModel.getLength());
+        }
+      });
+    controller.addPropertyChangeListener(Home3DAttributesController.Property.OBSERVER_HEIGHT, 
+        new PropertyChangeListener() {
+          public void propertyChange(PropertyChangeEvent ev) {
+            observerHeightSpinnerModel.setLength((float)Math.round(controller.getObserverHeight() * 100) / 100);
+          }
+        });
+    
     // Ground color and texture buttons bound to ground controller properties
-    this.groundColorRadioButton = new JRadioButton(SwingTools.getLocalizedLabelText(preferences, 
-        Home3DAttributesPanel.class, "groundColorRadioButton.text"));
+    this.groundColorRadioButton = new JRadioButton(this.resource.getString("groundColorRadioButton.text"));
     this.groundColorRadioButton.addChangeListener(new ChangeListener() {
         public void stateChanged(ChangeEvent ev) {
           if (groundColorRadioButton.isSelected()) {
@@ -103,9 +149,8 @@ public class Home3DAttributesPanel extends JPanel implements DialogView {
           }
         });
   
-    this.groundColorButton = new ColorButton(preferences);
-    this.groundColorButton.setColorDialogTitle(preferences.getLocalizedString(
-        Home3DAttributesPanel.class, "groundColorDialog.title"));
+    this.groundColorButton = new ColorButton();
+    this.groundColorButton.setColorDialogTitle(this.resource.getString("groundColorDialog.title"));
     this.groundColorButton.setColor(controller.getGroundColor());
     this.groundColorButton.addPropertyChangeListener(ColorButton.COLOR_PROPERTY, 
         new PropertyChangeListener() {
@@ -120,8 +165,7 @@ public class Home3DAttributesPanel extends JPanel implements DialogView {
           }
         });
     
-    this.groundTextureRadioButton = new JRadioButton(SwingTools.getLocalizedLabelText(preferences, 
-        Home3DAttributesPanel.class, "groundTextureRadioButton.text"));
+    this.groundTextureRadioButton = new JRadioButton(this.resource.getString("groundTextureRadioButton.text"));
     this.groundTextureRadioButton.addChangeListener(new ChangeListener() {
       public void stateChanged(ChangeEvent ev) {
         if (groundTextureRadioButton.isSelected()) {
@@ -138,8 +182,7 @@ public class Home3DAttributesPanel extends JPanel implements DialogView {
     updateGroundRadioButtons(controller);
     
     // Sky color and texture buttons bound to sky controller properties
-    this.skyColorRadioButton = new JRadioButton(SwingTools.getLocalizedLabelText(preferences, 
-        Home3DAttributesPanel.class, "skyColorRadioButton.text"));
+    this.skyColorRadioButton = new JRadioButton(this.resource.getString("skyColorRadioButton.text"));
     this.skyColorRadioButton.addChangeListener(new ChangeListener() {
         public void stateChanged(ChangeEvent ev) {
           if (skyColorRadioButton.isSelected()) {
@@ -154,9 +197,8 @@ public class Home3DAttributesPanel extends JPanel implements DialogView {
           }
         });
   
-    this.skyColorButton = new ColorButton(preferences);
-    this.skyColorButton.setColorDialogTitle(preferences.getLocalizedString(
-        Home3DAttributesPanel.class, "skyColorDialog.title"));
+    this.skyColorButton = new ColorButton();
+    this.skyColorButton.setColorDialogTitle(this.resource.getString("skyColorDialog.title"));
     this.skyColorButton.setColor(controller.getSkyColor());
     this.skyColorButton.addPropertyChangeListener(ColorButton.COLOR_PROPERTY, 
         new PropertyChangeListener() {
@@ -171,8 +213,7 @@ public class Home3DAttributesPanel extends JPanel implements DialogView {
           }
         });
     
-    this.skyTextureRadioButton = new JRadioButton(SwingTools.getLocalizedLabelText(preferences, 
-        Home3DAttributesPanel.class, "skyTextureRadioButton.text"));
+    this.skyTextureRadioButton = new JRadioButton(this.resource.getString("skyTextureRadioButton.text"));
     this.skyTextureRadioButton.addChangeListener(new ChangeListener() {
       public void stateChanged(ChangeEvent ev) {
         if (skyTextureRadioButton.isSelected()) {
@@ -189,15 +230,17 @@ public class Home3DAttributesPanel extends JPanel implements DialogView {
     updateSkyRadioButtons(controller);
     
     // Brightness label and slider bound to LIGHT_COLOR controller property
-    this.brightnessLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
-        Home3DAttributesPanel.class, "brightnessLabel.text"));
+    this.brightnessLabel = new JLabel(this.resource.getString("brightnessLabel.text"));
     this.brightnessSlider = new JSlider(0, 255);
-    this.darkBrightnessLabel = new JLabel(preferences.getLocalizedString(
-        Home3DAttributesPanel.class, "darkLabel.text"));
-    this.brightBrightnessLabel = new JLabel(preferences.getLocalizedString(
-        Home3DAttributesPanel.class, "brightLabel.text"));
+    JLabel darkLabel = new JLabel(this.resource.getString("darkLabel.text"));
+    JLabel brightLabel = new JLabel(this.resource.getString("brightLabel.text"));
+    Dictionary<Integer,JComponent> brightnessSliderLabelTable = new Hashtable<Integer,JComponent>();
+    brightnessSliderLabelTable.put(0, darkLabel);
+    brightnessSliderLabelTable.put(255, brightLabel);
+    this.brightnessSlider.setLabelTable(brightnessSliderLabelTable);
+    this.brightnessSlider.setPaintLabels(true);
     this.brightnessSlider.setPaintTicks(true);
-    this.brightnessSlider.setMajorTickSpacing(17);
+    this.brightnessSlider.setMajorTickSpacing(16);
     this.brightnessSlider.setValue(controller.getLightColor() & 0xFF);
     this.brightnessSlider.addChangeListener(new ChangeListener() {
         public void stateChanged(ChangeEvent ev) {
@@ -213,30 +256,29 @@ public class Home3DAttributesPanel extends JPanel implements DialogView {
         });
     
     // Walls transparency label and slider bound to WALLS_ALPHA controller property
-    this.wallsTransparencyLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
-        Home3DAttributesPanel.class, "wallsTransparencyLabel.text"));
+    this.wallsTransparencyLabel = new JLabel(this.resource.getString("wallsTransparencyLabel.text"));
     this.wallsTransparencySlider = new JSlider(0, 255);
-    this.opaqueWallsTransparencyLabel = new JLabel(preferences.getLocalizedString(
-        Home3DAttributesPanel.class, "opaqueLabel.text"));
-    this.invisibleWallsTransparencyLabel = new JLabel(preferences.getLocalizedString(
-        Home3DAttributesPanel.class, "invisibleLabel.text"));
+    JLabel opaqueLabel = new JLabel(this.resource.getString("opaqueLabel.text"));
+    JLabel invisibleLabel = new JLabel(this.resource.getString("invisibleLabel.text"));
+    Dictionary<Integer,JComponent> wallsTransparencySliderLabelTable = new Hashtable<Integer,JComponent>();
+    wallsTransparencySliderLabelTable.put(0, opaqueLabel);
+    wallsTransparencySliderLabelTable.put(255, invisibleLabel);
+    this.wallsTransparencySlider.setLabelTable(wallsTransparencySliderLabelTable);
+    this.wallsTransparencySlider.setPaintLabels(true);
     this.wallsTransparencySlider.setPaintTicks(true);
-    this.wallsTransparencySlider.setMajorTickSpacing(17);
+    this.wallsTransparencySlider.setMajorTickSpacing(16);
     this.wallsTransparencySlider.setValue((int)(controller.getWallsAlpha() * 255));
     this.wallsTransparencySlider.addChangeListener(new ChangeListener() {
         public void stateChanged(ChangeEvent ev) {
           controller.setWallsAlpha(wallsTransparencySlider.getValue() / 255f);
         }
       });
-    controller.addPropertyChangeListener(Home3DAttributesController.Property.WALLS_ALPHA, 
+    controller.addPropertyChangeListener(Home3DAttributesController.Property.LIGHT_COLOR, 
         new PropertyChangeListener() {
           public void propertyChange(PropertyChangeEvent ev) {
             wallsTransparencySlider.setValue((int)(controller.getWallsAlpha() * 255));
           }
         });
-    
-    this.dialogTitle = preferences.getLocalizedString(
-        Home3DAttributesPanel.class, "home3DAttributes.title");
   }
 
   /**
@@ -264,27 +306,27 @@ public class Home3DAttributesPanel extends JPanel implements DialogView {
   /**
    * Sets components mnemonics and label / component associations.
    */
-  private void setMnemonics(UserPreferences preferences) {
+  private void setMnemonics() {
     if (!OperatingSystem.isMacOSX()) {
+      this.observerFieldOfViewLabel.setDisplayedMnemonic(
+          KeyStroke.getKeyStroke(this.resource.getString("observerFieldOfViewLabel.mnemonic")).getKeyCode());
+      this.observerFieldOfViewLabel.setLabelFor(this.observerFieldOfViewLabel);
+      this.observerHeightLabel.setDisplayedMnemonic(
+          KeyStroke.getKeyStroke(this.resource.getString("observerHeightLabel.mnemonic")).getKeyCode());
+      this.observerHeightLabel.setLabelFor(this.observerHeightSpinner);
       this.groundColorRadioButton.setMnemonic(
-          KeyStroke.getKeyStroke(preferences.getLocalizedString(
-              Home3DAttributesPanel.class,"groundColorRadioButton.mnemonic")).getKeyCode());
+          KeyStroke.getKeyStroke(this.resource.getString("groundColorRadioButton.mnemonic")).getKeyCode());
       this.groundTextureRadioButton.setMnemonic(
-          KeyStroke.getKeyStroke(preferences.getLocalizedString(
-              Home3DAttributesPanel.class,"groundTextureRadioButton.mnemonic")).getKeyCode());
+          KeyStroke.getKeyStroke(this.resource.getString("groundTextureRadioButton.mnemonic")).getKeyCode());
       this.skyColorRadioButton.setMnemonic(
-          KeyStroke.getKeyStroke(preferences.getLocalizedString(
-              Home3DAttributesPanel.class,"skyColorRadioButton.mnemonic")).getKeyCode());
+          KeyStroke.getKeyStroke(this.resource.getString("skyColorRadioButton.mnemonic")).getKeyCode());
       this.skyTextureRadioButton.setMnemonic(
-          KeyStroke.getKeyStroke(preferences.getLocalizedString(
-              Home3DAttributesPanel.class,"skyTextureRadioButton.mnemonic")).getKeyCode());
+          KeyStroke.getKeyStroke(this.resource.getString("skyTextureRadioButton.mnemonic")).getKeyCode());
       this.brightnessLabel.setDisplayedMnemonic(
-          KeyStroke.getKeyStroke(preferences.getLocalizedString(
-              Home3DAttributesPanel.class,"brightnessLabel.mnemonic")).getKeyCode());
+          KeyStroke.getKeyStroke(this.resource.getString("brightnessLabel.mnemonic")).getKeyCode());
       this.brightnessLabel.setLabelFor(this.brightnessSlider);
       this.wallsTransparencyLabel.setDisplayedMnemonic(
-          KeyStroke.getKeyStroke(preferences.getLocalizedString(
-              Home3DAttributesPanel.class,"wallsTransparencyLabel.mnemonic")).getKeyCode());
+          KeyStroke.getKeyStroke(this.resource.getString("wallsTransparencyLabel.mnemonic")).getKeyCode());
       this.wallsTransparencyLabel.setLabelFor(this.wallsTransparencySlider);
     }
   }
@@ -292,88 +334,66 @@ public class Home3DAttributesPanel extends JPanel implements DialogView {
   /**
    * Layouts panel components in panel with their labels. 
    */
-  private void layoutComponents(UserPreferences preferences) {
+  private void layoutComponents() {
     int labelAlignment = OperatingSystem.isMacOSX() 
         ? GridBagConstraints.LINE_END
         : GridBagConstraints.LINE_START;
-    JPanel groundPanel = SwingTools.createTitledPanel(preferences.getLocalizedString(
-        Home3DAttributesPanel.class, "groundPanel.title"));
     // First row
-    Insets labelInsets = new Insets(0, 0, 2, 5);
-    groundPanel.add(this.groundColorRadioButton, new GridBagConstraints(
-        0, 0, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
-        GridBagConstraints.NONE, labelInsets, 0, 0));
-    groundPanel.add(this.groundColorButton, new GridBagConstraints(
-        1, 0, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
-        GridBagConstraints.HORIZONTAL, new Insets(0, 0, 2, 0), 0, 0));
-    // Second row
-    groundPanel.add(this.groundTextureRadioButton, new GridBagConstraints(
-        0, 1, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
-        GridBagConstraints.NONE, new Insets(0, 0, 0, 5), 0, 0));
-    groundPanel.add(this.groundTextureComponent, new GridBagConstraints(
-        1, 1, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
-        GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
-    Insets rowInsets;
-    if (OperatingSystem.isMacOSXLeopardOrSuperior()) {
-      // User smaller insets for Mac OS X 10.5
-      rowInsets = new Insets(0, 0, 0, 0);
-    } else {
-      rowInsets = new Insets(0, 0, 5, 0);
-    }
-    add(groundPanel, new GridBagConstraints(
-        0, 1, 1, 1, 0.5, 0, GridBagConstraints.LINE_START, 
-        GridBagConstraints.HORIZONTAL, rowInsets, 0, 0));
-    
-    JPanel skyPanel = SwingTools.createTitledPanel(preferences.getLocalizedString(
-        Home3DAttributesPanel.class, "skyPanel.title"));
-    skyPanel.add(this.skyColorRadioButton, new GridBagConstraints(
-        0, 0, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
-        GridBagConstraints.NONE, labelInsets, 0, 0));
-    skyPanel.add(this.skyColorButton, new GridBagConstraints(
-        1, 0, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
-        GridBagConstraints.HORIZONTAL, new Insets(0, 0, 2, 0), 0, 0));
-    skyPanel.add(this.skyTextureRadioButton, new GridBagConstraints(
-        0, 1, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
-        GridBagConstraints.NONE, new Insets(0, 0, 0, 5), 0, 0));
-    skyPanel.add(this.skyTextureComponent, new GridBagConstraints(
-        1, 1, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
-        GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
-    add(skyPanel, new GridBagConstraints(
-        1, 1, 1, 1, 0.5, 0, GridBagConstraints.LINE_START, 
-        GridBagConstraints.HORIZONTAL, rowInsets, 0, 0));
-    
-    JPanel renderingPanel = SwingTools.createTitledPanel(preferences.getLocalizedString(
-        Home3DAttributesPanel.class, "renderingPanel.title"));
-    // Third row
-    renderingPanel.add(this.brightnessLabel, new GridBagConstraints(
+    Insets labelInsets = new Insets(0, 0, 10, 5);
+    add(this.observerFieldOfViewLabel, new GridBagConstraints(
         0, 0, 1, 1, 0, 0, labelAlignment, 
-        GridBagConstraints.NONE, new Insets(0, 0, 0, 5), 0, 0));
-    renderingPanel.add(this.brightnessSlider, new GridBagConstraints(
-        1, 0, 3, 1, 1, 0, GridBagConstraints.LINE_START, 
-        GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
-    JPanel brightnessLabelsPanel = new JPanel(new BorderLayout(20, 0));
-    brightnessLabelsPanel.setOpaque(false);
-    brightnessLabelsPanel.add(this.darkBrightnessLabel, BorderLayout.WEST);
-    brightnessLabelsPanel.add(this.brightBrightnessLabel, BorderLayout.EAST);
-    renderingPanel.add(brightnessLabelsPanel, new GridBagConstraints(
-        1, 1, 3, 1, 1, 0, GridBagConstraints.CENTER, 
-        GridBagConstraints.HORIZONTAL, new Insets(OperatingSystem.isWindows() ? 0 : -3, 0, 3, 0), 0, 0));
-    // Last row
-    renderingPanel.add(this.wallsTransparencyLabel, new GridBagConstraints(
+        GridBagConstraints.NONE, labelInsets, 0, 0));
+    Insets componentInsets = new Insets(0, 0, 10, 10);
+    add(this.observerFieldOfViewSpinner, new GridBagConstraints(
+        1, 0, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
+        GridBagConstraints.HORIZONTAL, componentInsets, 10, 0));
+    add(this.observerHeightLabel, new GridBagConstraints(
+        2, 0, 1, 1, 0, 0, labelAlignment, 
+        GridBagConstraints.NONE, labelInsets, 0, 0));
+    Insets rightComponentInsets = new Insets(0, 0, 10, 0);
+    add(this.observerHeightSpinner, new GridBagConstraints(
+        3, 0, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
+        GridBagConstraints.HORIZONTAL, rightComponentInsets, 10, 0));
+    // Second row
+    Insets closeLabelInsets = new Insets(0, 0, 2, 5);
+    add(this.groundColorRadioButton, new GridBagConstraints(
+        0, 1, 1, 1, 0, 0, labelAlignment, 
+        GridBagConstraints.NONE, closeLabelInsets, 0, 0));
+    add(this.groundColorButton, new GridBagConstraints(
+        1, 1, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
+        GridBagConstraints.HORIZONTAL, new Insets(0, 0, 2, 10), 0, 0));
+    add(this.skyColorRadioButton, new GridBagConstraints(
+        2, 1, 1, 1, 0, 0, labelAlignment, 
+        GridBagConstraints.NONE, closeLabelInsets, 0, 0));
+    add(this.skyColorButton, new GridBagConstraints(
+        3, 1, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
+        GridBagConstraints.HORIZONTAL, new Insets(0, 0, 2, 0), 0, 0));
+    // Third row
+    add(this.groundTextureRadioButton, new GridBagConstraints(
         0, 2, 1, 1, 0, 0, labelAlignment, 
+        GridBagConstraints.NONE, labelInsets, 0, 0));
+    add(this.groundTextureComponent, new GridBagConstraints(
+        1, 2, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
+        GridBagConstraints.HORIZONTAL, componentInsets, 0, 0));
+    add(this.skyTextureRadioButton, new GridBagConstraints(
+        2, 2, 1, 1, 0, 0, labelAlignment, 
+        GridBagConstraints.NONE, labelInsets, 0, 0));
+    add(this.skyTextureComponent, new GridBagConstraints(
+        3, 2, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
+        GridBagConstraints.HORIZONTAL, rightComponentInsets, 0, 0));
+    // Fourth row
+    add(this.brightnessLabel, new GridBagConstraints(
+        0, 3, 1, 1, 0, 0, labelAlignment, 
         GridBagConstraints.NONE, new Insets(0, 0, 0, 5), 0, 0));
-    renderingPanel.add(this.wallsTransparencySlider, new GridBagConstraints(
-        1, 2, 3, 1, 1, 0, GridBagConstraints.LINE_START, 
+    add(this.brightnessSlider, new GridBagConstraints(
+        1, 3, 3, 1, 0, 0, GridBagConstraints.LINE_START, 
         GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
-    JPanel wallsTransparencyLabelsPanel = new JPanel(new BorderLayout(20, 0));
-    wallsTransparencyLabelsPanel.setOpaque(false);
-    wallsTransparencyLabelsPanel.add(this.opaqueWallsTransparencyLabel, BorderLayout.WEST);
-    wallsTransparencyLabelsPanel.add(this.invisibleWallsTransparencyLabel, BorderLayout.EAST);
-    renderingPanel.add(wallsTransparencyLabelsPanel, new GridBagConstraints(
-        1, 3, 3, 1, 1, 0, GridBagConstraints.CENTER, 
-        GridBagConstraints.HORIZONTAL, new Insets(OperatingSystem.isWindows() ? 0 : -3, 0, 10, 0), 0, 0));
-    add(renderingPanel, new GridBagConstraints(
-        0, 2, 2, 1, 0, 0, GridBagConstraints.LINE_START, 
+    // Last row
+    add(this.wallsTransparencyLabel, new GridBagConstraints(
+        0, 4, 1, 1, 0, 0, labelAlignment, 
+        GridBagConstraints.NONE, new Insets(0, 0, 0, 5), 0, 0));
+    add(this.wallsTransparencySlider, new GridBagConstraints(
+        1, 4, 3, 1, 0, 0, GridBagConstraints.LINE_START, 
         GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
   }
 
@@ -381,8 +401,11 @@ public class Home3DAttributesPanel extends JPanel implements DialogView {
    * Displays this panel in a modal dialog box. 
    */
   public void displayView(View parentView) {
+    String dialogTitle = this.resource.getString("home3DAttributes.title");
+    JFormattedTextField observerFieldOfViewSpinnerTextField = 
+        ((JSpinner.DefaultEditor)this.observerFieldOfViewSpinner.getEditor()).getTextField();
     if (SwingTools.showConfirmDialog((JComponent)parentView, 
-            this, this.dialogTitle, this.wallsTransparencySlider) == JOptionPane.OK_OPTION
+            this, dialogTitle, observerFieldOfViewSpinnerTextField) == JOptionPane.OK_OPTION
         && this.controller != null) {
       this.controller.modify3DAttributes();
     }

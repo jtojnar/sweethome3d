@@ -27,22 +27,16 @@ import com.eteks.sweethome3d.model.RecorderException;
  */
 public interface FurnitureLibraryRecorder {
   /**
-   * Merges a furniture library with the one at the given location.
-   */
-  public abstract void mergeFurnitureLibrary(FurnitureLibrary furnitureLibrary,
-                                             String furnitureLibraryLocation,
-                                             FurnitureLibraryUserPreferences preferences) throws RecorderException;
-  /**
-   * Reads a furniture library from the given location.
+   * Reads furniture library from the given file.
    */
   public abstract void readFurnitureLibrary(FurnitureLibrary furnitureLibrary,
-                                            String furnitureLibraryLocation,
+                                            String furnitureLibraryName,
                                             FurnitureLibraryUserPreferences preferences) throws RecorderException;
 
   /**
-   * Writes a furniture library at the given location.  
+   * Writes furniture library in the <code>furnitureLibraryName</code> file.  
    */
   public abstract void writeFurnitureLibrary(FurnitureLibrary furnitureLibrary,
-                                             String furnitureLibraryLocation,
+                                             String furnitureLibraryName,
                                              FurnitureLibraryUserPreferences preferences) throws RecorderException;
 }

@@ -1,7 +1,7 @@
 /*
  * PrintPreviewPanel.java 27 aout 07
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,14 +26,16 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.Locale;
+import java.util.ResourceBundle;
 
 import javax.swing.Action;
 import javax.swing.ActionMap;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.InputMap;
-import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -45,7 +47,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.AbstractBorder;
 
 import com.eteks.sweethome3d.model.Home;
-import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.tools.OperatingSystem;
 import com.eteks.sweethome3d.viewcontroller.DialogView;
 import com.eteks.sweethome3d.viewcontroller.HomeController;
@@ -59,7 +60,7 @@ import com.eteks.sweethome3d.viewcontroller.View;
 public class PrintPreviewPanel extends JPanel implements DialogView {
   private enum ActionType {SHOW_PREVIOUS_PAGE, SHOW_NEXT_PAGE}
 
-  private final UserPreferences  preferences;
+  private ResourceBundle         resource;
   private JToolBar               toolBar;
   private HomePrintableComponent printableComponent;
   private JLabel                 pageLabel;
@@ -67,17 +68,15 @@ public class PrintPreviewPanel extends JPanel implements DialogView {
   /**
    * Creates a panel that displays print preview.
    * @param home home previewed by this panel
-   * @param preferences the user preferences from which localized data is retrieved
    * @param homeController the controller of <code>home</code>
    * @param printPreviewController the controller of this panel
    */
   public PrintPreviewPanel(Home home,
-                           UserPreferences preferences, 
                            HomeController homeController,
                            PrintPreviewController printPreviewController) {
     super(new ProportionalLayout());
-    this.preferences = preferences;
-    createActions(preferences);
+    this.resource = ResourceBundle.getBundle(PrintPreviewPanel.class.getName());
+    createActions();
     installKeyboardActions();
     createComponents(home, homeController);
     layoutComponents();
@@ -87,11 +86,10 @@ public class PrintPreviewPanel extends JPanel implements DialogView {
   /**
    * Creates actions.  
    */
-  private void createActions(UserPreferences preferences) {
+  private void createActions() {
     // Show previous page action
     Action showPreviousPageAction = new ResourceAction(
-          preferences, PrintPreviewPanel.class, ActionType.SHOW_PREVIOUS_PAGE.name()) {
-        @Override
+            this.resource, ActionType.SHOW_PREVIOUS_PAGE.name()) {
         public void actionPerformed(ActionEvent e) {
           printableComponent.setPage(printableComponent.getPage() - 1);
           updateComponents();
@@ -99,8 +97,7 @@ public class PrintPreviewPanel extends JPanel implements DialogView {
       };
     // Show next page action
     Action showNextPageAction = new ResourceAction(
-          preferences, PrintPreviewPanel.class, ActionType.SHOW_NEXT_PAGE.name()) {
-        @Override
+            this.resource, ActionType.SHOW_NEXT_PAGE.name()) {
         public void actionPerformed(ActionEvent e) {
           printableComponent.setPage(printableComponent.getPage() + 1);
           updateComponents();
@@ -153,35 +150,18 @@ public class PrintPreviewPanel extends JPanel implements DialogView {
     
     this.pageLabel = new JLabel();
     
-    this.toolBar = new JToolBar() {
-        public void applyComponentOrientation(ComponentOrientation orientation) {
-          // Ignore orientation 
-        }
-      };
+    this.toolBar = new JToolBar();
     this.toolBar.setFloatable(false);
     ActionMap actions = getActionMap();    
-    if (OperatingSystem.isMacOSXLeopardOrSuperior() && OperatingSystem.isJavaVersionGreaterOrEqual("1.7")) {
-      // Add buttons with higher insets to ensure the top and bottom of segmented buttons are correctly drawn
-      class HigherInsetsButton extends JButton {
-        public HigherInsetsButton(Action action) {
-          super(action);
-        }
-
-        @Override
-        public Insets getInsets() {
-          Insets insets = super.getInsets();
-          insets.top += 3;
-          insets.bottom += 3;
-          return insets;
-        }
-      }
-      toolBar.add(new HigherInsetsButton(actions.get(ActionType.SHOW_PREVIOUS_PAGE)));
-      toolBar.add(new HigherInsetsButton(actions.get(ActionType.SHOW_NEXT_PAGE)));
-    } else {
-      this.toolBar.add(actions.get(ActionType.SHOW_PREVIOUS_PAGE));
-      this.toolBar.add(actions.get(ActionType.SHOW_NEXT_PAGE));
-    }
+    this.toolBar.add(actions.get(ActionType.SHOW_PREVIOUS_PAGE));
+    this.toolBar.add(actions.get(ActionType.SHOW_NEXT_PAGE));
     updateToolBarButtonsStyle(this.toolBar);
+    this.toolBar.addPropertyChangeListener("componentOrientation", 
+        new PropertyChangeListener () {
+          public void propertyChange(PropertyChangeEvent evt) {
+            updateToolBarButtonsStyle(toolBar);
+          }
+        });
     
     this.toolBar.add(Box.createHorizontalStrut(20));
     this.toolBar.add(this.pageLabel);
@@ -200,12 +180,19 @@ public class PrintPreviewPanel extends JPanel implements DialogView {
     // Use segmented buttons under Mac OS X 10.5
     if (OperatingSystem.isMacOSXLeopardOrSuperior()) {
       // Retrieve component orientation because Mac OS X 10.5 miserably doesn't it take into account 
+      ComponentOrientation orientation = toolBar.getComponentOrientation();
       JComponent previousButton = (JComponent)toolBar.getComponentAtIndex(0);
       previousButton.putClientProperty("JButton.buttonType", "segmentedTextured");
-      previousButton.putClientProperty("JButton.segmentPosition", "first");
+      previousButton.putClientProperty("JButton.segmentPosition", 
+          orientation == ComponentOrientation.LEFT_TO_RIGHT 
+            ? "first"
+            : "last");
       JComponent nextButton = (JComponent)toolBar.getComponentAtIndex(1);
       nextButton.putClientProperty("JButton.buttonType", "segmentedTextured");
-      nextButton.putClientProperty("JButton.segmentPosition", "last");
+      nextButton.putClientProperty("JButton.segmentPosition", 
+          orientation == ComponentOrientation.LEFT_TO_RIGHT 
+            ? "last"
+            : "first");
     }
   }
     
@@ -229,8 +216,7 @@ public class PrintPreviewPanel extends JPanel implements DialogView {
     actions.get(ActionType.SHOW_PREVIOUS_PAGE).setEnabled(this.printableComponent.getPage() > 0);
     actions.get(ActionType.SHOW_NEXT_PAGE).setEnabled(
         this.printableComponent.getPage() < this.printableComponent.getPageCount() - 1);
-    this.pageLabel.setText(preferences.getLocalizedString(
-        PrintPreviewPanel.class, "pageLabel.text", 
+    this.pageLabel.setText(String.format(this.resource.getString("pageLabel.text"), 
         this.printableComponent.getPage() + 1, this.printableComponent.getPageCount()));
   }
 
@@ -238,12 +224,8 @@ public class PrintPreviewPanel extends JPanel implements DialogView {
    * Displays this panel in a modal resizable dialog box. 
    */
   public void displayView(View parentView) {
-    String dialogTitle = preferences.getLocalizedString(PrintPreviewPanel.class, "printPreview.title");
-    JOptionPane optionPane = new JOptionPane(this, 
-        JOptionPane.PLAIN_MESSAGE, JOptionPane.DEFAULT_OPTION); 
-    if (parentView != null) {
-      optionPane.setComponentOrientation(((JComponent)parentView).getComponentOrientation());
-    }
+    String dialogTitle = resource.getString("printPreview.title");
+    JOptionPane optionPane = new JOptionPane(this, JOptionPane.PLAIN_MESSAGE, JOptionPane.DEFAULT_OPTION); 
     JDialog dialog = optionPane.createDialog(SwingUtilities.getRootPane((JComponent)parentView), dialogTitle);
     dialog.applyComponentOrientation(ComponentOrientation.getOrientation(Locale.getDefault()));    
     dialog.setResizable(true);

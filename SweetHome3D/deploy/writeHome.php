@@ -2,7 +2,7 @@
   /*
    * writeHome.php 13 Oct 2008
    *
-   * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+   * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
    *
    * This program is free software; you can redistribute it and/or modify
    * it under the terms of the GNU General Public License as published by
@@ -21,8 +21,33 @@
    
   // Updloads the file available in multipart file "home", saves it
   // in homes directory and returns "1" if save was successful
-  $homesDir = ".";
+  $homesDir = "../persistent/homes";
   $homeFile = $homesDir."/".$_FILES['home']['name'].".sh3d"; 
+  
+  // Security for Sweet Home 3D hosted on sourceforge.net
+  if ($_FILES['home']['size'] > 200000) {
+    // Refuse files bigger than 200000 Bytes
+    echo "0";
+    return;
+  }
+  
+  if (!file_exists($homeFile)) {
+    $homes = array();
+    $handler = opendir($homesDir);
+    while ($file = readdir($handler)) {
+      if (!is_dir($file) && eregi('.sh3d', $file)) {
+        $homes[] = $homesDir."/".$file;
+      }  
+    }
+    closedir($handler);
+
+    if (sizeof($homes) >= 5) {
+      // Refuse more than 5 homes on server
+      echo "0";
+      return;
+    }
+  }
+  // End of security
   
   if (move_uploaded_file($_FILES['home']['tmp_name'], $homeFile)) {
     echo "1";

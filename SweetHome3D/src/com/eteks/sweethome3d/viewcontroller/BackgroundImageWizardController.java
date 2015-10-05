@@ -1,7 +1,7 @@
 /*
  * BackgroundImageWizardController.java 8 juin 07
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.net.URL;
+import java.util.ResourceBundle;
 
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.CannotRedoException;
@@ -33,7 +34,6 @@ import javax.swing.undo.UndoableEditSupport;
 import com.eteks.sweethome3d.model.BackgroundImage;
 import com.eteks.sweethome3d.model.Content;
 import com.eteks.sweethome3d.model.Home;
-import com.eteks.sweethome3d.model.Level;
 import com.eteks.sweethome3d.model.UserPreferences;
 
 /**
@@ -73,14 +73,15 @@ public class BackgroundImageWizardController extends WizardController
                                          ViewFactory viewFactory,
                                          ContentManager contentManager,
                                          UndoableEditSupport undoSupport) {
-    super(preferences, viewFactory);
+    super(viewFactory);
     this.home = home;
     this.preferences = preferences;
     this.viewFactory = viewFactory;
     this.contentManager = contentManager;
     this.undoSupport = undoSupport;
     this.propertyChangeSupport = new PropertyChangeSupport(this);
-    setTitle(preferences.getLocalizedString(BackgroundImageWizardController.class, "wizard.title"));    
+    ResourceBundle resource = ResourceBundle.getBundle(BackgroundImageWizardController.class.getName());
+    setTitle(resource.getString("wizard.title"));    
     setResizable(true);
     // Initialize states
     this.imageChoiceStepState = new ImageChoiceStepState();
@@ -94,24 +95,17 @@ public class BackgroundImageWizardController extends WizardController
    */
   @Override
   public void finish() {
-    Level selectedLevel = this.home.getSelectedLevel();
-    BackgroundImage oldImage = selectedLevel != null
-        ? selectedLevel.getBackgroundImage()
-        : this.home.getBackgroundImage();
+    final BackgroundImage oldImage = this.home.getBackgroundImage();
     float [][] scaleDistancePoints = getScaleDistancePoints();
-    BackgroundImage image = new BackgroundImage(getImage(),
+    final BackgroundImage image = new BackgroundImage(getImage(),
         getScaleDistance(), scaleDistancePoints [0][0], scaleDistancePoints [0][1],
         scaleDistancePoints [1][0], scaleDistancePoints [1][1], 
         getXOrigin(), getYOrigin());
-    if (selectedLevel != null) {
-      selectedLevel.setBackgroundImage(image);
-    } else {
-      this.home.setBackgroundImage(image);
-    }
-    boolean modification = oldImage == null;
+    this.home.setBackgroundImage(image);
+    final Home home = this.home;
+    final boolean modification = oldImage == null;
     UndoableEdit undoableEdit = 
-        new BackgroundImageUndoableEdit(this.home, selectedLevel, 
-            this.preferences, modification, oldImage, image);
+        new BackgroundImageUndoableEdit(home, modification, oldImage, image);
     this.undoSupport.postEdit(undoableEdit);
   }
 
@@ -121,21 +115,15 @@ public class BackgroundImageWizardController extends WizardController
    */
   private static class BackgroundImageUndoableEdit extends AbstractUndoableEdit {
     private final Home            home;
-    private final Level           level;
-    private final UserPreferences preferences;
     private final boolean         modification;
     private final BackgroundImage oldImage;
     private final BackgroundImage image;
 
     private BackgroundImageUndoableEdit(Home home,
-                                        Level level, 
-                                        UserPreferences preferences,
                                         boolean modification,
                                         BackgroundImage oldImage,
                                         BackgroundImage image) {
       this.home = home;
-      this.level = level;
-      this.preferences = preferences;
       this.modification = modification;
       this.oldImage = oldImage;
       this.image = image;
@@ -144,31 +132,21 @@ public class BackgroundImageWizardController extends WizardController
     @Override
     public void undo() throws CannotUndoException {
       super.undo();
-      this.home.setSelectedLevel(this.level);
-      if (this.level != null) {
-        this.level.setBackgroundImage(this.oldImage);
-      } else {
-        this.home.setBackgroundImage(this.oldImage);
-      } 
+      this.home.setBackgroundImage(this.oldImage); 
     }
 
     @Override
     public void redo() throws CannotRedoException {
       super.redo();
-      this.home.setSelectedLevel(this.level);
-      if (this.level != null) {
-        this.level.setBackgroundImage(this.image);
-      } else {
-        this.home.setBackgroundImage(this.image);
-      } 
+      this.home.setBackgroundImage(this.image);
     }
 
     @Override
     public String getPresentationName() {
-      return this.preferences.getLocalizedString(BackgroundImageWizardController.class,
-          this.modification 
-              ? "undoImportBackgroundImageName"
-              : "undoModifyBackgroundImageName");
+      return ResourceBundle.getBundle(BackgroundImageWizardController.class.getName()).
+        getString(this.modification 
+            ? "undoImportBackgroundImageName"
+            : "undoModifyBackgroundImageName");
     }
   }
 
@@ -214,11 +192,8 @@ public class BackgroundImageWizardController extends WizardController
   protected View getStepsView() {
     // Create view lazily only once it's needed
     if (this.stepsView == null) {
-      BackgroundImage image = this.home.getSelectedLevel() != null
-          ? this.home.getSelectedLevel().getBackgroundImage()
-          : this.home.getBackgroundImage();
       this.stepsView = this.viewFactory.createBackgroundImageWizardStepsView(
-          image, this.preferences, this);
+          this.home.getBackgroundImage(), this.preferences, this);
     }
     return this.stepsView;
   }

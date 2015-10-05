@@ -1,7 +1,7 @@
 /*
  * PlanView.java 28 oct 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,9 +19,6 @@
  */
 package com.eteks.sweethome3d.viewcontroller;
 
-import java.util.List;
-
-import com.eteks.sweethome3d.model.DimensionLine;
 import com.eteks.sweethome3d.model.Selectable;
 import com.eteks.sweethome3d.model.TextStyle;
 
@@ -30,16 +27,18 @@ import com.eteks.sweethome3d.model.TextStyle;
  * @author Emmanuel Puybaret
  */
 public interface PlanView extends View {
-  /**
-   * The cursor types available in plan view.
-   */
-  public enum CursorType {SELECTION, PANNING, DRAW, ROTATION, ELEVATION, HEIGHT, POWER, RESIZE, DUPLICATION, MOVE}
-  
+  public enum CursorType {SELECTION, DRAW, ROTATION, ELEVATION, HEIGHT, RESIZE, DUPLICATION}
+
   /**
    * Sets rectangle selection feedback coordinates. 
    */
   public abstract void setRectangleFeedback(float x0, float y0,
                                             float x1, float y1);
+
+  /**
+   * Deletes rectangle feed back.
+   */
+  public abstract void deleteRectangleFeedback();
 
   /**
    * Ensures selected items are visible at screen and moves
@@ -48,7 +47,7 @@ public interface PlanView extends View {
   public abstract void makeSelectionVisible();
 
   /**
-   * Ensures the point at (<code>x</code>, <code>y</code>) is visible,
+   * Ensures the point at (<code>xPixel</code>, <code>yPixel</code>) is visible,
    * moving scroll bars if needed.
    */
   public abstract void makePointVisible(float x, float y);
@@ -64,11 +63,6 @@ public interface PlanView extends View {
   public abstract void setScale(float scale);
 
   /**
-   * Moves the view from (dx, dy) unit in the scrolling zone it belongs to.
-   */
-  public abstract void moveView(float dx, float dy);
-
-  /**
    * Returns <code>x</code> converted in model coordinates space.
    */
   public abstract float convertXPixelToModel(int x);
@@ -77,16 +71,6 @@ public interface PlanView extends View {
    * Returns <code>y</code> converted in model coordinates space.
    */
   public abstract float convertYPixelToModel(int y);
-
-  /**
-   * Returns <code>x</code> converted in screen coordinates space.
-   */
-  public abstract int convertXModelToScreen(float x);
-
-  /**
-   * Returns <code>y</code> converted in screen coordinates space.
-   */
-  public abstract int convertYModelToScreen(float y);
 
   /**
    * Returns the length in centimeters of a pixel with the current scale.
@@ -114,13 +98,6 @@ public interface PlanView extends View {
                                           float x, float y);
 
   /**
-   * Set properties edited in tool tip.
-   */
-  public abstract void setToolTipEditedProperties(PlanController.EditableProperty [] toolTipEditedProperties, 
-                                                  Object [] toolTipPropertyValues,
-                                                  float x, float y);
-  
-  /**
    * Deletes tool tip text from screen. 
    */
   public abstract void deleteToolTipFeedback();
@@ -139,31 +116,10 @@ public interface PlanView extends View {
                                             float x, 
                                             float y, 
                                             boolean showPoint);
-  
-
   /**
-   * Sets the points used to draw an angle in plan view.
+   * Deletes the alignment feedback. 
    */
-  public abstract void setAngleFeedback(float xCenter, float yCenter, 
-                                        float x1, float y1, 
-                                        float x2, float y2);
-
-  /**
-   * Sets the feedback of dragged items drawn during a drag and drop operation, 
-   * initiated from outside of plan view.
-   */
-  public abstract void setDraggedItemsFeedback(List<Selectable> draggedItems);
-
-  /**
-   * Sets the given dimension lines to be drawn as feedback.
-   */
-  public abstract void setDimensionLinesFeedback(List<DimensionLine> dimensionLines);
-
-  /**
-   * Deletes all elements shown as feedback.
-   */
-  public abstract void deleteFeedback();
-
+  public abstract void deleteAlignmentFeedback();
 
   /**
    * Returns the component used as an horizontal ruler for this plan.
@@ -174,9 +130,4 @@ public interface PlanView extends View {
    * Returns the component used as a vertical ruler for this plan.
    */
   public abstract View getVerticalRuler();
-
-  /**
-   * Returns <code>true</code> if this plan accepts to import dragged items at the given coordinates.
-   */
-  public abstract boolean canImportDraggedItems(List<Selectable> items, int x, int y);
 }

@@ -26,61 +26,39 @@ public class PackageDependenciesTest extends TestCase {
     packageFilter.addPackage("javax.swing.*");
     // Ignore JUnit tests
     packageFilter.addPackage("com.eteks.sweethome3d.junit");
+    // Ignore other test classes 
+    packageFilter.addPackage("com.eteks.sweethome3d.test");
+    packageFilter.addPackage("com.eteks.sweethome3d.utilities");
     
     JDepend jdepend = new JDepend(packageFilter);
     jdepend.addDirectory("classes");
 
     DependencyConstraint constraint = new DependencyConstraint();
     // Sweet Home 3D packages
-    JavaPackage sweetHome3DModel = constraint.addPackage("com.eteks.sweethome3d.model");
+    JavaPackage sweetHome3dModel = constraint.addPackage("com.eteks.sweethome3d.model");
     JavaPackage sweetHome3DTools = constraint.addPackage("com.eteks.sweethome3d.tools");
     JavaPackage sweetHome3DPlugin = constraint.addPackage("com.eteks.sweethome3d.plugin");
     JavaPackage sweetHome3DViewController = constraint.addPackage("com.eteks.sweethome3d.viewcontroller");
     JavaPackage sweetHome3DSwing = constraint.addPackage("com.eteks.sweethome3d.swing");
-    JavaPackage sweetHome3DJava3D = constraint.addPackage("com.eteks.sweethome3d.j3d");
     JavaPackage sweetHome3DIO = constraint.addPackage("com.eteks.sweethome3d.io");
     JavaPackage sweetHome3DApplication = constraint.addPackage("com.eteks.sweethome3d");
     JavaPackage sweetHome3DApplet = constraint.addPackage("com.eteks.sweethome3d.applet");
     // Swing components packages
     JavaPackage swing = constraint.addPackage("javax.swing");
     JavaPackage imageio = constraint.addPackage("javax.imageio");
-    JavaPackage imageioStream = constraint.addPackage("javax.imageio.stream");
     // Java 3D
     JavaPackage java3d = constraint.addPackage("javax.media.j3d");
     JavaPackage vecmath = constraint.addPackage("javax.vecmath");
     JavaPackage sun3dLoaders = constraint.addPackage("com.sun.j3d.loaders");
     JavaPackage sun3dLoadersLw3d = constraint.addPackage("com.sun.j3d.loaders.lw3d");
+    JavaPackage sun3dLoadersObj = constraint.addPackage("com.sun.j3d.loaders.objectfile");
     JavaPackage sun3dUtilsGeometry = constraint.addPackage("com.sun.j3d.utils.geometry");
     JavaPackage sun3dUtilsImage = constraint.addPackage("com.sun.j3d.utils.image");
     JavaPackage sun3dUtilsUniverse = constraint.addPackage("com.sun.j3d.utils.universe");
-    JavaPackage sun3dExpSwing = constraint.addPackage("com.sun.j3d.exp.swing.JCanvas3D");
-    // XML
-    JavaPackage xmlParsers = constraint.addPackage("javax.xml.parsers");
-    JavaPackage xmlSax = constraint.addPackage("org.xml.sax");
-    JavaPackage xmlSaxHelpers = constraint.addPackage("org.xml.sax.helpers");
-    // JMF
-    JavaPackage jmf = constraint.addPackage("javax.media");
-    JavaPackage jmfControl = constraint.addPackage("javax.media.control");
-    JavaPackage jmfDataSink = constraint.addPackage("javax.media.datasink");
-    JavaPackage jmfFormat = constraint.addPackage("javax.media.format");
-    JavaPackage jmfProtocol = constraint.addPackage("javax.media.protocol");
-    // SunFlow
-    JavaPackage sunflow = constraint.addPackage("org.sunflow");
-    JavaPackage sunflowCore = constraint.addPackage("org.sunflow.core");
-    JavaPackage sunflowCoreLight = constraint.addPackage("org.sunflow.core.light");
-    JavaPackage sunflowCorePrimitive = constraint.addPackage("org.sunflow.core.primitive");
-    JavaPackage sunflowImage = constraint.addPackage("org.sunflow.image");
-    JavaPackage sunflowMath = constraint.addPackage("org.sunflow.math");
-    JavaPackage sunflowSystem = constraint.addPackage("org.sunflow.system");
-    JavaPackage sunflowSystemUI = constraint.addPackage("org.sunflow.system.ui");
+    JavaPackage loader3ds = constraint.addPackage("com.microcrowd.loader.java3d.max3ds");
     // iText for PDF
     JavaPackage iText = constraint.addPackage("com.lowagie.text");
     JavaPackage iTextPdf = constraint.addPackage("com.lowagie.text.pdf");
-    // FreeHEP Vector Graphics for SVG
-    JavaPackage vectorGraphicsUtil = constraint.addPackage("org.freehep.util");
-    JavaPackage vectorGraphicsSvg = constraint.addPackage("org.freehep.graphicsio.svg");
-    // Batik for SVG path parsing
-    JavaPackage orgApacheBatikParser = constraint.addPackage("org.apache.batik.parser");
     // Java JNLP
     JavaPackage jnlp = constraint.addPackage("javax.jnlp");
     // Mac OS X specific interfaces
@@ -90,74 +68,43 @@ public class PackageDependenciesTest extends TestCase {
     // Describe dependencies : model don't have any dependency on
     // other packages, IO and View/Controller packages ignore each other
     // and Swing components and Java 3D use is isolated in sweetHome3DSwing
-    sweetHome3DTools.dependsUpon(sweetHome3DModel);
-    sweetHome3DTools.dependsUpon(eio);
+    sweetHome3DTools.dependsUpon(sweetHome3dModel);
     
-    sweetHome3DPlugin.dependsUpon(sweetHome3DModel);
+    sweetHome3DPlugin.dependsUpon(sweetHome3dModel);
     sweetHome3DPlugin.dependsUpon(sweetHome3DTools);
-    sweetHome3DPlugin.dependsUpon(sweetHome3DViewController);   
     
-    sweetHome3DViewController.dependsUpon(sweetHome3DModel);
+    sweetHome3DViewController.dependsUpon(sweetHome3dModel);
     sweetHome3DViewController.dependsUpon(sweetHome3DTools);
+    sweetHome3DViewController.dependsUpon(sweetHome3DPlugin);   
     
-    sweetHome3DJava3D.dependsUpon(sweetHome3DModel);
-    sweetHome3DJava3D.dependsUpon(sweetHome3DTools);
-    sweetHome3DJava3D.dependsUpon(sweetHome3DViewController);
-    sweetHome3DJava3D.dependsUpon(java3d);
-    sweetHome3DJava3D.dependsUpon(vecmath);
-    sweetHome3DJava3D.dependsUpon(sun3dLoaders);
-    sweetHome3DJava3D.dependsUpon(sun3dLoadersLw3d);
-    sweetHome3DJava3D.dependsUpon(sun3dUtilsGeometry);
-    sweetHome3DJava3D.dependsUpon(sun3dUtilsImage);
-    sweetHome3DJava3D.dependsUpon(sun3dUtilsUniverse);
-    sweetHome3DJava3D.dependsUpon(imageio);
-    sweetHome3DJava3D.dependsUpon(sunflow);
-    sweetHome3DJava3D.dependsUpon(sunflowCore);
-    sweetHome3DJava3D.dependsUpon(sunflowCoreLight);
-    sweetHome3DJava3D.dependsUpon(sunflowCorePrimitive);
-    sweetHome3DJava3D.dependsUpon(sunflowImage);
-    sweetHome3DJava3D.dependsUpon(sunflowMath);
-    sweetHome3DJava3D.dependsUpon(sunflowSystem);
-    sweetHome3DJava3D.dependsUpon(sunflowSystemUI);
-    sweetHome3DJava3D.dependsUpon(xmlParsers);
-    sweetHome3DJava3D.dependsUpon(xmlSax);
-    sweetHome3DJava3D.dependsUpon(xmlSaxHelpers);
-    sweetHome3DJava3D.dependsUpon(orgApacheBatikParser);
-    
-    sweetHome3DSwing.dependsUpon(sweetHome3DModel);
+    sweetHome3DSwing.dependsUpon(sweetHome3dModel);
     sweetHome3DSwing.dependsUpon(sweetHome3DTools);
     sweetHome3DSwing.dependsUpon(sweetHome3DPlugin);   
     sweetHome3DSwing.dependsUpon(sweetHome3DViewController);
-    sweetHome3DSwing.dependsUpon(sweetHome3DJava3D);
     sweetHome3DSwing.dependsUpon(swing);
     sweetHome3DSwing.dependsUpon(imageio);
-    sweetHome3DSwing.dependsUpon(imageioStream);
     sweetHome3DSwing.dependsUpon(java3d);
     sweetHome3DSwing.dependsUpon(vecmath);
+    sweetHome3DSwing.dependsUpon(sun3dLoaders);
+    sweetHome3DSwing.dependsUpon(sun3dLoadersLw3d);
+    sweetHome3DSwing.dependsUpon(sun3dLoadersObj);
     sweetHome3DSwing.dependsUpon(sun3dUtilsGeometry);
+    sweetHome3DSwing.dependsUpon(sun3dUtilsImage);
     sweetHome3DSwing.dependsUpon(sun3dUtilsUniverse);
-    sweetHome3DSwing.dependsUpon(sun3dExpSwing);
-    sweetHome3DSwing.dependsUpon(jmf);
-    sweetHome3DSwing.dependsUpon(jmfControl);
-    sweetHome3DSwing.dependsUpon(jmfDataSink);
-    sweetHome3DSwing.dependsUpon(jmfFormat);
-    sweetHome3DSwing.dependsUpon(jmfProtocol);
+    sweetHome3DSwing.dependsUpon(loader3ds);
     sweetHome3DSwing.dependsUpon(iText);
     sweetHome3DSwing.dependsUpon(iTextPdf);
-    sweetHome3DSwing.dependsUpon(vectorGraphicsUtil);
-    sweetHome3DSwing.dependsUpon(vectorGraphicsSvg);
     sweetHome3DSwing.dependsUpon(jnlp);
     
-    sweetHome3DIO.dependsUpon(sweetHome3DModel);
+    sweetHome3DIO.dependsUpon(sweetHome3dModel);
     sweetHome3DIO.dependsUpon(sweetHome3DTools);
     sweetHome3DIO.dependsUpon(eio);
 
     // Describe application and applet assembly packages
-    sweetHome3DApplication.dependsUpon(sweetHome3DModel);
+    sweetHome3DApplication.dependsUpon(sweetHome3dModel);
     sweetHome3DApplication.dependsUpon(sweetHome3DTools);
     sweetHome3DApplication.dependsUpon(sweetHome3DPlugin);
     sweetHome3DApplication.dependsUpon(sweetHome3DViewController);
-    sweetHome3DApplication.dependsUpon(sweetHome3DJava3D);
     sweetHome3DApplication.dependsUpon(sweetHome3DSwing);
     sweetHome3DApplication.dependsUpon(sweetHome3DIO);
     sweetHome3DApplication.dependsUpon(swing);
@@ -166,11 +113,10 @@ public class PackageDependenciesTest extends TestCase {
     sweetHome3DApplication.dependsUpon(eawt);
     sweetHome3DApplication.dependsUpon(jnlp);
     
-    sweetHome3DApplet.dependsUpon(sweetHome3DModel);
+    sweetHome3DApplet.dependsUpon(sweetHome3dModel);
     sweetHome3DApplet.dependsUpon(sweetHome3DTools);
     sweetHome3DApplet.dependsUpon(sweetHome3DPlugin);
     sweetHome3DApplet.dependsUpon(sweetHome3DViewController);
-    sweetHome3DApplet.dependsUpon(sweetHome3DJava3D);
     sweetHome3DApplet.dependsUpon(sweetHome3DSwing);
     sweetHome3DApplet.dependsUpon(sweetHome3DIO);
     sweetHome3DApplet.dependsUpon(swing);

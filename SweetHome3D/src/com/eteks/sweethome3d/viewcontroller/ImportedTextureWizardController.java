@@ -1,7 +1,7 @@
 /*
  * ImportedTextureWizardController.java 01 oct 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,8 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.net.URL;
+import java.util.Collections;
+import java.util.ResourceBundle;
 
 import com.eteks.sweethome3d.model.CatalogTexture;
 import com.eteks.sweethome3d.model.Content;
@@ -93,17 +95,17 @@ public class ImportedTextureWizardController extends WizardController
                                           UserPreferences preferences,
                                           ViewFactory    viewFactory,
                                           ContentManager contentManager) {
-    super(preferences, viewFactory);
+    super(viewFactory);
     this.texture = texture;
     this.textureName = textureName;
     this.preferences = preferences;
     this.viewFactory = viewFactory;
     this.contentManager = contentManager;
     this.propertyChangeSupport = new PropertyChangeSupport(this);
-    setTitle(this.preferences.getLocalizedString(ImportedTextureWizardController.class, 
-        texture == null 
-          ? "importTextureWizard.title" 
-          : "modifyTextureWizard.title"));    
+    ResourceBundle resource = ResourceBundle.getBundle(ImportedTextureWizardController.class.getName());
+    setTitle(resource.getString(texture == null 
+        ? "importTextureWizard.title" 
+        : "modifyTextureWizard.title"));    
     // Initialize states
     this.textureImageStepState = new TextureImageStepState();
     this.textureAttributesStepState = new TextureAttributesStepState();
@@ -227,7 +229,8 @@ public class ImportedTextureWizardController extends WizardController
    * Sets the name of the imported texture.
    */
   public void setName(String name) {
-    if (name != this.name) {
+    if (name != this.name
+        || (name != null && !name.equals(this.name))) {
       String oldName = this.name;
       this.name = name;
       if (this.propertyChangeSupport != null) {
@@ -294,9 +297,19 @@ public class ImportedTextureWizardController extends WizardController
    * Returns <code>true</code> if texture name is valid.
    */
   public boolean isTextureNameValid() {
+    CatalogTexture temporaryTexture = new CatalogTexture(this.name, null, 0, 0);
+    if (this.texture != null
+        && this.category == this.texture.getCategory()
+        // Check texture names are equal with binary search to keep locale dependence
+        && Collections.binarySearch(this.category.getTextures(), this.texture)
+              == Collections.binarySearch(this.category.getTextures(), temporaryTexture)) {
+      // Accept piece name if it didn't change 
+      return true;
+    }
     return this.name != null
         && this.name.length() > 0
-        && this.category != null;
+        && this.category != null
+        && Collections.binarySearch(this.category.getTextures(), temporaryTexture) < 0;
   }
 
   /**

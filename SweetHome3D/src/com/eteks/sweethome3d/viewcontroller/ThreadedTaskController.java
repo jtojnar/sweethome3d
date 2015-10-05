@@ -1,7 +1,7 @@
 /*
  * ThreadedTaskController.java 29 sept. 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,21 +26,18 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
-import com.eteks.sweethome3d.model.UserPreferences;
-
 /**
  * A MVC controller used to execute a particular task in a separated thread.
  * @author Emmanuel Puybaret
  */
 public class ThreadedTaskController implements Controller {
-  private static ExecutorService    tasksExecutor;
-  private final UserPreferences     preferences;
-  private final ViewFactory         viewFactory;
-  private final Callable<Void>      threadedTask;
-  private final String              taskMessage;
-  private final ExceptionHandler    exceptionHandler;
-  private ThreadedTaskView          view;
-  private Future<?>                 task;
+  private final ViewFactory      viewFactory;
+  private final Callable<Void>   threadedTask;
+  private final String           taskMessage;
+  private final ExceptionHandler exceptionHandler;
+  private final ExecutorService  threadExecutor;
+  private ThreadedTaskView       view;
+  private Future<?>              task;
 
   /**
    * Creates a controller that will execute in a separated thread the given task. 
@@ -48,16 +45,15 @@ public class ThreadedTaskController implements Controller {
    * interruptions with <code>Thread</code> methods that the user may provoke 
    * when he wants to cancel a threaded task. 
    */
-  public ThreadedTaskController(Callable<Void> threadedTask,
-                                String taskMessage,
-                                ExceptionHandler exceptionHandler,
-                                UserPreferences preferences, 
-                                ViewFactory viewFactory) {
-    this.preferences = preferences;
+  public ThreadedTaskController(ViewFactory viewFactory,
+                                Callable<Void> threadedTask,
+                                String taskMessage, 
+                                ExceptionHandler exceptionHandler) {
     this.viewFactory = viewFactory;
     this.threadedTask = threadedTask;
     this.taskMessage = taskMessage;
     this.exceptionHandler = exceptionHandler;
+    this.threadExecutor = Executors.newSingleThreadExecutor();
   }
   
   /**
@@ -66,21 +62,17 @@ public class ThreadedTaskController implements Controller {
   public ThreadedTaskView getView() {
     // Create view lazily only once it's needed
     if (this.view == null) {
-      this.view = this.viewFactory.createThreadedTaskView(this.taskMessage, this.preferences, this);
+      this.view = this.viewFactory.createThreadedTaskView(this.taskMessage, this);
     }
     return this.view;
   }
 
   /**
    * Executes in a separated thread the task given in constructor. This task shouldn't
-   * modify any model objects shared with other threads. 
+   * modify any model objects. 
    */
   public void executeTask(final View executingView) {
-    if (tasksExecutor == null) {
-      tasksExecutor = Executors.newSingleThreadExecutor();
-    }
-
-    this.task = tasksExecutor.submit(new FutureTask<Void>(this.threadedTask) {
+    this.task = this.threadExecutor.submit(new FutureTask<Void>(threadedTask) {
         @Override
         public void run() {
           // Update running status in view

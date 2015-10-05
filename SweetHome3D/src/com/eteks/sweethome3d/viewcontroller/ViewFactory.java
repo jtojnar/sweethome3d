@@ -1,7 +1,7 @@
 /*
  * ViewFactory.java 28 oct. 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,8 +65,7 @@ public interface ViewFactory {
   /**
    * Returns a new view that displays a wizard. 
    */
-  public abstract DialogView createWizardView(UserPreferences preferences,
-                                              WizardController wizardController);
+  public abstract DialogView createWizardView(WizardController wizardController);
 
   /**
    * Returns a new view that displays the different steps that helps the user to choose a background image. 
@@ -97,7 +96,6 @@ public interface ViewFactory {
    * Returns a new view that displays message for a threaded task.
    */
   public abstract ThreadedTaskView createThreadedTaskView(String taskMessage,
-                                                          UserPreferences userPreferences, 
                                                           ThreadedTaskController threadedTaskController);
 
   /**
@@ -106,12 +104,6 @@ public interface ViewFactory {
   public abstract DialogView createUserPreferencesView(
                                           UserPreferences preferences,
                                           UserPreferencesController userPreferencesController);
-  
-  /**
-   * Returns a new view that edits level values.
-   */
-  public abstract DialogView createLevelView(UserPreferences preferences, LevelController levelController);
-
   /**
    * Returns a new view that edits furniture values.
    */
@@ -131,30 +123,11 @@ public interface ViewFactory {
                                             RoomController roomController);
   
   /**
-   * Returns a new view that edits polyline values.
-   * @since 5.0
-   */
-  public abstract DialogView createPolylineView(UserPreferences preferences,
-                                                PolylineController polylineController);
-
-  /**
    * Returns a new view that edits label values.
    */
   public abstract DialogView createLabelView(boolean modification,
                                              UserPreferences preferences,
                                              LabelController labelController);
-
-  /**
-   * Returns a new view that edits compass values.
-   */
-  public abstract DialogView createCompassView(UserPreferences preferences, 
-                                               CompassController compassController);
-  
-  /**
-   * Returns a new view that edits observer camera values.
-   */
-  public abstract DialogView createObserverCameraView(UserPreferences preferences,
-                                                      ObserverCameraController home3DAttributesController);
   
   /**
    * Returns a new view that edits 3D attributes.
@@ -169,18 +142,6 @@ public interface ViewFactory {
                                                      TextureChoiceController textureChoiceController);
 
   /**
-   * Returns a new view that edits the baseboard of its controller.  
-   */
-  public abstract View createBaseboardChoiceView(UserPreferences preferences,
-                                                 BaseboardChoiceController baseboardChoiceController);
-
-  /**
-   * Returns a new view that edits the materials of its controller.  
-   */
-  public abstract View createModelMaterialsView(UserPreferences preferences,
-                                                 ModelMaterialsController modelMaterialsController);
-
-  /**
    * Creates a new view that edits page setup.
    */
   public abstract DialogView createPageSetupView(UserPreferences preferences,
@@ -190,27 +151,8 @@ public interface ViewFactory {
    * Returns a new view that displays home print preview. 
    */
   public abstract DialogView createPrintPreviewView(Home home,
-                                                    UserPreferences preferences,
-                                                    HomeController homeController,
-                                                    PrintPreviewController printPreviewController);
-
-  /**
-   * Returns a new view able to compute a photo realistic image of a home. 
-   */
-  public abstract DialogView createPhotoView(Home home, UserPreferences preferences, 
-                                             PhotoController photoController);
-
-  /**
-   * Returns a new view able to compute a photos of a home from its stored points of view. 
-   */
-  public abstract DialogView createPhotosView(Home home, UserPreferences preferences, 
-                                              PhotosController photosController);
-
-  /**
-   * Returns a new view able to compute a 3D video of a home. 
-   */
-  public abstract DialogView createVideoView(Home home, UserPreferences preferences, 
-                                             VideoController videoController);
+                                                 HomeController homeController,
+                                                 PrintPreviewController printPreviewController);
 
   /**
    * Returns a new view that displays Sweet Home 3D help.

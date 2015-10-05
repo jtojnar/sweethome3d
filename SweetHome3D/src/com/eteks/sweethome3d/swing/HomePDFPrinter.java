@@ -1,7 +1,7 @@
 /*
  * HomePDFPrinter.java 7 sept. 07
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,9 +26,9 @@ import java.awt.print.PrinterException;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
+import java.util.ResourceBundle;
 
 import com.eteks.sweethome3d.model.Home;
-import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.viewcontroller.ContentManager;
 import com.eteks.sweethome3d.viewcontroller.HomeController;
 import com.lowagie.text.Document;
@@ -43,20 +43,12 @@ import com.lowagie.text.pdf.PdfWriter;
  * @author Emmanuel Puybaret
  */
 public class HomePDFPrinter {
-  private final Home            home;
-  private final UserPreferences preferences;
-  private final HomeController  controller;
-  private final Font            defaultFont;
+  private final Home           home;
+  private final HomeController controller;
+  private final Font           defaultFont;
 
-  /**
-   * Creates a PDF printer able to write to an output stream. 
-   */
-  public HomePDFPrinter(Home home, 
-                        UserPreferences preferences, 
-                        HomeController controller, 
-                        Font defaultFont) {
+  public HomePDFPrinter(Home home, HomeController controller, Font defaultFont) {
     this.home = home;
-    this.preferences = preferences;
     this.controller = controller;
     this.defaultFont = defaultFont;
   }
@@ -74,8 +66,8 @@ public class HomePDFPrinter {
       
       // Set PDF document description
       pdfDocument.addAuthor(System.getProperty("user.name", ""));
-      String pdfDocumentCreator = this.preferences.getLocalizedString(
-          HomePDFPrinter.class, "pdfDocument.creator");    
+      String pdfDocumentCreator = ResourceBundle.getBundle(HomePDFPrinter.class.getName()).
+          getString("pdfDocument.creator");    
       pdfDocument.addCreator(pdfDocumentCreator);
       pdfDocument.addCreationDate();
       String homeName = this.home.getName();

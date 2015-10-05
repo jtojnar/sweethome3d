@@ -29,6 +29,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Locale;
+import java.util.ResourceBundle;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -53,9 +54,9 @@ import com.eteks.sweethome3d.io.FileUserPreferences;
 import com.eteks.sweethome3d.model.CatalogTexture;
 import com.eteks.sweethome3d.model.Content;
 import com.eteks.sweethome3d.model.Home;
-import com.eteks.sweethome3d.model.LengthUnit;
 import com.eteks.sweethome3d.model.RecorderException;
 import com.eteks.sweethome3d.model.TexturesCategory;
+import com.eteks.sweethome3d.model.LengthUnit;
 import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.model.Wall;
 import com.eteks.sweethome3d.swing.HomePane;
@@ -163,7 +164,7 @@ public class ImportedTextureWizardTest extends ComponentTestFixture {
     assertNull("Wrong texture on wall 2 right side", wall2.getRightSideTexture());
     
     // 3. Edit walls
-    JDialog attributesDialog = showWallPanel(preferences, controller, frame, tester);
+    JDialog attributesDialog = showWallPanel(controller, frame, tester);
     // Retrieve WallPanel components
     WallPanel wallPanel = (WallPanel)TestUtilities.findComponent(
         attributesDialog, WallPanel.class);
@@ -177,18 +178,18 @@ public class ImportedTextureWizardTest extends ComponentTestFixture {
     assertFalse("X start spinner panel is visible", xStartSpinner.getParent().isVisible());
     assertFalse("X end spinner panel is visible", xEndSpinner.getParent().isVisible());
     // Edit right side texture
-    JDialog textureDialog = showTexturePanel(preferences, rightSideTextureComponent, false, attributesDialog, tester);
+    JDialog textureDialog = showTexturePanel(rightSideTextureComponent, false, attributesDialog, tester);
     JList availableTexturesList = (JList)new BasicFinder().find(textureDialog, 
         new ClassMatcher(JList.class, true));
     int textureCount = availableTexturesList.getModel().getSize();
     CatalogTexture defaultTexture = (CatalogTexture)availableTexturesList.getSelectedValue();
     // Import texture
-    JDialog textureWizardDialog = showImportTextureWizard(preferences, frame, tester, false);    
+    JDialog textureWizardDialog = showImportTextureWizard(frame, tester, false);    
     // Retrieve ImportedFurnitureWizardStepsPanel components
     ImportedTextureWizardStepsPanel panel = (ImportedTextureWizardStepsPanel)TestUtilities.findComponent(
         textureWizardDialog, ImportedTextureWizardStepsPanel.class);
-    final JButton imageChoiceOrChangeButton = (JButton)TestUtilities.getField(panel, "imageChoiceOrChangeButton");
-    final JTextField nameTextField = (JTextField)TestUtilities.getField(panel, "nameTextField");
+    JButton imageChoiceOrChangeButton = (JButton)TestUtilities.getField(panel, "imageChoiceOrChangeButton");
+    JTextField nameTextField = (JTextField)TestUtilities.getField(panel, "nameTextField");
     JComboBox categoryComboBox = (JComboBox)TestUtilities.getField(panel, "categoryComboBox");
     JSpinner widthSpinner = (JSpinner)TestUtilities.getField(panel, "widthSpinner");
     JSpinner heightSpinner = (JSpinner)TestUtilities.getField(panel, "heightSpinner");
@@ -203,23 +204,16 @@ public class ImportedTextureWizardTest extends ComponentTestFixture {
     
     // 4. Choose tested image 
     String imageChoiceOrChangeButtonText = imageChoiceOrChangeButton.getText();
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          imageChoiceOrChangeButton.doClick();
-        }
-      });
-    // Wait 200 ms to let time to Java to load the image
+    imageChoiceOrChangeButton.doClick();
+    // Wait 200 s to let time to Java to load the image
     Thread.sleep(200);
     // Check choice button text changed
     assertFalse("Choice button text didn't change", 
         imageChoiceOrChangeButtonText.equals(imageChoiceOrChangeButton.getText()));
     // Click on next button
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          nextFinishOptionButton.doClick();
-        }
-      });
+    nextFinishOptionButton.doClick();
     // Check current step is attributes
+    tester.waitForIdle();
     assertStepShowing(panel, false, true);
 
     // 5. Check default furniture name is the presentation name proposed by content manager
@@ -230,17 +224,13 @@ public class ImportedTextureWizardTest extends ComponentTestFixture {
     assertSame("Name text field doesn't have focus", nameTextField,
         KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner());    
     // Check default category is user category  
-    String userCategoryName = preferences.getLocalizedString(
-        ImportedTextureWizardStepsPanel.class, "userCategory");
+    String userCategoryName = ResourceBundle.getBundle(
+        ImportedTextureWizardStepsPanel.class.getName()).getString("userCategory");
     assertEquals("Wrong default category", userCategoryName, 
         ((TexturesCategory)categoryComboBox.getSelectedItem()).getName());
     // Rename texture  
-    final String textureTestName = "#@" + System.currentTimeMillis() + "@#";
-    tester.invokeAndWait(new Runnable() {
-      public void run() {
-        nameTextField.setText(textureTestName);    
-      }
-    });
+    String textureTestName = "#@" + System.currentTimeMillis() + "@#";
+    nameTextField.setText(textureTestName);    
     // Check next button is enabled again
     assertTrue("Next button isn't enabled", nextFinishOptionButton.isEnabled());
 
@@ -287,7 +277,7 @@ public class ImportedTextureWizardTest extends ComponentTestFixture {
     // 8. Edit left side texture of first wall
     home.setSelectedItems(Arrays.asList(wall1));
     assertEquals("Wrong selected items count in home", 1, home.getSelectedItems().size());
-    attributesDialog = showWallPanel(preferences, controller, frame, tester);
+    attributesDialog = showWallPanel(controller, frame, tester);
     // Retrieve WallPanel components
     wallPanel = (WallPanel)TestUtilities.findComponent(attributesDialog, WallPanel.class);
     xStartSpinner = (JSpinner)TestUtilities.getField(wallPanel, "xStartSpinner");
@@ -298,25 +288,23 @@ public class ImportedTextureWizardTest extends ComponentTestFixture {
     assertTrue("X start spinner panel isn't visible", xStartSpinner.getParent().isVisible());
     assertTrue("X end spinner panel isn't visible", xEndSpinner.getParent().isVisible());
     // Edit left side texture
-    textureDialog = showTexturePanel(preferences, leftSideTextureComponent, true, attributesDialog, tester);
+    textureDialog = showTexturePanel(leftSideTextureComponent, true, attributesDialog, tester);
     availableTexturesList = (JList)new BasicFinder().find(textureDialog, 
         new ClassMatcher(JList.class, true));
     textureCount = availableTexturesList.getModel().getSize();
     // Select imported texture
     availableTexturesList.setSelectedValue(importedTexture, true);
     // Modify texture
-    textureWizardDialog = showImportTextureWizard(preferences, frame, tester, true);    
+    textureWizardDialog = showImportTextureWizard(frame, tester, true);    
     // Retrieve ImportedFurnitureWizardStepsPanel components
     panel = (ImportedTextureWizardStepsPanel)TestUtilities.findComponent(
         textureWizardDialog, ImportedTextureWizardStepsPanel.class);
+    imageChoiceOrChangeButton = (JButton)TestUtilities.getField(panel, "imageChoiceOrChangeButton");
     widthSpinner = (JSpinner)TestUtilities.getField(panel, "widthSpinner");
     final JButton nextFinishOptionButton2 = (JButton)TestUtilities.getField(
         TestUtilities.findComponent(textureWizardDialog, WizardPane.class), "nextFinishOptionButton");
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          nextFinishOptionButton2.doClick();
-        }
-      });
+    tester.waitForIdle();
+    nextFinishOptionButton2.doClick();
     
     // Change width
     widthSpinner.setValue((Float)widthSpinner.getValue() * 2);
@@ -327,7 +315,6 @@ public class ImportedTextureWizardTest extends ComponentTestFixture {
           nextFinishOptionButton2.doClick(); 
         }
       });
-    tester.waitForIdle();
     assertFalse("Import texture wizard still showing", textureWizardDialog.isShowing());
     // Check the list of available textures has the same texture count 
     // and a new selected texture 
@@ -352,12 +339,12 @@ public class ImportedTextureWizardTest extends ComponentTestFixture {
     assertEquals("Wrong texture on wall 2 right side", newWidth / 2, wall2.getRightSideTexture().getWidth());
     
     // 10. Open wall dialog a last time to delete the modified texture
-    attributesDialog = showWallPanel(preferences, controller, frame, tester);
+    attributesDialog = showWallPanel(controller, frame, tester);
     // Retrieve WallPanel components
     wallPanel = (WallPanel)TestUtilities.findComponent(attributesDialog, WallPanel.class);
     leftSideTextureComponent = (TextureChoiceComponent)TestUtilities.getField(wallPanel, "leftSideTextureComponent");
     // Edit left side texture
-    textureDialog = showTexturePanel(preferences, leftSideTextureComponent, true, attributesDialog, tester);
+    textureDialog = showTexturePanel(leftSideTextureComponent, true, attributesDialog, tester);
     availableTexturesList = (JList)new BasicFinder().find(textureDialog, 
         new ClassMatcher(JList.class, true));
     textureCount = availableTexturesList.getModel().getSize();
@@ -366,20 +353,18 @@ public class ImportedTextureWizardTest extends ComponentTestFixture {
     final JButton deleteButton = (JButton)new BasicFinder().find(textureDialog, 
         new Matcher() {
           public boolean matches(Component c) {
-            return c instanceof JButton && ((JButton)c).getText().equals(preferences.getLocalizedString(
-                TextureChoiceComponent.class, "deleteTextureButton.text"));
+            return c instanceof JButton && ((JButton)c).getText().equals(ResourceBundle.getBundle(
+                TextureChoiceComponent.class.getName()).getString("deleteTextureButton.text"));
           }
         });
-    tester.invokeAndWait(new Runnable() { 
-        public void run() {
-          // Display confirm dialog box later in Event Dispatch Thread to avoid blocking test thread
-          deleteButton.doClick();        
-        }
-      });
-    tester.waitForIdle();
+    tester.invokeLater(new Runnable() { 
+      public void run() {
+        // Display confirm dialog box later in Event Dispatch Thread to avoid blocking test thread
+        deleteButton.doClick();        }
+    });
     // Wait for confirm dialog to be shown
-    final String confirmDeleteSelectedCatalogTextureDialogTitle = preferences.getLocalizedString(
-        TextureChoiceComponent.class, "confirmDeleteSelectedCatalogTexture.title");
+    final String confirmDeleteSelectedCatalogTextureDialogTitle = ResourceBundle.getBundle(
+        TextureChoiceComponent.class.getName()).getString("confirmDeleteSelectedCatalogTexture.title");
     tester.waitForFrameShowing(new AWTHierarchy(), confirmDeleteSelectedCatalogTextureDialogTitle);
     // Check dialog box is displayed
     JDialog confirmDialog = (JDialog)new BasicFinder().find(textureDialog,  
@@ -411,8 +396,7 @@ public class ImportedTextureWizardTest extends ComponentTestFixture {
   /**
    * Returns the dialog that displays wall attributes. 
    */
-  private JDialog showWallPanel(UserPreferences preferences,
-                                final HomeController controller, 
+  private JDialog showWallPanel(final HomeController controller, 
                                 JFrame parent, JComponentTester tester) 
             throws ComponentSearchException {
     tester.invokeLater(new Runnable() { 
@@ -422,8 +406,8 @@ public class ImportedTextureWizardTest extends ComponentTestFixture {
         }
       });
     // Wait for wall view to be shown
-    tester.waitForFrameShowing(new AWTHierarchy(), preferences.getLocalizedString(
-        WallPanel.class, "wall.title"));
+    tester.waitForFrameShowing(new AWTHierarchy(), ResourceBundle.getBundle(
+        WallPanel.class.getName()).getString("wall.title"));
     // Check dialog box is displayed
     JDialog attributesDialog = (JDialog)new BasicFinder().find(parent, 
         new ClassMatcher (JDialog.class, true));
@@ -434,8 +418,7 @@ public class ImportedTextureWizardTest extends ComponentTestFixture {
   /**
    * Returns the dialog that displays texture panel. 
    */
-  private JDialog showTexturePanel(UserPreferences preferences,
-                                   final TextureChoiceComponent textureComponent, 
+  private JDialog showTexturePanel(final TextureChoiceComponent textureComponent, 
                                    boolean leftSide,
                                    Container parent, JComponentTester tester) 
             throws ComponentSearchException {
@@ -445,8 +428,8 @@ public class ImportedTextureWizardTest extends ComponentTestFixture {
           textureComponent.doClick();        }
       });
     // Wait for texture panel to be shown
-    String textureTitle = preferences.getLocalizedString(
-        WallController.class, leftSide ? "leftSideTextureTitle" : "rightSideTextureTitle");
+    String textureTitle = ResourceBundle.getBundle(
+        WallController.class.getName()).getString(leftSide ? "leftSideTextureTitle" : "rightSideTextureTitle");
     tester.waitForFrameShowing(new AWTHierarchy(), textureTitle);
     // Check texture dialog box is displayed
     JDialog textureDialog = (JDialog)new BasicFinder().find(parent, 
@@ -458,8 +441,7 @@ public class ImportedTextureWizardTest extends ComponentTestFixture {
   /**
    * Returns the dialog that displays texture import wizard. 
    */
-  private JDialog showImportTextureWizard(final UserPreferences preferences,
-                                          Container parent, JComponentTester tester, 
+  private JDialog showImportTextureWizard(Container parent, JComponentTester tester, 
                                           final boolean modify) 
             throws ComponentSearchException {
     final JButton button = (JButton)new BasicFinder().find(parent, 
@@ -467,9 +449,9 @@ public class ImportedTextureWizardTest extends ComponentTestFixture {
           public boolean matches(Component c) {
             return c instanceof JButton 
                 && ((JButton)c).getText() != null 
-                && ((JButton)c).getText().equals(preferences.getLocalizedString(
-                    TextureChoiceComponent.class,
-                    modify ? "modifyTextureButton.text" : "importTextureButton.text"));
+                && ((JButton)c).getText().equals(ResourceBundle.getBundle(
+                    TextureChoiceComponent.class.getName()).getString(
+                        modify ? "modifyTextureButton.text" : "importTextureButton.text"));
           }
         });
     tester.invokeLater(new Runnable() { 
@@ -479,9 +461,9 @@ public class ImportedTextureWizardTest extends ComponentTestFixture {
         }
       });
     // Wait for texture wizard to be shown
-    String textureWizardTitle = preferences.getLocalizedString(
-        ImportedTextureWizardController.class,
-        modify ? "modifyTextureWizard.title" : "importTextureWizard.title");
+    String textureWizardTitle = ResourceBundle.getBundle(
+        ImportedTextureWizardController.class.getName()).getString(
+            modify ? "modifyTextureWizard.title" : "importTextureWizard.title");
     tester.waitForFrameShowing(new AWTHierarchy(), textureWizardTitle);
     // Check texture dialog box is displayed
     JDialog textureDialog = (JDialog)new BasicFinder().find(parent, 

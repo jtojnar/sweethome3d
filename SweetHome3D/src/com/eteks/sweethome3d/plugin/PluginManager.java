@@ -1,7 +1,7 @@
 /*
  * PluginManager.java 24 oct. 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,31 +19,23 @@
  */
 package com.eteks.sweethome3d.plugin;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
-import java.util.TreeMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -53,20 +45,13 @@ import com.eteks.sweethome3d.model.CollectionEvent;
 import com.eteks.sweethome3d.model.CollectionListener;
 import com.eteks.sweethome3d.model.Home;
 import com.eteks.sweethome3d.model.HomeApplication;
-import com.eteks.sweethome3d.model.Library;
-import com.eteks.sweethome3d.model.RecorderException;
 import com.eteks.sweethome3d.model.UserPreferences;
-import com.eteks.sweethome3d.tools.OperatingSystem;
-import com.eteks.sweethome3d.viewcontroller.HomeController;
 
 /**
  * Sweet Home 3D plug-ins manager.
  * @author Emmanuel Puybaret
  */
 public class PluginManager {
-  public static final String PLUGIN_LIBRARY_TYPE = "Plugin"; 
-  
-  private static final String ID                          = "id";
   private static final String NAME                        = "name";
   private static final String CLASS                       = "class";
   private static final String DESCRIPTION                 = "description";
@@ -81,42 +66,32 @@ public class PluginManager {
   private static final String DEFAULT_APPLICATION_PLUGIN_PROPERTIES_FILE = 
       APPLICATION_PLUGIN_FAMILY + ".properties";
 
-  private final File [] pluginFolders;
-  private final Map<String, PluginLibrary> pluginLibraries = 
-      new TreeMap<String, PluginLibrary>();
-  private final Map<Home, List<Plugin>> homePlugins = new LinkedHashMap<Home, List<Plugin>>();
+  private final Map<String, PluginDefinition> pluginDefinitions = 
+      new HashMap<String, PluginDefinition>();
+  
+  private final Map<Home, List<Plugin>> homePlugins = new HashMap<Home, List<Plugin>>();
   
   /**
    * Reads application plug-ins from resources in the given plug-in folder.
    */
   public PluginManager(File pluginFolder) {
-    this(new File [] {pluginFolder});
-  }
-  
-  /**
-   * Reads application plug-ins from resources in the given plug-in folders.
-   * @since 3.0
-   */
-  public PluginManager(File [] pluginFolders) {
-    this.pluginFolders = pluginFolders;
-    if (pluginFolders != null) {
-      for (File pluginFolder : pluginFolders) {
-        // Try to load plugin files from plugin folder
-        File [] pluginFiles = pluginFolder.listFiles(new FileFilter () {
-          public boolean accept(File pathname) {
-            return pathname.isFile();
-          }
-        });
-        
-        if (pluginFiles != null) {
-          // Treat plug in files in reverse order of their version number
-          Arrays.sort(pluginFiles, Collections.reverseOrder(OperatingSystem.getFileVersionComparator()));
-          for (File pluginFile : pluginFiles) {
-            try {
-              loadPlugins(pluginFile.toURI().toURL(), pluginFile.getAbsolutePath());
-            } catch (MalformedURLException ex) {
-              // Files are supposed to exist !
-            }
+    if (pluginFolder != null) {
+      // Try to load plugin files from plugin folder
+      File [] pluginFiles = pluginFolder.listFiles(new FileFilter () {
+        public boolean accept(File pathname) {
+          return pathname.isFile();
+        }
+      });
+      
+      if (pluginFiles != null) {
+        // Treat plug in files in reverse order so file named with a date will be taken into account 
+        // from most recent to least recent
+        Arrays.sort(pluginFiles, Collections.reverseOrder());
+        for (File pluginFile : pluginFiles) {
+          try {
+            loadPlugins(pluginFile.toURI().toURL());
+          } catch (MalformedURLException ex) {
+            // Files are supposed to exist !
           }
         }
       }
@@ -127,16 +102,15 @@ public class PluginManager {
    * Reads application plug-ins from resources in the given URLs.
    */
   public PluginManager(URL [] pluginUrls) {
-    this.pluginFolders = null;
     for (URL pluginUrl : pluginUrls) {
-      loadPlugins(pluginUrl, pluginUrl.toExternalForm());
+      loadPlugins(pluginUrl);
     }
   }
 
   /**
    * Loads the plug-ins that may be available in the given URL.
    */
-  private void loadPlugins(URL pluginUrl, String pluginLocation) {
+  private void loadPlugins(URL pluginUrl) {
     ZipInputStream zipIn = null;
     try {
       // Open a zip input from pluginUrl
@@ -154,9 +128,7 @@ public class PluginManager {
             applicationPluginFamily += APPLICATION_PLUGIN_FAMILY;
             ClassLoader classLoader = new URLClassLoader(new URL [] {pluginUrl}, getClass().getClassLoader());
             readPlugin(ResourceBundle.getBundle(applicationPluginFamily, Locale.getDefault(), classLoader), 
-                pluginLocation, 
-                "jar:" + pluginUrl.toString() + "!/" + URLEncoder.encode(zipEntryName, "UTF-8").replace("+", "%20"),
-                classLoader);
+                "jar:" + pluginUrl.toString() + "!/" + zipEntryName, classLoader);
           } catch (MissingResourceException ex) {
             // Ignore malformed plugins
           }
@@ -179,22 +151,21 @@ public class PluginManager {
    */
   private void readPlugin(ResourceBundle resource,
                           String         pluginLocation,
-                          String         pluginEntry,
                           ClassLoader    pluginClassLoader) {
     try {
       String name = resource.getString(NAME);
 
       // Check Java and application versions
       String javaMinimumVersion = resource.getString(JAVA_MINIMUM_VERSION);
-      if (!OperatingSystem.isJavaVersionGreaterOrEqual(javaMinimumVersion)) {
-        System.err.println("Invalid plug-in " + pluginEntry + ":\n" 
+      if (!isJavaVersionSuperiorTo(javaMinimumVersion)) {
+        System.err.println("Invalid plug-in " + pluginLocation + ":\n" 
             + "Not compatible Java version " + System.getProperty("java.version"));
         return;
       }
       
       String applicationMinimumVersion = resource.getString(APPLICATION_MINIMUM_VERSION);
       if (!isApplicationVersionSuperiorTo(applicationMinimumVersion)) {
-        System.err.println("Invalid plug-in " + pluginEntry + ":\n" 
+        System.err.println("Invalid plug-in " + pluginLocation + ":\n" 
             + "Not compatible application version");
         return;
       }
@@ -202,36 +173,51 @@ public class PluginManager {
       String pluginClassName = resource.getString(CLASS);
       Class<? extends Plugin> pluginClass = getPluginClass(pluginClassLoader, pluginClassName);
       
-      String id = getOptionalString(resource, ID, null);
       String description = resource.getString(DESCRIPTION);
       String version = resource.getString(VERSION);
       String license = resource.getString(LICENSE);
       String provider = resource.getString(PROVIDER);
       
       // Store plug-in properties if they don't exist yet
-      if (this.pluginLibraries.get(name) == null) {
-        this.pluginLibraries.put(name, new PluginLibrary(
-            pluginLocation, id, name, description, version, license, provider, pluginClass, pluginClassLoader));
+      if (this.pluginDefinitions.get(name) == null) {
+        this.pluginDefinitions.put(name, new PluginDefinition(
+            name, pluginClass, pluginClassLoader, description, version, license, provider));
       }      
     } catch (MissingResourceException ex) {
-      System.err.println("Invalid plug-in " + pluginEntry + ":\n" + ex.getMessage());
+      System.err.println("Invalid plug-in " + pluginLocation + ":\n" + ex.getMessage());
     } catch (IllegalArgumentException ex) {
-      System.err.println("Invalid plug-in " + pluginEntry + ":\n" + ex.getMessage());
+      System.err.println("Invalid plug-in " + pluginLocation + ":\n" + ex.getMessage());
     } 
   }
-
-  /**
-   * Returns the value of the property with the given <code>key</code> or the default value 
-   * if the property isn't defined.
-   */
-  private String getOptionalString(ResourceBundle resource, String key, String defaultValue) {
-    try {
-      return resource.getString(key);
-    } catch (MissingResourceException ex) {
-      return defaultValue;
-    }
-  }
   
+  /**
+   * Returns <code>true</code> if the given version is smaller than the version 
+   * of the current JVM. Versions are compared only on their first two parts.
+   */
+  private boolean isJavaVersionSuperiorTo(String javaMinimumVersion) {
+    String javaVersion = System.getProperty("java.version");
+    String [] javaVersionParts = javaVersion.split("\\.|_");
+    String [] javaMinimumVersionParts = javaMinimumVersion.split("\\.|_");
+    if (javaVersionParts.length >= 1
+        && javaMinimumVersionParts.length >= 1) {
+      try {
+        // Compare digits in first part
+        int javaVersionFirstPart = Integer.parseInt(javaVersionParts [0]);
+        int javaMinimumVersionFirstPart = Integer.parseInt(javaMinimumVersionParts [0]);        
+        if (javaVersionFirstPart > javaMinimumVersionFirstPart) {
+          return true;
+        } else if (javaVersionFirstPart == javaMinimumVersionFirstPart 
+                   && javaVersionParts.length >= 2
+                   && javaMinimumVersionParts.length >= 2) { 
+          // Compare digits in second part (this may work even if second part is > 10)
+          return Integer.parseInt(javaVersionParts [1]) >= Integer.parseInt(javaMinimumVersionParts [1]);
+        }
+      } catch (NumberFormatException ex) {
+      }
+    }
+    return false;
+  }
+
   /**
    * Returns <code>true</code> if the given version is smaller than the version 
    * of the application. Versions are compared only on their first two parts.
@@ -280,8 +266,6 @@ public class PluginManager {
             pluginClassName + " constructor not accessible");
       }
       return pluginClass;
-    } catch (NoClassDefFoundError ex) {
-      throw new IllegalArgumentException(ex.getMessage(), ex);
     } catch (ClassNotFoundException ex) {
       throw new IllegalArgumentException(ex.getMessage(), ex);
     } catch (NoSuchMethodException ex) {
@@ -290,51 +274,29 @@ public class PluginManager {
   }
 
   /**
-   * Returns the available plug-in libraries.
-   * @since 4.0
-   */
-  public List<Library> getPluginLibraries() {
-    return Collections.unmodifiableList(new ArrayList<Library>(this.pluginLibraries.values()));
-  }
-  
-  /**
    * Returns an unmodifiable list of plug-in instances initialized with the 
    * given parameters.
    */
   public List<Plugin> getPlugins(final HomeApplication application, 
                                  final Home home, 
-                                 UserPreferences preferences,                                 
+                                 UserPreferences preferences,
                                  UndoableEditSupport undoSupport) {
-    return getPlugins(application, home, preferences, null, undoSupport);
-  }
-    
-  /**
-   * Returns an unmodifiable list of plug-in instances initialized with the 
-   * given parameters.
-   * @since 3.5
-   */
-  List<Plugin> getPlugins(final HomeApplication application, 
-                          final Home home, 
-                          UserPreferences preferences,
-                          HomeController homeController,
-                          UndoableEditSupport undoSupport) {
     if (application.getHomes().contains(home)) {
       List<Plugin> plugins = this.homePlugins.get(home);
       if (plugins == null) {
         plugins = new ArrayList<Plugin>();
         // Instantiate each plug-in class
-        for (PluginLibrary pluginLibrary : this.pluginLibraries.values()) {
+        for (PluginDefinition pluginDefinition : this.pluginDefinitions.values()) {
           try {
-            Plugin plugin = pluginLibrary.getPluginClass().newInstance();                      
-            plugin.setPluginClassLoader(pluginLibrary.getPluginClassLoader());
-            plugin.setName(pluginLibrary.getName());
-            plugin.setDescription(pluginLibrary.getDescription());
-            plugin.setVersion(pluginLibrary.getVersion());
-            plugin.setLicense(pluginLibrary.getLicense());
-            plugin.setProvider(pluginLibrary.getProvider());
+            Plugin plugin = pluginDefinition.getPluginClass().newInstance();                      
+            plugin.setPluginClassLoader(pluginDefinition.getPluginClassLoader());
+            plugin.setName(pluginDefinition.getName());
+            plugin.setDescription(pluginDefinition.getDescription());
+            plugin.setVersion(pluginDefinition.getVersion());
+            plugin.setLicense(pluginDefinition.getLicense());
+            plugin.setProvider(pluginDefinition.getProvider());
             plugin.setUserPreferences(preferences);
             plugin.setHome(home);
-            plugin.setHomeController(homeController);
             plugin.setUndoableEditSupport(undoSupport);
             plugins.add(plugin);
           } catch (InstantiationException ex) {
@@ -345,7 +307,6 @@ public class PluginManager {
             throw new RuntimeException(ex);
           } 
         }
-        
         plugins = Collections.unmodifiableList(plugins);
         this.homePlugins.put(home, plugins);
         
@@ -370,110 +331,36 @@ public class PluginManager {
   }
   
   /**
-   * Returns <code>true</code> if a plug-in in the given file name already exists
-   * in the first plug-ins folder.
-   * @throws RecorderException if no plug-ins folder is associated to this manager.
-   */
-  public boolean pluginExists(String pluginLocation) throws RecorderException {
-    if (this.pluginFolders == null
-        || this.pluginFolders.length == 0) {
-      throw new RecorderException("Can't access to plugins folder");
-    } else {
-      String pluginFileName = new File(pluginLocation).getName();
-      return new File(this.pluginFolders [0], pluginFileName).exists();
-    }
-  }
-
-  /**
-   * Deletes the given plug-in <code>libraries</code> from managed plug-ins. 
-   * @since 4.0
-   */
-  public void deletePlugins(List<Library> libraries) throws RecorderException {
-    for (Library library : libraries) {
-      for (Iterator<Map.Entry<String, PluginLibrary>> it = this.pluginLibraries.entrySet().iterator(); it.hasNext(); ) {
-        String pluginLocation = it.next().getValue().getLocation();
-        if (pluginLocation.equals(library.getLocation())) {
-          if (new File(pluginLocation).exists()
-              && !new File(pluginLocation).delete()) {
-            throw new RecorderException("Couldn't delete file " + library.getLocation());
-          }
-          it.remove();
-        }
-      }
-    }
-  }
-  
-  /**
-   * Adds the file at the given location to the first plug-ins folders if it exists.
-   * Once added, the plug-in will be available at next application start. 
-   * @throws RecorderException if no plug-ins folder is associated to this manager.
-   */
-  public void addPlugin(String pluginPath) throws RecorderException {
-    try {
-      if (this.pluginFolders == null
-          || this.pluginFolders.length == 0) {
-        throw new RecorderException("Can't access to plugins folder");
-      }
-      String pluginFileName = new File(pluginPath).getName();
-      File destinationFile = new File(this.pluginFolders [0], pluginFileName);
-
-      // Copy furnitureCatalogFile to furniture plugin folder
-      InputStream tempIn = null;
-      OutputStream tempOut = null;
-      try {
-        tempIn = new BufferedInputStream(new FileInputStream(pluginPath));
-        this.pluginFolders [0].mkdirs();
-        tempOut = new FileOutputStream(destinationFile);          
-        byte [] buffer = new byte [8192];
-        int size; 
-        while ((size = tempIn.read(buffer)) != -1) {
-          tempOut.write(buffer, 0, size);
-        }
-      } finally {
-        if (tempIn != null) {
-          tempIn.close();
-        }
-        if (tempOut != null) {
-          tempOut.close();
-        }
-      }
-    } catch (IOException ex) {
-      throw new RecorderException(
-          "Can't write " + pluginPath +  " in plugins folder", ex);
-    }
-  }
-
-  /**
    * The properties required to instantiate a plug-in.
    */
-  private static class PluginLibrary implements Library {
-    private final String                  location;
+  private static class PluginDefinition {
     private final String                  name;
-    private final String                  id;
+    private final Class<? extends Plugin> pluginClass;
+    private final ClassLoader             pluginClassLoader;
     private final String                  description;
     private final String                  version;
     private final String                  license;
     private final String                  provider;
-    private final Class<? extends Plugin> pluginClass;
-    private final ClassLoader             pluginClassLoader;
     
     /**
      * Creates plug-in properties from parameters. 
      */
-    public PluginLibrary(String location,
-                         String id,
-                         String name, String description, String version, 
-                         String license, String provider,
-                         Class<? extends Plugin> pluginClass, ClassLoader pluginClassLoader) {
-      this.location = location;
-      this.id = id;
+    public PluginDefinition(String name,
+                            Class<? extends Plugin> pluginClass,
+                            ClassLoader pluginClassLoader, 
+                            String description, String version,
+                            String license, String provider) {
       this.name = name;
+      this.pluginClass = pluginClass;
+      this.pluginClassLoader = pluginClassLoader;
       this.description = description;
       this.version = version;
       this.license = license;
       this.provider = provider;
-      this.pluginClass = pluginClass;
-      this.pluginClassLoader = pluginClassLoader;
+    }
+
+    public String getName() {
+      return this.name;
     }
 
     public Class<? extends Plugin> getPluginClass() {
@@ -483,23 +370,7 @@ public class PluginManager {
     public ClassLoader getPluginClassLoader() {
       return this.pluginClassLoader;
     }
-    
-    public String getType() {
-      return PluginManager.PLUGIN_LIBRARY_TYPE;
-    }
-    
-    public String getLocation() {
-      return this.location;
-    }
-    
-    public String getId() {
-      return this.id;
-    }
 
-    public String getName() {
-      return this.name;
-    }
-    
     public String getDescription() {
       return this.description;
     }

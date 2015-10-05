@@ -20,13 +20,11 @@
 package com.eteks.furniturelibraryeditor.io;
 
 import java.io.File;
-import java.util.List;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 import com.eteks.furniturelibraryeditor.model.FurnitureLibraryUserPreferences;
 import com.eteks.sweethome3d.model.LengthUnit;
-import com.eteks.sweethome3d.model.Library;
 import com.eteks.sweethome3d.model.RecorderException;
 
 /**
@@ -123,11 +121,6 @@ public class FileFurnitureLibraryUserPreferences extends FurnitureLibraryUserPre
 
   @Override
   public boolean texturesLibraryExists(String texturesLibraryName) throws RecorderException {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public List<Library> getLibraries() {
     throw new UnsupportedOperationException();
   }
 }

@@ -1,7 +1,7 @@
 /*
  * Plugin.java 25 oct. 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,20 +23,15 @@ import javax.swing.undo.UndoableEditSupport;
 
 import com.eteks.sweethome3d.model.Home;
 import com.eteks.sweethome3d.model.UserPreferences;
-import com.eteks.sweethome3d.viewcontroller.HomeController;
 
 /**
  * The super class of a plug-in.
  * Subclasses should implement {@link #getActions() getActions} method
  * to return the actions that will be available to user.
  * This class should be packed in a JAR file with a family of properties file named 
- * <code>ApplicationPlugin.properties</code> at its root or in one of its subfolders. 
- * This file describes a plug-in with the following keys (all of them are mandatory
- * except <code>id</code>):
- * <ul><li>The <code>id</code> key gives an optional id to the plug-in, 
- *     which can be useful to determine if an update for this plug-in is available 
- *     during libraries updates checking.</li>
- *     <li>The <code>name</code> key specifies the name of the plug-in.</li>
+ * <code>ApplicationPlugin.properties</code> at its root or in one of its subdirectories. 
+ * This file describes a plug-in with the following keys (all of them are mandatory):
+ * <ul><li>The <code>name</code> key specifies the name of the plug-in.</li>
  *     <li>The <code>class</code> key specifies the fully qualified class name
  *     of the plug-in.</li>
  *     <li>The <code>description</code> key specifies the description of 
@@ -77,9 +72,7 @@ public abstract class Plugin {
   private String              provider;
   private UserPreferences     userPreferences;
   private Home                home;
-  private HomeController      homeController;
   private UndoableEditSupport undoableEditSupport;
-
 
   /**
    * Sets the class loader used to load this plug-in.
@@ -191,22 +184,6 @@ public abstract class Plugin {
    */
   public final Home getHome() {
     return this.home;
-  }
-
-  /**
-   * Sets the controller of the home.
-   * @since 3.5
-   */
-  final void setHomeController(HomeController homeController) {
-    this.homeController = homeController;
-  }
-
-  /**
-   * Returns the controller of the home of this plug-in.
-   * @since 3.5
-   */
-  public HomeController getHomeController() {
-    return this.homeController;
   }
   
   /**
