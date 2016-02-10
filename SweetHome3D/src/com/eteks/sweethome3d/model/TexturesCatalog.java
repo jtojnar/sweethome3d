@@ -1,7 +1,7 @@
 /*
  * TexturesCatalog.java 5 oct. 2006
  * 
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -27,8 +27,9 @@ import java.util.List;
  * Textures catalog.
  * @author Emmanuel Puybaret
  */
-public class TexturesCatalog {
+public abstract class TexturesCatalog {
   private List<TexturesCategory>  categories = new ArrayList<TexturesCategory>();
+  private boolean                 sorted;
   private final CollectionChangeSupport<CatalogTexture> texturesChangeSupport = 
                                       new CollectionChangeSupport<CatalogTexture>(this);
 
@@ -37,7 +38,18 @@ public class TexturesCatalog {
    * @return an unmodifiable list of categories.
    */
   public List<TexturesCategory> getCategories() {
+    checkCategoriesSorted();
     return Collections.unmodifiableList(this.categories);
+  }
+
+  /**
+   * Checks categories are sorted.
+   */
+  private void checkCategoriesSorted() {
+    if (!this.sorted) {
+      Collections.sort(this.categories);
+      this.sorted = true;
+    }
   }
 
   /**
@@ -51,6 +63,7 @@ public class TexturesCatalog {
    * Returns the category at a given <code>index</code>.
    */
   public TexturesCategory getCategory(int index) {
+    checkCategoriesSorted();
     return this.categories.get(index);
   }
 
@@ -69,6 +82,21 @@ public class TexturesCatalog {
   }
 
   /**
+   * Adds a category to this catalog.
+   * @param category the textures category to add.
+   * @throws IllegalHomonymException if a category with same name as the one in
+   *           parameter already exists in this catalog.
+   */
+  private void add(TexturesCategory category) {
+    if (this.categories.contains(category)) {
+      throw new IllegalHomonymException(
+          category.getName() + " already exists in catalog");
+    }
+    this.categories.add(category);
+    this.sorted = false;
+  }
+
+  /**
    * Adds <code>texture</code> of a given <code>category</code> to this catalog.
    * Once the <code>texture</code> is added, texture listeners added to this catalog will receive a
    * {@link CollectionListener#collectionChanged(CollectionEvent) collectionChanged} notification.
@@ -76,11 +104,11 @@ public class TexturesCatalog {
    * @param texture  a texture.
    */
   public void add(TexturesCategory category, CatalogTexture texture) {
-    int index = Collections.binarySearch(this.categories, category);
+    int index = this.categories.indexOf(category);
     // If category doesn't exist yet, add it to categories
-    if (index < 0) {
+    if (index == -1) {
       category = new TexturesCategory(category.getName());
-      this.categories.add(-index - 1, category);
+      add(category);
     } else {
       category = this.categories.get(index);
     }    
@@ -88,7 +116,7 @@ public class TexturesCatalog {
     category.add(texture);
     
     this.texturesChangeSupport.fireCollectionChanged(texture, 
-        category.getIndexOfTexture(texture), CollectionEvent.Type.ADD);
+        Collections.binarySearch(category.getTextures(), texture), CollectionEvent.Type.ADD);
   }
 
   /**
@@ -102,8 +130,8 @@ public class TexturesCatalog {
     TexturesCategory category = texture.getCategory();
     // Remove texture from its category
     if (category != null) {
-      int textureIndex = category.getIndexOfTexture(texture);
-      if (textureIndex >= 0) {
+      int pieceIndex = Collections.binarySearch(category.getTextures(), texture);
+      if (pieceIndex >= 0) {
         category.delete(texture);
         
         if (category.getTexturesCount() == 0) {
@@ -112,7 +140,7 @@ public class TexturesCatalog {
           this.categories.remove(category);
         }
         
-        this.texturesChangeSupport.fireCollectionChanged(texture, textureIndex, CollectionEvent.Type.DELETE);
+        this.texturesChangeSupport.fireCollectionChanged(texture, pieceIndex, CollectionEvent.Type.DELETE);
         return;
       }
     }

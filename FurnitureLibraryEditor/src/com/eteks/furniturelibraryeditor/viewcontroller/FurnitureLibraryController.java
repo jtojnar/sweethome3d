@@ -190,7 +190,7 @@ public class FurnitureLibraryController implements Controller {
       AddedFurnitureSelector addedFurnitureListener = new AddedFurnitureSelector();
       this.furnitureLibrary.addListener(addedFurnitureListener);
       new FurnitureController(this.furnitureLibrary, this.selectedFurniture, this.preferences, 
-          this.furnitureLanguageController, this.viewFactory, this.contentManager).displayView(getView());
+          this.furnitureLanguageController, this.viewFactory).displayView(getView());
       addedFurnitureListener.selectAddedFurniture();
       this.furnitureLibrary.removeListener(addedFurnitureListener);
     }
@@ -248,7 +248,7 @@ public class FurnitureLibraryController implements Controller {
                 piece, translationLanguage, FurnitureLibrary.FURNITURE_CATEGORY_PROPERTY) == null) {
           FurnitureController furnitureController = new FurnitureController(this.furnitureLibrary, 
               Arrays.asList(new CatalogPieceOfFurniture [] {piece}), 
-              this.preferences, this.furnitureLanguageController, this.viewFactory, this.contentManager);
+              this.preferences, this.furnitureLanguageController, this.viewFactory);
           if (categories == null) {
             categories = furnitureController.getDefaultCategories(language);
             translatedCategories = furnitureController.getDefaultCategories(translationLanguage);

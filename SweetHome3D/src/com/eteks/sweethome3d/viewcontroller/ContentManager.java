@@ -1,7 +1,7 @@
 /*
  * ContentManager.java 11 juil. 07
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,42 +27,42 @@ import com.eteks.sweethome3d.model.RecorderException;
  * @author Emmanuel Puybaret
  */
 public interface ContentManager {
-  public enum ContentType {SWEET_HOME_3D, MODEL, IMAGE, CSV, SVG, OBJ, PNG, JPEG, MOV, PDF, LANGUAGE_LIBRARY, TEXTURES_LIBRARY, FURNITURE_LIBRARY, PLUGIN, PHOTOS_DIRECTORY, USER_DEFINED};
+  public enum ContentType {SWEET_HOME_3D, MODEL, IMAGE, OBJ, PDF, FURNITURE_LIBRARY, PLUGIN, USER_DEFINED};
 
   /**
-   * Returns a {@link Content content} object that references a given content location.
+   * Returns a {@link Content content} object that references a given content name.
    */
-  public abstract Content getContent(String contentLocation) throws RecorderException;
+  public abstract Content getContent(String contentName) throws RecorderException;
 
   /**
-   * Returns a human readable string for a given content location.
+   * Returns a human readable string for a given content name.
    */
-  public abstract String getPresentationName(String contentLocation,
+  public abstract String getPresentationName(String contentName,
                                              ContentType contentType);
 
   /**
-   * Returns <code>true</code> if the content location in parameter is accepted
+   * Returns <code>true</code> if the content name in parameter is accepted
    * for <code>contentType</code>.
    */
-  public abstract boolean isAcceptable(String contentLocation,
+  public abstract boolean isAcceptable(String contentName,
                                        ContentType contentType);
 
   /**
-   * Returns the content location chosen by user with an open content dialog.
-   * @return the chosen content location or <code>null</code> if user canceled its choice.
+   * Returns the content name chosen by user with an open content dialog.
+   * @return the chosen content name or <code>null</code> if user canceled its choice.
    */
   public abstract String showOpenDialog(View parentView,
                                         String dialogTitle,
                                         ContentType contentType);
 
   /**
-   * Returns the content location chosen by user with a save content dialog.
-   * If the returned location already exists, this method should have confirmed 
+   * Returns the content name chosen by user with a save content dialog.
+   * If the returned name already exists, this method should have confirmed 
    * if the user wants to overwrite it before return. 
-   * @return the chosen content location or <code>null</code> if user canceled its choice.
+   * @return the chosen content name or <code>null</code> if user canceled its choice.
    */
   public abstract String showSaveDialog(View parentView,
                                         String dialogTitle,
                                         ContentType contentType,
-                                        String location);
+                                        String name);
 }

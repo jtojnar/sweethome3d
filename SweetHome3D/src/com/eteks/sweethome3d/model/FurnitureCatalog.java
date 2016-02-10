@@ -1,8 +1,9 @@
 /*
  * FurnitureCatalog.java 7 avr. 2006
  * 
- * Sweet Home 3D, Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>
- *  
+ * Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights
+ * Reserved.
+ * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation; either version 2 of the License, or (at your option) any later
@@ -27,8 +28,9 @@ import java.util.List;
  * Furniture catalog.
  * @author Emmanuel Puybaret
  */
-public class FurnitureCatalog {
+public abstract class FurnitureCatalog {
   private List<FurnitureCategory>       categories = new ArrayList<FurnitureCategory>();
+  private boolean                       sorted;
   private final CollectionChangeSupport<CatalogPieceOfFurniture> furnitureChangeSupport = 
                              new CollectionChangeSupport<CatalogPieceOfFurniture>(this);
 
@@ -37,7 +39,18 @@ public class FurnitureCatalog {
    * @return an unmodifiable list of categories.
    */
   public List<FurnitureCategory> getCategories() {
+    checkCategoriesSorted();
     return Collections.unmodifiableList(this.categories);
+  }
+
+  /**
+   * Checks categories are sorted.
+   */
+  private void checkCategoriesSorted() {
+    if (!this.sorted) {
+      Collections.sort(this.categories);
+      this.sorted = true;
+    }
   }
 
   /**
@@ -51,6 +64,7 @@ public class FurnitureCatalog {
    * Returns the category at a given <code>index</code>.
    */
   public FurnitureCategory getCategory(int index) {
+    checkCategoriesSorted();
     return this.categories.get(index);
   }
 
@@ -69,6 +83,21 @@ public class FurnitureCatalog {
   }
 
   /**
+   * Adds a category.
+   * @param category the category to add.
+   * @throws IllegalHomonymException if a category with same name as the one in
+   *           parameter already exists in this catalog.
+   */
+  private void add(FurnitureCategory category) {
+    if (this.categories.contains(category)) {
+      throw new IllegalHomonymException(
+          category.getName() + " already exists in catalog");
+    }
+    this.categories.add(category);
+    this.sorted = false;
+  }
+
+  /**
    * Adds <code>piece</code> of a given <code>category</code> to this catalog.
    * Once the <code>piece</code> is added, furniture listeners added to this catalog will receive a
    * {@link CollectionListener#collectionChanged(CollectionEvent) collectionChanged}
@@ -77,19 +106,19 @@ public class FurnitureCatalog {
    * @param piece    a piece of furniture.
    */
   public void add(FurnitureCategory category, CatalogPieceOfFurniture piece) {
-    int index = Collections.binarySearch(this.categories, category);
+    int index = this.categories.indexOf(category);
     // If category doesn't exist yet, add it to categories
-    if (index < 0) {
+    if (index == -1) {
       category = new FurnitureCategory(category.getName());
-      this.categories.add(-index - 1, category);
+      add(category);
     } else {
       category = this.categories.get(index);
     }    
     // Add current piece of furniture to category list
     category.add(piece);
-
+    
     this.furnitureChangeSupport.fireCollectionChanged(piece, 
-        category.getIndexOfPieceOfFurniture(piece), CollectionEvent.Type.ADD);
+        Collections.binarySearch(category.getFurniture(), piece), CollectionEvent.Type.ADD);
   }
 
   /**
@@ -104,7 +133,7 @@ public class FurnitureCatalog {
     FurnitureCategory category = piece.getCategory();
     // Remove piece from its category
     if (category != null) {
-      int pieceIndex = category.getIndexOfPieceOfFurniture(piece);
+      int pieceIndex = Collections.binarySearch(category.getFurniture(), piece);
       if (pieceIndex >= 0) {
         category.delete(piece);
         

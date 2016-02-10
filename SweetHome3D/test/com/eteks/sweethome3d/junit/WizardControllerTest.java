@@ -33,7 +33,6 @@ import javax.swing.JPanel;
 
 import junit.framework.TestCase;
 import abbot.finder.ComponentSearchException;
-import abbot.tester.JComponentTester;
 
 import com.eteks.sweethome3d.io.DefaultUserPreferences;
 import com.eteks.sweethome3d.model.UserPreferences;
@@ -60,8 +59,8 @@ public class WizardControllerTest extends TestCase {
     }; 
     WizardPane view = (WizardPane)controller.getView();
     // Retrieve view back and next buttons
-    final JButton backOptionButton = (JButton)TestUtilities.getField(view, "backOptionButton"); 
-    final JButton nextFinishOptionButton = (JButton)TestUtilities.getField(view, "nextFinishOptionButton"); 
+    JButton backOptionButton = (JButton)TestUtilities.getField(view, "backOptionButton"); 
+    JButton nextFinishOptionButton = (JButton)TestUtilities.getField(view, "nextFinishOptionButton"); 
     String nextFinishOptionButtonText = nextFinishOptionButton.getText();
     // Check view displays first step view
     assertEquals("First step view class isn't correct", 
@@ -72,12 +71,7 @@ public class WizardControllerTest extends TestCase {
     assertTrue("Next button isn't enabled", nextFinishOptionButton.isEnabled());
     
     // 2. Click on nextFinishButton
-    JComponentTester tester = new JComponentTester();
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          nextFinishOptionButton.doClick();
-        }
-      });
+    nextFinishOptionButton.doClick();
     // Check view displays second step view
     assertEquals("Second step view class isn't correct", 
         ControllerTest.SecondStepView.class, 
@@ -90,11 +84,7 @@ public class WizardControllerTest extends TestCase {
         nextFinishOptionButton.getText().equals(nextFinishOptionButtonText));
     
     // 3. Click on backButton
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          backOptionButton.doClick();
-        }
-      });
+    backOptionButton.doClick();
     // Check view displays first step view
     assertEquals("First step view class isn't correct", 
         ControllerTest.FirstStepView.class, 
@@ -108,34 +98,22 @@ public class WizardControllerTest extends TestCase {
     
 
     // 4. Click on nextFinishButton
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          nextFinishOptionButton.doClick();
-        }
-      });
+    nextFinishOptionButton.doClick();
     // Check view displays second step view
     assertEquals("Second step view class isn't correct", 
         ControllerTest.SecondStepView.class, 
         ((BorderLayout)((JPanel)view.getMessage()).getLayout()).getLayoutComponent(BorderLayout.CENTER).getClass());
     // Check the check box in second step view isn't selected
-    final JCheckBox yesCheckBox = (JCheckBox)TestUtilities.findComponent(view, JCheckBox.class);
+    JCheckBox yesCheckBox = (JCheckBox)TestUtilities.findComponent(view, JCheckBox.class);
     assertFalse("Check box is selected", yesCheckBox.isSelected());
     // Select the check box in second step view
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          yesCheckBox.doClick();
-        }
-      });
+    yesCheckBox.doClick();
     // Check the check box is selected and next button is enabled
     assertTrue("Check box isn't selected", yesCheckBox.isSelected());
     assertTrue("Next button isn't enabled", nextFinishOptionButton.isEnabled());
     
     // 5. Click on nextFinishButton
-    tester.invokeAndWait(new Runnable() {
-        public void run() {
-          nextFinishOptionButton.doClick();
-        }
-      });
+    nextFinishOptionButton.doClick();
     // Check finish was called
     assertTrue("Finish wasn't called", finished [0]);
   }

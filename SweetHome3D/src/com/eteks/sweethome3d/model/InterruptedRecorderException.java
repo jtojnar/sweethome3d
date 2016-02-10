@@ -1,7 +1,7 @@
 /*
  * InterruptedRecorderException.java 29 sept 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 package com.eteks.sweethome3d.model;
 
 /**
- * Exception thrown when a thread is interrupted during an access to data in IO layer.
+ * Exception thrown when an a thread is interrupted during an access to data in IO layer.
  * @author Emmanuel Puybaret
  */
 public class InterruptedRecorderException extends RecorderException {
