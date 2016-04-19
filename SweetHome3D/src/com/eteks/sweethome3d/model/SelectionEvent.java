@@ -1,7 +1,7 @@
 /*
  * SelectionEvent.java 26 juin 2006
  *
- * Sweet Home 3D, Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,16 +23,16 @@ import java.util.EventObject;
 import java.util.List;
 
 /**
- * Type of event notified when selection changes in home or furniture catalog.
+ * Type of event notified when {@link Home home} selection changes.
  * @author Emmanuel Puybaret
  */
 public class SelectionEvent extends EventObject {
-  private List<? extends Object> selectedItems;
+  private List selectedItems;
 
   /**
    * Creates an event with an associated list of selected items.
    */
-  public SelectionEvent(Object source, List<? extends Object> selectedItems) {
+  public SelectionEvent(Object source, List selectedItems) {
     super(source);
     this.selectedItems = selectedItems;
   }
@@ -40,7 +40,7 @@ public class SelectionEvent extends EventObject {
   /**
    * Returns the selected items.
    */
-  public List<? extends Object> getSelectedItems() {
+  public List getSelectedItems() {
     return this.selectedItems;
   }
 }

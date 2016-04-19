@@ -22,14 +22,11 @@ package com.eteks.textureslibraryeditor.swing;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.EventQueue;
-import java.awt.Insets;
 
-import javax.swing.Action;
 import javax.swing.ActionMap;
 import javax.swing.Box;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JEditorPane;
 import javax.swing.JOptionPane;
@@ -47,7 +44,6 @@ import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.swing.ControllerAction;
 import com.eteks.sweethome3d.swing.ResourceAction;
 import com.eteks.sweethome3d.swing.UnfocusableToolBar;
-import com.eteks.sweethome3d.tools.OperatingSystem;
 import com.eteks.sweethome3d.viewcontroller.HomeView.SaveAnswer;
 import com.eteks.textureslibraryeditor.model.TexturesLibrary;
 import com.eteks.textureslibraryeditor.model.TexturesLibraryUserPreferences;
@@ -100,9 +96,6 @@ public class EditorPane extends JRootPane implements EditorView {
       actionMap.put(ActionType.OPEN, new ControllerAction(
           preferences, EditorPane.class, ActionType.OPEN.name(), true, 
           controller, "open"));
-      actionMap.put(ActionType.MERGE, new ControllerAction(
-          preferences, EditorPane.class, ActionType.MERGE.name(), true, 
-          controller, "merge"));
       actionMap.put(ActionType.SAVE, new ControllerAction(
           preferences, EditorPane.class, ActionType.SAVE.name(), true, 
           controller, "save"));
@@ -144,46 +137,24 @@ public class EditorPane extends JRootPane implements EditorView {
                                  EditorController controller) {
     JToolBar toolBar = new UnfocusableToolBar();
     toolBar.setFloatable(false);
-    addActionToToolBar(EditorView.ActionType.NEW_LIBRARY, toolBar);
-    addActionToToolBar(EditorView.ActionType.OPEN, toolBar);
-    addActionToToolBar(EditorView.ActionType.MERGE, toolBar);
-    addActionToToolBar(EditorView.ActionType.SAVE, toolBar);
-    addActionToToolBar(EditorView.ActionType.SAVE_AS, toolBar);
+    ActionMap actionMap = getActionMap();
+    toolBar.add(new ResourceAction.ToolBarAction(actionMap.get(EditorView.ActionType.NEW_LIBRARY)));
+    toolBar.add(new ResourceAction.ToolBarAction(actionMap.get(EditorView.ActionType.OPEN)));
+    toolBar.add(new ResourceAction.ToolBarAction(actionMap.get(EditorView.ActionType.SAVE)));
+    toolBar.add(new ResourceAction.ToolBarAction(actionMap.get(EditorView.ActionType.SAVE_AS)));
     toolBar.add(Box.createRigidArea(new Dimension(2, 2)));
-    addActionToToolBar(EditorView.ActionType.PREFERENCES, toolBar);
+    toolBar.add(new ResourceAction.ToolBarAction(actionMap.get(EditorView.ActionType.PREFERENCES)));
     toolBar.addSeparator();
-    addActionToToolBar(ActionType.IMPORT_TEXTURES, toolBar);
-    addActionToToolBar(ActionType.MODIFY_TEXTURES, toolBar);
-    addActionToToolBar(ActionType.DELETE, toolBar);
+    toolBar.add(new ResourceAction.ToolBarAction(actionMap.get(ActionType.IMPORT_TEXTURES)));
+    toolBar.add(new ResourceAction.ToolBarAction(actionMap.get(ActionType.MODIFY_TEXTURES)));
+    toolBar.add(new ResourceAction.ToolBarAction(actionMap.get(ActionType.DELETE)));
     toolBar.add(Box.createRigidArea(new Dimension(2, 2)));
     JComponent texturesLanguageView = (JComponent)controller.getTexturesLanguageController().getView();
     texturesLanguageView.setMaximumSize(texturesLanguageView.getPreferredSize());
     toolBar.add(texturesLanguageView);
     toolBar.addSeparator();
-    addActionToToolBar(EditorView.ActionType.ABOUT, toolBar);
+    toolBar.add(new ResourceAction.ToolBarAction(actionMap.get(EditorView.ActionType.ABOUT)));
     return toolBar;
-  }
-
-  /**
-   * Adds to tool bar the button matching the given <code>actionType</code>. 
-   */
-  private void addActionToToolBar(ActionType actionType,
-                                  JToolBar toolBar) {
-    Action action = new ResourceAction.ToolBarAction(getActionMap().get(actionType));
-    if (OperatingSystem.isMacOSXLeopardOrSuperior() && OperatingSystem.isJavaVersionGreaterOrEqual("1.7")) {
-      // Add a button with higher insets to ensure the top and bottom of segmented buttons are correctly drawn 
-      toolBar.add(new JButton(new ResourceAction.ToolBarAction(action)) {
-          @Override
-          public Insets getInsets() {
-            Insets insets = super.getInsets();
-            insets.top += 3;
-            insets.bottom += 3;
-            return insets;
-          }
-        });
-    } else {
-      toolBar.add(new JButton(new ResourceAction.ToolBarAction(action)));
-    }
   }
 
   /**

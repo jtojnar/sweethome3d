@@ -183,12 +183,4 @@ public abstract class TexturesLibraryUserPreferences extends UserPreferences {
   public boolean isContentMatchingTexturesName() {
     return true;
   }
-
-  /**
-   * Returns <code>false</code>.
-   */
-  @Override
-  public boolean isCheckUpdatesEnabled() {
-    return false;
-  }
 }

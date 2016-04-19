@@ -258,7 +258,7 @@ public class TexturesController implements Controller {
           }
         }
       }
-      setCategory(category == null ? null : new TexturesCategory(categoryName));
+      setCategory(new TexturesCategory(categoryName));
 
       Float width = firstTexture.getWidth();
       for (int i = 1; i < this.modifiedTextures.size(); i++) {
@@ -502,93 +502,62 @@ public class TexturesController implements Controller {
       int texturesCount = this.modifiedTextures.size();
       for (CatalogTexture texture : this.modifiedTextures) {
         int index = this.texturesLibrary.getTextureIndex(texture);
-        // Retrieve texture data
-        String textureId = texture.getId();
-        String textureName = texture.getName();
-        TexturesCategory textureCategory = texture.getCategory();
-        Content textureImage = texture.getImage();
-        float textureWidth = texture.getWidth();
-        float textureHeight = texture.getHeight();
-        String textureCreator = texture.getCreator();
         // Retrieve localized data
         Map<String, Object> localizedNames = new HashMap<String, Object>();
-        retrieveLocalizedData(texture, localizedNames, TexturesLibrary.TEXTURES_NAME_PROPERTY);
         Map<String, Object> localizedCategories = new HashMap<String, Object>();
-        retrieveLocalizedData(texture, localizedCategories, TexturesLibrary.TEXTURES_CATEGORY_PROPERTY);
-        
-        // Update mandatory not localizable data
-        if (image != null) {
-          textureImage = image;
-        }
-        if (width != null) {
-          textureWidth = width;
-        } else if (height != null) {
-          textureWidth = texture.getWidth() * height / texture.getHeight();
-        }
-        if (height != null) {
-          textureHeight = height;
-        } else if (width != null) {
-          textureHeight = texture.getHeight() * width / texture.getWidth();
-        }
-        // Update not mandatory and not localizable data
-        // When only one texture is updated, data can be reset to empty 
-        if (id != null || texturesCount == 1) {
-          textureId = id;
-        }
-        if (creator != null || texturesCount == 1) {
-          textureCreator = creator;
-        }
-        // Update mandatory localizable data
-        if (name != null) {
-          if (defaultTexturesLanguage) {
-            textureName = name;
-          } else {
-            localizedNames.put(this.texturesLanguageController.getTexturesLangauge(), name);
+        for (String language : this.texturesLibrary.getSupportedLanguages()) {
+          Object textureName = this.texturesLibrary.getTextureLocalizedData(
+              texture, language, TexturesLibrary.TEXTURES_NAME_PROPERTY);
+          if (textureName != null) {
+            localizedNames.put(language, textureName);
+          }
+          Object categoryName = this.texturesLibrary.getTextureLocalizedData(
+              texture, language, TexturesLibrary.TEXTURES_CATEGORY_PROPERTY);
+          if (categoryName != null) {
+            localizedCategories.put(language, categoryName);
           }
         }
-        if (category != null) {
-          if (defaultTexturesLanguage) {
-            textureCategory = category;
-          } else {
-            localizedCategories.put(this.texturesLanguageController.getTexturesLangauge(), category.getName());
-          }
-        }
-       
-        // Create update texture
-        CatalogTexture updatedTexture = new CatalogTexture(textureId, textureName, textureImage, textureWidth, textureHeight, textureCreator);
+        this.texturesLibrary.deleteTexture(texture);
         
-        new TexturesCatalog().add(textureCategory, updatedTexture);
-        this.texturesLibrary.addTexture(updatedTexture, index);
+        String textureId = id != null || texturesCount == 1 ? id : texture.getId();
+        String textureName = name != null && defaultTexturesLanguage ? name : texture.getName();
+        TexturesCategory textureCategory = category != null && defaultTexturesLanguage ? category : texture.getCategory();
+        Content textureImage = image != null ? image : texture.getImage();
+        float textureWidth = width != null 
+            ? width 
+            : (height != null  
+                  ? (texture.getWidth() * height / texture.getHeight())
+                  : texture.getWidth());
+        float textureHeight = height != null 
+            ? height 
+            : (width != null  
+                ? (texture.getHeight() * width / texture.getWidth())
+                : texture.getHeight());
+        String textureCreator = creator != null || texturesCount == 1 ? creator : texture.getCreator();
+        
+        texture = new CatalogTexture(textureId, textureName, textureImage, textureWidth, textureHeight, textureCreator);
+
+        new TexturesCatalog().add(textureCategory, texture);
+        this.texturesLibrary.addTexture(texture, index);
         Set<String> supportedLanguages = new HashSet<String>(this.texturesLibrary.getSupportedLanguages());
         supportedLanguages.add(this.texturesLanguageController.getTexturesLangauge());
         for (String language : supportedLanguages) {
           if (!TexturesLibrary.DEFAULT_LANGUAGE.equals(language)) {
-            Object localizedTextureName = localizedNames.get(language);
+            boolean editedTexturesLanguage = this.texturesLanguageController.getTexturesLangauge().equals(language);
+            Object localizedTextureName = name != null && editedTexturesLanguage 
+                ? name : localizedNames.get(language);
             if (localizedTextureName != null) {
               this.texturesLibrary.setTextureLocalizedData(
-                  updatedTexture, language, TexturesLibrary.TEXTURES_NAME_PROPERTY, localizedTextureName);
+                  texture, language, TexturesLibrary.TEXTURES_NAME_PROPERTY, localizedTextureName);
             }
-            Object localizedTextureCategory = localizedCategories.get(language);
+            Object localizedTextureCategory = category != null && editedTexturesLanguage 
+                ? category.getName() : localizedCategories.get(language);
             if (localizedTextureCategory != null) {
               this.texturesLibrary.setTextureLocalizedData(
-                  updatedTexture, language, TexturesLibrary.TEXTURES_CATEGORY_PROPERTY, localizedTextureCategory);
+                  texture, language, TexturesLibrary.TEXTURES_CATEGORY_PROPERTY, localizedTextureCategory);
             }
           }
         }
-        
-        // Remove old texture from library
-        this.texturesLibrary.deleteTexture(texture);
-      }
-    }
-  }
-
-  private void retrieveLocalizedData(CatalogTexture texture,
-                                     Map<String, Object> localizedNames,
-                                     String propertyKey) {
-    for (String language : this.texturesLibrary.getSupportedLanguages()) {
-      Object textureData = this.texturesLibrary.getTextureLocalizedData(texture, language, propertyKey);
-      if (textureData != null) {
-        localizedNames.put(language, textureData);
       }
     }
   }

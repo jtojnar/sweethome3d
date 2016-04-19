@@ -101,26 +101,20 @@ public class EditorController implements Controller {
    * Empties the textures library after saving and deleting the current one.
    */
   public void newLibrary() {
-    // Create a task that resets textures library
+    // Create a task that deletes home and run postCloseTask
     Runnable newLibraryTask = new Runnable() {
         public void run() {
           for (CatalogTexture texture : texturesLibrary.getTextures()) {
             texturesLibrary.deleteTexture(texture);
           }
           getTexturesLanguageController().setTexturesLanguage(TexturesLibrary.DEFAULT_LANGUAGE);
-          texturesLibrary.setId(null);
           texturesLibrary.setName(null);
-          texturesLibrary.setDescription(null);
-          texturesLibrary.setProvider(null);
-          texturesLibrary.setLicense(null);
-          texturesLibrary.setVersion(null);
-          texturesLibrary.setLocation(null);
           texturesLibrary.setModified(false);
         }
       };
       
     if (this.texturesLibrary.isModified()) {
-      switch (getView().confirmSave(this.texturesLibrary.getLocation())) {
+      switch (getView().confirmSave(this.texturesLibrary.getName())) {
         case SAVE   : save(newLibraryTask); // Falls through
         case CANCEL : return;
       }  
@@ -132,20 +126,20 @@ public class EditorController implements Controller {
    * Opens a textures library chosen by user after saving and deleting the current one.
    */
   public void open() {
-    // Create a task that opens textures library
+    // Create a task that deletes home and run postCloseTask
     Runnable openTask = new Runnable() {
         public void run() {
           String openTitle = preferences.getLocalizedString(EditorController.class, "openTitle");
-          String texturesLibraryLocation = contentManager.showOpenDialog(null, openTitle, 
+          String texturesLibraryName = contentManager.showOpenDialog(null, openTitle, 
               ContentManager.ContentType.TEXTURES_LIBRARY);
-          if (texturesLibraryLocation != null) {
-            open(texturesLibraryLocation);
+          if (texturesLibraryName != null) {
+            open(texturesLibraryName);
           }
         }
       };
       
     if (this.texturesLibrary.isModified()) {
-      switch (getView().confirmSave(this.texturesLibrary.getLocation())) {
+      switch (getView().confirmSave(this.texturesLibrary.getName())) {
         case SAVE   : save(openTask); // Falls through
         case CANCEL : return;
       }  
@@ -154,47 +148,14 @@ public class EditorController implements Controller {
   }
 
   /**
-   * Merges the current library with a textures library chosen by user.
+   * Opens the textures library in the given file.
    */
-  public void merge() {
-    String mergeTitle = preferences.getLocalizedString(EditorController.class, "mergeTitle");
-    final String texturesLibraryLocation = contentManager.showOpenDialog(null, mergeTitle, 
-        ContentManager.ContentType.TEXTURES_LIBRARY);
-    if (texturesLibraryLocation != null) {
-      Callable<Void> saveTask = new Callable<Void>() {
-          public Void call() throws RecorderException {
-            recorder.mergeTexturesLibrary(texturesLibrary, texturesLibraryLocation, preferences);
-            texturesLibrary.setModified(true);
-            return null;
-          }
-        };
-      ThreadedTaskController.ExceptionHandler exceptionHandler = 
-          new ThreadedTaskController.ExceptionHandler() {
-            public void handleException(Exception ex) {
-              if (!(ex instanceof InterruptedRecorderException)) {
-                ex.printStackTrace();
-                if (ex instanceof RecorderException) {
-                  getView().showError(preferences.getLocalizedString(EditorController.class, "errorTitle"), 
-                      preferences.getLocalizedString(EditorController.class, "invalidFile"));
-                }
-              }
-            }
-          };
-      new ThreadedTaskController(saveTask, 
-          this.preferences.getLocalizedString(EditorController.class, "mergeMessage"), exceptionHandler, 
-          this.preferences, this.viewFactory).executeTask(getView());
-    }
-  }
-
-  /**
-   * Opens the textures library in the given location.
-   */
-  public void open(final String texturesLibraryLocation) {
+  public void open(final String texturesLibraryName) {
     Callable<Void> saveTask = new Callable<Void>() {
         public Void call() throws RecorderException {
-          recorder.readTexturesLibrary(texturesLibrary, texturesLibraryLocation, preferences);
+          recorder.readTexturesLibrary(texturesLibrary, texturesLibraryName, preferences);
           getTexturesLanguageController().setTexturesLanguage(TexturesLibrary.DEFAULT_LANGUAGE);
-          texturesLibrary.setLocation(texturesLibraryLocation);
+          texturesLibrary.setName(texturesLibraryName);
           texturesLibrary.setModified(false);
           return null;
         }
@@ -228,30 +189,30 @@ public class EditorController implements Controller {
    * if it's not <code>null</code>.
    */
   private void save(Runnable postSaveTask) {
-    if (this.texturesLibrary.getLocation() == null) {
+    if (this.texturesLibrary.getName() == null) {
       saveAs(postSaveTask);
     } else {
-      save(this.texturesLibrary.getLocation(), postSaveTask);
+      save(this.texturesLibrary.getName(), postSaveTask);
     }
   }
   
   /**
-   * Saves the textures library under a different location.
+   * Saves the textures library under a different name.
    */
   public void saveAs() {
     saveAs(null);
   }
 
   /**
-   * Saves the textures library under a different location and executes <code>postSaveTask</code> 
+   * Saves the textures library under a different name and executes <code>postSaveTask</code> 
    * if it's not <code>null</code>.
    */
   private void saveAs(Runnable postSaveTask) {
     String saveTitle = this.preferences.getLocalizedString(EditorController.class, "saveTitle");
-    String texturesLibraryLocation = this.contentManager.showSaveDialog(null, saveTitle, 
-        ContentManager.ContentType.TEXTURES_LIBRARY, this.texturesLibrary.getLocation());
-    if (texturesLibraryLocation != null) {
-      save(texturesLibraryLocation, postSaveTask);
+    String texturesLibraryName = this.contentManager.showSaveDialog(null, saveTitle, 
+        ContentManager.ContentType.TEXTURES_LIBRARY, this.texturesLibrary.getName());
+    if (texturesLibraryName != null) {
+      save(texturesLibraryName, postSaveTask);
     }
   }
   
@@ -259,14 +220,14 @@ public class EditorController implements Controller {
    * Actually saves the library managed by this controller and executes <code>postSaveTask</code> 
    * if it's not <code>null</code>.
    */
-  private void save(final String location, 
+  private void save(final String name, 
                     final Runnable postSaveTask) {
     Callable<Void> saveTask = new Callable<Void>() {
         public Void call() throws RecorderException {
-          recorder.writeTexturesLibrary(texturesLibrary, location, preferences);
+          recorder.writeTexturesLibrary(texturesLibrary, name, preferences);
           getView().invokeLater(new Runnable() {
               public void run() {
-                texturesLibrary.setLocation(location);
+                texturesLibrary.setName(name);
                 texturesLibrary.setModified(false);
                 if (postSaveTask != null) {
                   postSaveTask.run();
@@ -305,7 +266,7 @@ public class EditorController implements Controller {
       };
       
     if (this.texturesLibrary.isModified()) {
-      switch (getView().confirmSave(this.texturesLibrary.getLocation())) {
+      switch (getView().confirmSave(this.texturesLibrary.getName())) {
         case SAVE   : save(exitTask); // Falls through
         case CANCEL : return;
       }  
