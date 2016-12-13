@@ -22,7 +22,6 @@
 //          URLContent.js
 //          big.js
 //          BackgroundImage.js
-//          HomeObject.js
 //          Camera.js
 //          Home.js
 //          HomeEnvironment.js
@@ -135,7 +134,6 @@ HomeRecorder.prototype.getHome = function(homeElement, zipUrl, params) {
   var home = new Home(wallHeight);
   home.setVersion(parseInt(homeElement.getAttribute("version")));
   home.setName(homeElement.getAttribute("name"));
-  this.parseProperties(homeElement, home);
   // Parse environment
   var environment = this.getHomeEnvironment(homeElement.getElementsByTagName("environment") [0], zipUrl);
   var homeEnvironment = home.getEnvironment();
@@ -219,9 +217,7 @@ HomeRecorder.prototype.getHomeEnvironment = function(environmentElement, zipUrl)
       ? parseInt("0x" + environmentElement.getAttribute("skyColor"))
       : null;
   var lightColor = parseInt("0x" + environmentElement.getAttribute("lightColor"));
-  var wallsAlpha = environmentElement.hasAttribute("wallsAlpha")
-      ? parseFloat(environmentElement.getAttribute("wallsAlpha"))
-      : 0;
+  var wallsAlpha = parseFloat(environmentElement.getAttribute("wallsAlpha"));
   var allLevelsVisible = "true" == environmentElement.getAttribute("allLevelsVisible");
   var observerCameraElevationAdjusted = "false" != environmentElement.getAttribute("observerCameraElevationAdjusted");
   var textureElements = environmentElement.getElementsByTagName("texture");
@@ -289,7 +285,6 @@ HomeRecorder.prototype.getCamera = function(cameraElement, zipUrl) {
   } else {
     camera = new Camera(x, y, z, yaw, pitch, fieldOfView, time, lens);
   }
-  this.parseProperties(cameraElement, camera);
   camera.setName(name);
   return camera;
 }
@@ -314,7 +309,6 @@ HomeRecorder.prototype.getLevels = function(levelElements, zipUrl) {
     var visible        = "false" != levelElement.getAttribute("visible");
     var viewable       = "false" != levelElement.getAttribute("viewable");
     var level = new Level(name, elevation, floorThickness, height);
-    this.parseProperties(levelElement, level);
     level.setElevationIndex(elevationIndex);
     level.setVisible(visible);
     level.setViewable(viewable);
@@ -445,28 +439,13 @@ HomeRecorder.prototype.getPieceOfFurniture = function(pieceElement, zipUrl, para
       piece.setModelMaterials(modelMaterials);
       piece.setShininess(shininess);
     }
+    piece.setVisible(visible);
   }
-  this.parseProperties(pieceElement, piece);
   piece.setVisible(visible);
   piece.setLevel(level);
   return piece;
 }
 
-/**
- * Parses the property children of the given element.
- * @param {Element} element
- * @param {HomeObject|Home} homeObject
- * @private
- */
-HomeRecorder.prototype.parseProperties = function(element, homeObject) {
-  for (var i = 0; i < element.childNodes.length; i++) {
-    var childElement = element.childNodes [i];
-    if (childElement.tagName == "property") {
-      homeObject.setProperty(childElement.getAttribute("name"), childElement.getAttribute("value"));
-    }
-  }
-}
-  
 /**
  * Returns a material matching the given element. 
  * @param {Element} materialElement
@@ -510,9 +489,8 @@ HomeRecorder.prototype.getTexture = function(textureElement, zipUrl) {
   var angle  = textureElement.hasAttribute("angle")
       ? parseFloat(textureElement.getAttribute("angle"))
       : 0;
-  var leftToRightOriented = "false" != textureElement.getAttribute("leftToRightOriented");
   var image  = this.getContent(textureElement, "image", zipUrl);
-  return new HomeTexture(new CatalogTexture(catalogId, name, image, width, height, null), angle, leftToRightOriented);
+  return new HomeTexture(new CatalogTexture(catalogId, name, image, width, height, null), angle);
 }
 
 /**

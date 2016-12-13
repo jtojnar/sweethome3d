@@ -1,7 +1,7 @@
 /*
  * FurnitureLibraryEditor.java 14 déc. 2009
  *
- * Furniture Library Editor, Copyright (c) 2009 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2009 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,9 +27,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.ResourceBundle;
 
 import javax.imageio.ImageIO;
 import javax.swing.Action;
@@ -151,13 +148,6 @@ public class FurnitureLibraryEditor {
   }
   
   /**
-   * Returns the name of this application read from resources.
-   */
-  private String getName() {
-    return getUserPreferences().getLocalizedString(FurnitureLibraryEditor.class, "applicationName");
-  }
-
-  /**
    * Returns a new instance of an editor controller after <code>furnitureLibrary</code> was created.
    */
   protected EditorController createEditorController(FurnitureLibrary furnitureLibrary) {
@@ -193,19 +183,11 @@ public class FurnitureLibraryEditor {
   private void initSystemProperties() {
     if (OperatingSystem.isMacOSX()) {
       // Change Mac OS X application menu name
-      String classPackage = FurnitureLibraryEditor.class.getName();
-      classPackage = classPackage.substring(0, classPackage.lastIndexOf("."));
-      ResourceBundle resource = ResourceBundle.getBundle(classPackage + "." + "package");
-      String applicationName = resource.getString("FurnitureLibraryEditor.applicationName");
-      System.setProperty("com.apple.mrj.application.apple.menu.about.name", applicationName);
+      System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Furniture Library Editor");
       // Use Mac OS X screen menu bar for frames menu bar
       System.setProperty("apple.laf.useScreenMenuBar", "true");
       // Force the use of Quartz under Mac OS X for better Java 2D rendering performance
       System.setProperty("apple.awt.graphics.UseQuartz", "true");
-    }
-    // Force 3D antialiasing before toolkit is launched
-    if (System.getProperty("j3d.implicitAntialiasing") == null) {
-      System.setProperty("j3d.implicitAntialiasing", "true");
     }
   }
 
@@ -252,17 +234,8 @@ public class FurnitureLibraryEditor {
           }
         }
       };
-    // Update frame image and title 
-    Image [] frameImages = {new ImageIcon(FurnitureLibraryEditor.class.getResource("resources/frameIcon.png")).getImage(),
-                            new ImageIcon(FurnitureLibraryEditor.class.getResource("resources/frameIcon32x32.png")).getImage()};
-    try {
-      // Call Java 1.6 setIconImages by reflection
-      furnitureFrame.getClass().getMethod("setIconImages", List.class)
-          .invoke(furnitureFrame, Arrays.asList(frameImages));
-    } catch (Exception ex) {
-      // Call setIconImage available in previous versions
-      furnitureFrame.setIconImage(frameImages [0]);
-    }
+    furnitureFrame.setIconImage(new ImageIcon(
+        FurnitureLibraryEditor.class.getResource("resources/frameIcon.png")).getImage());
     furnitureFrame.setLocationByPlatform(true);
     furnitureFrame.pack();
     furnitureFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -286,7 +259,7 @@ public class FurnitureLibraryEditor {
     }
     updateFrameTitle(furnitureFrame, furnitureLibrary, getUserPreferences(), getContentManager());
     // Update title when the name or the modified state of library changes
-    furnitureLibrary.addPropertyChangeListener(FurnitureLibrary.Property.LOCATION, new PropertyChangeListener () {
+    furnitureLibrary.addPropertyChangeListener(FurnitureLibrary.Property.NAME, new PropertyChangeListener () {
         public void propertyChange(PropertyChangeEvent ev) {
           updateFrameTitle(furnitureFrame, furnitureLibrary, getUserPreferences(), getContentManager());
         }
@@ -320,13 +293,13 @@ public class FurnitureLibraryEditor {
                                 FurnitureLibrary furnitureLibrary,
                                 UserPreferences  preferences,
                                 ContentManager   contentManager) {
-    String furnitureLibraryLocation = furnitureLibrary.getLocation();
+    String furnitureLibraryName = furnitureLibrary.getName();
     String furnitureLibraryDisplayedName;
-    if (furnitureLibraryLocation == null) {
+    if (furnitureLibraryName == null) {
       furnitureLibraryDisplayedName = preferences.getLocalizedString(FurnitureLibraryEditor.class, "untitled"); 
     } else {
       furnitureLibraryDisplayedName = contentManager.getPresentationName(
-          furnitureLibraryLocation, ContentManager.ContentType.FURNITURE_LIBRARY);
+          furnitureLibraryName, ContentManager.ContentType.FURNITURE_LIBRARY);
     }
     
     String title = furnitureLibraryDisplayedName;
@@ -339,8 +312,8 @@ public class FurnitureLibraryEditor {
       if (OperatingSystem.isMacOSXLeopardOrSuperior()) {
         frame.getRootPane().putClientProperty("Window.documentModified", furnitureLibraryModified);
         
-        if (furnitureLibraryLocation != null) {        
-          File furnitureLibraryFile = new File(furnitureLibraryLocation);
+        if (furnitureLibraryName != null) {        
+          File furnitureLibraryFile = new File(furnitureLibraryName);
           if (furnitureLibraryFile.exists()) {
             // Update the icon in window title bar for library files
             frame.getRootPane().putClientProperty("Window.documentFile", furnitureLibraryFile);
@@ -348,7 +321,7 @@ public class FurnitureLibraryEditor {
         }
       }
     } else {
-      title += " - " + getName(); 
+      title += " - " + preferences.getLocalizedString(FurnitureLibraryEditor.class, "title"); 
       if (furnitureLibrary.isModified()) {
         title = "* " + title;
       }

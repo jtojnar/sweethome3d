@@ -1,12 +1,6 @@
-# cabinetWithBasin.obj Blender3D v245 OBJ File: d-cabinet_with_basin.blend
+# Blender3D v245 OBJ File: d-cabinet_with_basin.blend
 # www.blender3d.org
-#
-# Created by Robert Pastierovic
-#
-# This file is distributed under Free Art License, see http://artlibre.org/licence/lal/en for more informations
-# and under CC-BY Creative Commons Attribution 3.0 Unported license, see http://creativecommons.org/licenses/by/3.0/
-# at your choice
-# 
+mtllib d-cabinet_with_basin.mtl
 o Cylinder
 v 4.389763 85.790726 -23.776358
 v 5.836964 86.896294 -22.724920

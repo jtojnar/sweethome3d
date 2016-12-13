@@ -1,12 +1,6 @@
-# drawers.obj Blender3D v245 OBJ File: d-trays.blend
+# Blender3D v245 OBJ File: d-trays.blend
 # www.blender3d.org
-#
-# Created by Robert Pastierovic
-#
-# This file is distributed under Free Art License, see http://artlibre.org/licence/lal/en for more informations
-# and under CC-BY Creative Commons Attribution 3.0 Unported license, see http://creativecommons.org/licenses/by/3.0/
-# at your choice
-# 
+mtllib d-trays.mtl
 o Cube.005_Cube.006
 v -13.000000 77.000000 29.999996
 v -13.000000 75.000000 29.999996

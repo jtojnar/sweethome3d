@@ -20,7 +20,6 @@
 
 // Requires core.js
 //          HomeEnvironment.js
-//          HomeObject.js
 //          HomePieceOfFurniture.js
 //          Camera.js
 //          Level.js
@@ -1204,19 +1203,19 @@ Home.prototype.setPrint = function(print) {
 }
 
 /**
- * Returns the value of the property <code>name</code> associated with this home.
+ * Returns the value of the property <code>propertyName</code> associated with this home.
  * @return {string} the value of the property or <code>null</code> if it doesn't exist. 
  */
-Home.prototype.getProperty = function(name) {
-  return this.properties [name];
+Home.prototype.getProperty = function(propertyName) {
+  return this.properties [propertyName];
 }
 
 /**
- * Returns the numeric value of the property <code>name</code> associated with this home.
+ * Returns the numeric value of the property <code>propertyName</code> associated with this home.
  * @return {number} a number or <code>null</code> if the property doesn't exist or can't be parsed. 
  */
-Home.prototype.getNumericProperty = function(name) {
-  var value = this.properties [name];
+Home.prototype.getNumericProperty = function(propertyName) {
+  var value = this.properties [propertyName];
   if (value !== undefined) {
     number = parseFloat(value);
     if (!isNaN(number)) {
@@ -1228,17 +1227,11 @@ Home.prototype.getNumericProperty = function(name) {
 
 /**
  * Sets a property associated with this home.
- * @param {string} name   the name of the property to set
- * @param {string} value  the new value of the property 
+ * @param {string} propertyName   the name of the property to set
+ * @param {string} propertyValue  the new value of the property 
  */
-Home.prototype.setProperty = function(name, value) {
-  if (value === null) {
-    if (this.properties.hasOwnProperty(name)) {
-      delete this.properties [name];
-    }
-  } else {
-    this.properties [name] = value;
-  }
+Home.prototype.setProperty = function(propertyName, propertyValue) {
+  this.properties [propertyName] = propertyValue;
 }
 
 /**
@@ -1424,10 +1417,8 @@ Home.copyHomeData = function(source, destination) {
   }
   destination.furnitureVisibleProperties = source.furnitureVisibleProperties.slice(0);
   destination.properties = {};
-  for (var property in source.properties) {
-    if (source.properties.hasOwnProperty(property)) {
-      destination.properties [property] = source.properties [property];
-    } 
+  for (var i = 0; i < source.properties.length; i++) {
+    destination.properties [i] = source.properties [i];
   }
   // Additional possible structure field
   destination.structure = source.structure;

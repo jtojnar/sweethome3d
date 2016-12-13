@@ -20,12 +20,9 @@
  */
 package com.eteks.sweethome3d.junit;
 
-import java.awt.EventQueue;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 
 import javax.swing.undo.UndoManager;
 import javax.swing.undo.UndoableEditSupport;
@@ -33,18 +30,15 @@ import javax.swing.undo.UndoableEditSupport;
 import junit.framework.TestCase;
 
 import com.eteks.sweethome3d.io.DefaultUserPreferences;
-import com.eteks.sweethome3d.model.CollectionEvent;
-import com.eteks.sweethome3d.model.CollectionListener;
 import com.eteks.sweethome3d.model.Home;
-import com.eteks.sweethome3d.model.Selectable;
 import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.model.Wall;
-import com.eteks.sweethome3d.swing.SwingViewFactory;
-import com.eteks.sweethome3d.viewcontroller.PlanController;
-import com.eteks.sweethome3d.viewcontroller.ViewFactory;
+import com.eteks.sweethome3d.model.WallEvent;
+import com.eteks.sweethome3d.model.WallListener;
+import com.eteks.sweethome3d.swing.PlanController;
 
 /**
- * Tests {@link com.eteks.sweethome3d.viewcontroller.PlanController plan controller}.
+ * Tests {@link com.eteks.sweethome3d.swing.PlanController plan controller}.
  * @author Emmanuel Puybaret
  */
 public class PlanControllerTest extends TestCase {
@@ -52,34 +46,21 @@ public class PlanControllerTest extends TestCase {
    * Performs the same tests as {@link PlanComponentTest#testPlanComponent()} 
    * but with direct calls to controller in memory.
    */
-  public void testPlanContoller() throws InterruptedException, InvocationTargetException {
-    // Run test in Event Dispatch Thread because the default view associated 
-    // to plan controller instance performs some actions in EDT even if it's not displayed
-    EventQueue.invokeAndWait(new Runnable() {
-        public void run() {
-          runPlanContollerTest();          
-        }
-      });
-  }
-  
-  private void runPlanContollerTest() { 
+  public void testPlanContoller() {
     // 1. Create a frame that displays a PlanComponent at its preferred size, 
     Home home = new Home();
-    Locale.setDefault(Locale.FRANCE);
     UserPreferences preferences = new DefaultUserPreferences();
-    ViewFactory viewFactory = new SwingViewFactory();
     UndoableEditSupport undoSupport = new UndoableEditSupport();
     UndoManager undoManager = new UndoManager();
     undoSupport.addUndoableEditListener(undoManager);
-    PlanController planController = 
-        new PlanController(home, preferences, viewFactory, null, undoSupport);
+    PlanController planController = new PlanController(home, preferences, undoSupport);
     
     // Build an ordered list of walls added to home
     final ArrayList<Wall> orderedWalls = new ArrayList<Wall>();
-    home.addWallsListener(new CollectionListener<Wall> () {
-      public void collectionChanged(CollectionEvent<Wall> ev) {
-        if (ev.getType() == CollectionEvent.Type.ADD) {
-          orderedWalls.add(ev.getItem());
+    home.addWallListener(new WallListener () {
+      public void wallChanged(WallEvent ev) {
+        if (ev.getType() == WallEvent.Type.ADD) {
+          orderedWalls.add(ev.getWall());
         }
       }
     });
@@ -88,19 +69,19 @@ public class PlanControllerTest extends TestCase {
     planController.setMode(PlanController.Mode.WALL_CREATION);
     // Click at (20, 20), (500, 22), (498, 300), then double click at (20, 302) in home coordinates space 
     planController.moveMouse(20, 20);
-    planController.pressMouse(20, 20, 1, false, false);
+    planController.pressMouse(20, 20, 1, false);
     planController.toggleMagnetism(false);
     planController.releaseMouse(20, 20);
     planController.moveMouse(500, 22);
-    planController.pressMouse(500, 22, 1, false, false);
+    planController.pressMouse(500, 22, 1, false);
     planController.releaseMouse(500, 22);
     planController.moveMouse(498, 300);
-    planController.pressMouse(498, 300, 1, false, false);
+    planController.pressMouse(498, 300, 1, false);
     planController.releaseMouse(498, 300);
     planController.moveMouse(20, 302);
-    planController.pressMouse(20, 302, 1, false, false);
+    planController.pressMouse(20, 302, 1, false);
     planController.releaseMouse(20, 302);
-    planController.pressMouse(20, 302, 2, false, false);
+    planController.pressMouse(20, 302, 2, false);
     planController.releaseMouse(20, 302);
     // Check 3 walls were created at (20, 20), (500, 20), (500, 300) and (20, 300) coordinates
     Wall wall1 = orderedWalls.get(0);
@@ -118,13 +99,13 @@ public class PlanControllerTest extends TestCase {
 
     // 3. Click at (20, 300), then double click at (60, 60) with Alt key depressed
     planController.moveMouse(20, 300);
-    planController.pressMouse(20, 300, 1, false, false);
+    planController.pressMouse(20, 300, 1, false);
     planController.releaseMouse(20, 300);
     planController.toggleMagnetism(true);
     planController.moveMouse(60, 60);
-    planController.pressMouse(60, 60, 1, false, false);
+    planController.pressMouse(60, 60, 1, false);
     planController.releaseMouse(60, 60);
-    planController.pressMouse(60, 60, 2, false, false);
+    planController.pressMouse(60, 60, 2, false);
     planController.releaseMouse(60, 60);
     planController.toggleMagnetism(false);
     // Check a forth wall was created at (20, 300), (60, 60) coordinates
@@ -147,12 +128,12 @@ public class PlanControllerTest extends TestCase {
     planController.setMode(PlanController.Mode.WALL_CREATION);
     //  Click at (22, 18), then double click at (20, 300)
     planController.moveMouse(22, 18);
-    planController.pressMouse(22, 18, 1, false, false);
+    planController.pressMouse(22, 18, 1, false);
     planController.releaseMouse(22, 18);
     planController.moveMouse(20, 300);
-    planController.pressMouse(20, 300, 1, false, false);
+    planController.pressMouse(20, 300, 1, false);
     planController.releaseMouse(20, 300);
-    planController.pressMouse(20, 300, 2, false, false);
+    planController.pressMouse(20, 300, 2, false);
     planController.releaseMouse(20, 300);
     // Check a new forth wall was created at (20, 20), (20, 300) coordinates
     wall4 = orderedWalls.get(orderedWalls.size() - 1);
@@ -164,7 +145,7 @@ public class PlanControllerTest extends TestCase {
     planController.setMode(PlanController.Mode.SELECTION);
     // Drag and drop cursor from (360, 160) to (560, 320)
     planController.moveMouse(360, 160);
-    planController.pressMouse(360, 160, 1, false, false);
+    planController.pressMouse(360, 160, 1, false);
     planController.moveMouse(560, 320);
     planController.releaseMouse(560, 320);
     // Check the selected walls are the second and third ones
@@ -179,16 +160,16 @@ public class PlanControllerTest extends TestCase {
     assertCoordinatesEqualWallPoints(504, 300, 24, 300, wall3);
     assertCoordinatesEqualWallPoints(20, 20, 24, 300, wall4);
 
-    // 8. Click at (504, 40) 
+    // 8. Click at (504, 40) with Shift key depressed
     planController.moveMouse(504, 40);
-    planController.pressMouse(504, 40, 1, true, false);
+    planController.pressMouse(504, 40, 1, true);
     planController.releaseMouse(504, 40);
     // Check the second wall was removed from selection
     assertSelectionContains(home, wall3);
 
      // 9. Drag cursor from (60, 20) to (60, 60) 
     planController.moveMouse(60, 20);
-    planController.pressMouse(60, 20, 1, false, false);
+    planController.pressMouse(60, 20, 1, false);
     planController.moveMouse(60, 60);
     // Check first wall is selected and that it moved
     assertSelectionContains(home, wall1);
@@ -220,14 +201,10 @@ public class PlanControllerTest extends TestCase {
    * <code>wall</code> are at (<code>xStart</code>, <code>yStart</code>), (<code>xEnd</code>, <code>yEnd</code>). 
    */
   private void assertCoordinatesEqualWallPoints(float xStart, float yStart, float xEnd, float yEnd, Wall wall) {
-    assertTrue("Incorrect X start " + xStart + " " + wall.getXStart(), 
-        Math.abs(xStart - wall.getXStart()) < 1E-10);
-    assertTrue("Incorrect Y start " + yStart + " " + wall.getYStart(), 
-        Math.abs(yStart - wall.getYStart()) < 1E-10);
-    assertTrue("Incorrect X end " + xEnd + " " + wall.getXEnd(), 
-        Math.abs(xEnd - wall.getXEnd()) < 1E-10);
-    assertTrue("Incorrect Y end " + yEnd + " " + wall.getYEnd(), 
-        Math.abs(yEnd - wall.getYEnd()) < 1E-10);
+    assertTrue("Incorrect X start", Math.abs(xStart - wall.getXStart()) < 1E-10);
+    assertTrue("Incorrect Y start", Math.abs(yStart - wall.getYStart()) < 1E-10);
+    assertTrue("Incorrect X end", Math.abs(xEnd - wall.getXEnd()) < 1E-10);
+    assertTrue("Incorrect Y end", Math.abs(yEnd - wall.getYEnd()) < 1E-10);
   }
 
   /**
@@ -256,7 +233,7 @@ public class PlanControllerTest extends TestCase {
    */
   private void assertSelectionContains(Home home, 
                                        Wall ... walls) {
-    List<Selectable> selectedItems = home.getSelectedItems();
+    List<Object> selectedItems = home.getSelectedItems();
     assertEquals(walls.length, selectedItems.size());
     for (Wall wall : walls) {
       assertTrue("Wall not selected", selectedItems.contains(wall));

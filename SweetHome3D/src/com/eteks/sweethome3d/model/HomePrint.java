@@ -1,7 +1,7 @@
 /*
  * HomePrint.java 27 juil. 07
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,16 +22,11 @@ package com.eteks.sweethome3d.model;
 import java.io.Serializable;
 
 /**
- * The print attributes for a home.
+ * The print attibutes for a home.
  * @author Emmanuel Puybaret
  */
 public class HomePrint implements Serializable {
-  /**
-   * Paper orientation. 
-   */
   public enum PaperOrientation {PORTRAIT, LANDSCAPE, REVERSE_LANDSCAPE};
-    
-  private static final long serialVersionUID = -2868070768300325498L;
   
   private final PaperOrientation paperOrientation;
   private final float            paperWidth;
@@ -43,10 +38,6 @@ public class HomePrint implements Serializable {
   private final boolean          furniturePrinted;
   private final boolean          planPrinted;
   private final boolean          view3DPrinted;
-  private final Float            planScale;
-  private final String           headerFormat;
-  private final String           footerFormat;
-
   
   /**
    * Create a print attributes for home from the given parameters.
@@ -60,10 +51,7 @@ public class HomePrint implements Serializable {
                    float paperRightMargin,
                    boolean furniturePrinted,
                    boolean planPrinted,
-                   boolean view3DPrinted,
-                   Float planScale,
-                   String headerFormat,
-                   String footerFormat) {
+                   boolean view3DPrinted) {
     this.paperOrientation = paperOrientation;
     this.paperWidth = paperWidth;
     this.paperHeight = paperHeight;
@@ -74,9 +62,6 @@ public class HomePrint implements Serializable {
     this.furniturePrinted = furniturePrinted;
     this.planPrinted = planPrinted;
     this.view3DPrinted = view3DPrinted;
-    this.planScale = planScale;
-    this.headerFormat = headerFormat;
-    this.footerFormat = footerFormat;
   }
 
   /**
@@ -148,26 +133,4 @@ public class HomePrint implements Serializable {
   public boolean isView3DPrinted() {
     return this.view3DPrinted;
   } 
-  
-  /**
-   * Returns the scale used to print home plan or 
-   * <code>null</code> if no special scale is desired. 
-   */
-  public Float getPlanScale() {
-    return this.planScale;
-  }
-  
-  /**
-   * Returns the string format used to print page headers. 
-   */
-  public String getHeaderFormat() {
-    return this.headerFormat;
-  }
-
-  /**
-   * Returns the string format used to print page footers. 
-   */
-  public String getFooterFormat() {
-    return this.footerFormat;
-  }
 }

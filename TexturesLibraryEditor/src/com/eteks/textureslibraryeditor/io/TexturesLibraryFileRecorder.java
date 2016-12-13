@@ -76,37 +76,18 @@ public class TexturesLibraryFileRecorder implements TexturesLibraryRecorder {
   private static final String PROVIDER    = "provider"; 
   
   /**
-   * Reads a textures library from the given file, after clearing the given library.
+   * Reads textures library from the given file.
    */
   public void readTexturesLibrary(final TexturesLibrary texturesLibrary, 
-                                  String texturesLibraryLocation,
-                                  TexturesLibraryUserPreferences preferences) throws RecorderException {
-    readTexturesLibrary(texturesLibrary, texturesLibraryLocation, preferences, false);
-  }
-  
-  /**
-   * Merges a textures library with one in the given file.
-   */
-  public void mergeTexturesLibrary(TexturesLibrary texturesLibrary,
-                                   String texturesLibraryLocation,
+                                   String texturesLibraryName,
                                    TexturesLibraryUserPreferences preferences) throws RecorderException {
-    readTexturesLibrary(texturesLibrary, texturesLibraryLocation, preferences, true);
-  }
-
-  /**
-   * Reads a Textures library from the given file.
-   */
-  private void readTexturesLibrary(final TexturesLibrary texturesLibrary, 
-                                   String texturesLibraryLocation, 
-                                   TexturesLibraryUserPreferences preferences, 
-                                   final boolean mergeLibrary) throws RecorderException {
     try {
       // Retrieve textures library with default reader and locale 
       Locale defaultLocale = Locale.getDefault();
       Locale.setDefault(DEFAULT_LOCALE);
       File texturesLibraryFile = File.createTempFile("textures", ".sh3t");
       texturesLibraryFile.deleteOnExit();
-      copyFile(new File(texturesLibraryLocation), texturesLibraryFile);      
+      copyFile(new File(texturesLibraryName), texturesLibraryFile);      
       URL texturesLibraryUrl = texturesLibraryFile.toURI().toURL();
       String texturesResourcesLocalDirectory = preferences.getTexturesResourcesLocalDirectory();
       URL texturesResourcesUrlBase = texturesResourcesLocalDirectory != null
@@ -119,7 +100,7 @@ public class TexturesLibraryFileRecorder implements TexturesLibraryRecorder {
                                                int index,
                                                URL texturesCatalogUrl,
                                                URL texturesResourcesUrlBase) {
-            if (index == 1 && !mergeLibrary) {
+            if (index == 1) {
               texturesLibrary.setId(getOptionalString(resource, ID));
               texturesLibrary.setName(getOptionalString(resource, NAME));
               texturesLibrary.setDescription(getOptionalString(resource, DESCRIPTION));
@@ -158,10 +139,8 @@ public class TexturesLibraryFileRecorder implements TexturesLibraryRecorder {
       }
 
       // Replace textures by the one read
-      if (!mergeLibrary) {
-        for (CatalogTexture texture : texturesLibrary.getTextures()) {
-          texturesLibrary.deleteTexture(texture);
-        }
+      for (CatalogTexture texture : texturesLibrary.getTextures()) {
+        texturesLibrary.deleteTexture(texture);
       }
       for (CatalogTexture texture : textures) {
         texturesLibrary.addTexture(texture);
@@ -195,9 +174,9 @@ public class TexturesLibraryFileRecorder implements TexturesLibraryRecorder {
       
       Locale.setDefault(defaultLocale);
     } catch (IOException ex) {
-      throw new RecorderException("Invalid textures library file " + texturesLibraryLocation, ex);
+      throw new RecorderException("Invalid textures library file " + texturesLibraryName, ex);
     } catch (MissingResourceException ex) {
-      throw new RecorderException("Invalid textures library file " + texturesLibraryLocation, ex);
+      throw new RecorderException("Invalid textures library file " + texturesLibraryName, ex);
     }
   }
 
@@ -328,8 +307,7 @@ public class TexturesLibraryFileRecorder implements TexturesLibraryRecorder {
     boolean keepURLContentUnchanged = !offlineTexturesLibrary
         && texturesResourcesRemoteAbsoluteUrlBase == null 
         && texturesResourcesRemoteRelativeUrlBase == null;
-    // Store existing entries in lower case to be able to compare their names ignoring case
-    Set<String> existingEntryNamesLowerCase = new HashSet<String>();
+    Set<String> existingEntryNames = new HashSet<String>();
     BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(output, "ISO-8859-1"));
     final String CATALOG_FILE_HEADER = "#\n# " 
         + DefaultTexturesCatalog.PLUGIN_TEXTURES_CATALOG_FAMILY + ".properties %tc\n" 
@@ -371,18 +349,14 @@ public class TexturesLibraryFileRecorder implements TexturesLibraryRecorder {
           contentExtension = file.substring(file.lastIndexOf('.'));
         }
       }
-      String imageContentEntryName = contentEntries.get(textureImage);
-      // If image content not referenced among saved content yet
-      if (imageContentEntryName == null) {
-        imageContentEntryName = getContentEntry(textureImage, contentBaseName + contentExtension, 
-            keepURLContentUnchanged, existingEntryNamesLowerCase);
-        if (imageContentEntryName != null) {
-          contentEntries.put(textureImage, imageContentEntryName);
-        }
-      }
+      String imageContentEntryName = getContentEntry(textureImage, contentBaseName + contentExtension, 
+          keepURLContentUnchanged, existingEntryNames);
       writeProperty(writer, DefaultTexturesCatalog.PropertyKey.IMAGE, i, 
           getContentProperty(textureImage, imageContentEntryName, offlineTexturesLibrary, 
               texturesResourcesRemoteAbsoluteUrlBase, texturesResourcesRemoteRelativeUrlBase));
+      if (imageContentEntryName != null) {
+        contentEntries.put(textureImage, imageContentEntryName);
+      }
       writeProperty(writer, DefaultTexturesCatalog.PropertyKey.WIDTH, i, texture.getWidth());
       writeProperty(writer, DefaultTexturesCatalog.PropertyKey.HEIGHT, i, texture.getHeight());
       writeProperty(writer, DefaultTexturesCatalog.PropertyKey.CREATOR, i, texture.getCreator());
@@ -427,12 +401,12 @@ public class TexturesLibraryFileRecorder implements TexturesLibraryRecorder {
   private String getContentEntry(Content content,
                                  String entryName,
                                  boolean keepURLContentUnchanged, 
-                                 Set<String> existingEntryNamesLowerCase) throws IOException {
+                                 Set<String> existingEntryNames) throws IOException {
     if (content instanceof TemporaryURLContent
         || content instanceof ResourceURLContent) {
       int slashIndex = entryName.indexOf('/'); 
       if (slashIndex == -1) {
-        if (existingEntryNamesLowerCase.contains(entryName.toLowerCase())) {
+        if (existingEntryNames.contains(entryName)) {
           // Search an unexisting entry name
           int i = 2;
           String defaultEntryName = entryName;
@@ -440,18 +414,16 @@ public class TexturesLibraryFileRecorder implements TexturesLibraryRecorder {
             int dotIndex = defaultEntryName.lastIndexOf('.');
             entryName = defaultEntryName.substring(0, dotIndex) 
                 + i++ + defaultEntryName.substring(dotIndex);  
-          } while (existingEntryNamesLowerCase.contains(entryName.toLowerCase()));
+          } while (existingEntryNames.contains(entryName));
         }
       } else {
         String entryDirectory = entryName.substring(0, slashIndex + 1);
         int i = 2;
         while (true) {
           boolean entryDirectoryExists = false;
-          String entryDirectoryLowerCase = entryDirectory.toLowerCase();
           // Search an unexisting entry directory
-          for (String existingEntryNameLowerCase : existingEntryNamesLowerCase) {
-            // If existing entry name starts with entry directory ignoring case
-            if (existingEntryNameLowerCase.startsWith(entryDirectoryLowerCase)) {
+          for (String existingEntryName : existingEntryNames) {
+            if (existingEntryName.startsWith(entryDirectory)) {
               entryDirectoryExists = true;
               break;
             }
@@ -464,7 +436,7 @@ public class TexturesLibraryFileRecorder implements TexturesLibraryRecorder {
           }
         }
       }
-      existingEntryNamesLowerCase.add(entryName.toLowerCase());
+      existingEntryNames.add(entryName);
       return entryName;
     } else if (content instanceof URLContent) {
       if (keepURLContentUnchanged) {
@@ -486,7 +458,7 @@ public class TexturesLibraryFileRecorder implements TexturesLibraryRecorder {
           String file = urlContent.getURL().getFile();
           entryName = file.substring(file.lastIndexOf('/') + 1);
         }
-        existingEntryNamesLowerCase.add(entryName.toLowerCase());
+        existingEntryNames.add(entryName);
         return entryName;
       }
     } else {

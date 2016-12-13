@@ -1108,7 +1108,7 @@ OBJLoader.prototype.createGroupShapes = function(vertices, textureCoordinates, n
         }
       }
       
-      var geometryArray;
+      var shape;
       if (firstGeometry instanceof OBJFace) {
         var normalIndices = [];
         if (firstFaceHasNormalIndices) {
@@ -1131,26 +1131,22 @@ OBJLoader.prototype.createGroupShapes = function(vertices, textureCoordinates, n
           this.generateNormals(vertices, triangleCoordinateIndices, normals, triangleNormalIndices, 
               firstFaceIsSmooth  ? Math.PI / 2  : 0);
         }
-        geometryArray = new IndexedTriangleArray3D(vertices, triangleCoordinateIndices, 
-            textureCoordinates, triangleTextureCoordinateIndices, normals, triangleNormalIndices);                  
+        var geometryArray = new IndexedTriangleArray3D(vertices, triangleCoordinateIndices, 
+            textureCoordinates, triangleTextureCoordinateIndices, normals, triangleNormalIndices);          
+        shape = new Shape3D(geometryArray, appearance);   
       } else { // Line
-        var lineCoordinatesIndices = [];
-        var lineTextureCoordinateIndices = [];
+        shape = new Shape3D(null, appearance);   
         for (var j = 0, index = 0; j < geometryCount; index += stripCounts [j], j++) {
-          for (var k = 0; k < stripCounts [j] - 1; k++) {
-            lineCoordinatesIndices.push(coordinatesIndices [index + k]);
-            lineCoordinatesIndices.push(coordinatesIndices [index + k + 1]);
-            if (textureCoordinateIndices.length > 0) {
-              lineTextureCoordinateIndices.push(textureCoordinateIndices [index + k]);
-              lineTextureCoordinateIndices.push(textureCoordinateIndices [index + k + 1]);
-            }
+          var lineCoordinatesIndices = coordinatesIndices.slice(index, index + stripCounts [j]);
+          var lineTextureCoordinateIndices = [];
+          if (textureCoordinateIndices.length > 0) {
+            lineTextureCoordinateIndices = textureCoordinateIndices.slice(index, index + stripCounts [j]);
           }
+          shape.addGeometry(new IndexedLineArray3D(vertices, lineCoordinatesIndices, 
+              textureCoordinates, lineTextureCoordinateIndices));
         }
-        geometryArray = new IndexedLineArray3D(vertices, lineCoordinatesIndices, 
-            textureCoordinates, lineTextureCoordinateIndices);
       }
       
-      var shape = new Shape3D(geometryArray, appearance);   
       sceneRoot.addChild(shape);
       shape.setName(group.name + (i === 0 ? "" : i));   
       i = max;

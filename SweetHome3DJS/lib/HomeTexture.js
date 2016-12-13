@@ -24,15 +24,11 @@
  * Creates a home texture from an existing one with customized angle and offset.
  * @param {Object} texture the texture from which data are copied, 
  *                    either an instance of {@link CatalogTexture} or of this class
- * @param {number}  [angle]   the rotation angle applied to the texture
- * @param {boolean} [leftToRightOriented]
+ * @param {number} angle   the rotation angle applied to the texture
  * @constructor
  * @author Emmanuel Puybaret
  */
-function HomeTexture(texture, angle, leftToRightOriented) {
-  if (leftToRightOriented === undefined) {
-    leftToRightOriented = false;
-  }
+function HomeTexture(texture, angle) {
   if (angle === undefined) {
     angle = 0;
   }
@@ -41,7 +37,6 @@ function HomeTexture(texture, angle, leftToRightOriented) {
   this.width = texture.getWidth();
   this.height = texture.getHeight();
   this.angle = angle;
-  this.leftToRightOriented = leftToRightOriented;
   if (texture instanceof HomeTexture) {
     this.catalogId = texture.getCatalogId();
   } else if (texture instanceof CatalogTexture) {
@@ -97,15 +92,6 @@ HomeTexture.prototype.getHeight = function() {
  */
 HomeTexture.prototype.getAngle = function() {
   return this.angle;
-}
-
-/**
- * Returns <code>true</code> if the objects using this texture should take into account 
- * the orientation of the texture.
- * @return {boolean} 
- */
-HomeTexture.prototype.isLeftToRightOriented = function() {
-  return this.leftToRightOriented;
 }
 
 /**

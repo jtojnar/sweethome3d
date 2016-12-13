@@ -21,9 +21,6 @@
 // Requires scene3d.js
 //          Object3DBranch.js
 //          ModelManager.js
-//          HomeObject.js
-//          HomePieceOfFurniture.js
-
 
 /**
  * Creates the 3D piece matching the given home <code>piece</code>.
@@ -292,7 +289,7 @@ HomePieceOfFurniture3D.prototype.setColorAndTexture = function(node, color, text
           mat3.rotate(transform, transform, texture.getAngle());
           appearance.setTextureTransform(transform);
           this.updateAppearanceMaterial(appearance, Object3DBranch.DEFAULT_COLOR, Object3DBranch.DEFAULT_AMBIENT_COLOR, materialShininess);
-          TextureManager.getInstance().loadTexture(texture.getImage(), 0, 
+          TextureManager.getInstance().loadTexture(texture.getImage(), texture.getAngle(), 
               waitTextureLoadingEnd, this.getTextureObserver(appearance));
         }
       } else if (materialModified) {
@@ -333,7 +330,7 @@ HomePieceOfFurniture3D.prototype.setColorAndTexture = function(node, color, text
               appearance.setTextureTransform(transform);
               this.updateAppearanceMaterial(appearance, Object3DBranch.DEFAULT_COLOR, Object3DBranch.DEFAULT_AMBIENT_COLOR, materialShininess);
               var materialTexture = material.getTexture();
-              TextureManager.getInstance().loadTexture(materialTexture.getImage(), 0, 
+              TextureManager.getInstance().loadTexture(materialTexture.getImage(), materialTexture.getAngle(), 
                   waitTextureLoadingEnd, this.getTextureObserver(appearance));
             } else {
               this.restoreDefaultAppearance(appearance, material.getShininess());

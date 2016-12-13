@@ -10,7 +10,7 @@
 -->
 <project basedir="." default="build" name="SweetHome3DJS">
   <!-- The current version of Sweet Home 3D JS -->
-  <property name="version" value="1.2"/>
+  <property name="version" value="1.1"/>
 
   <target name="concat" 
           description="Concat Javacript files in dist/build directory">
@@ -32,7 +32,6 @@
       <filelist dir="lib">
       	<file name="CatalogPieceOfFurniture.js"/>
       	<file name="CatalogTexture.js"/>
-      	<file name="HomeObject.js"/>
       	<file name="HomePieceOfFurniture.js"/>
       	<file name="HomeFurnitureGroup.js"/>
       	<file name="Camera.js"/>

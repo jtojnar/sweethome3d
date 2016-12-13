@@ -25,7 +25,6 @@ import java.text.Collator;
 import java.util.List;
 import java.util.Locale;
 
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
@@ -35,11 +34,11 @@ import javax.swing.tree.TreeModel;
 
 import junit.framework.TestCase;
 
-import com.eteks.sweethome3d.io.DefaultFurnitureCatalog;
+import com.eteks.sweethome3d.io.DefaultCatalog;
+import com.eteks.sweethome3d.model.Catalog;
 import com.eteks.sweethome3d.model.CatalogPieceOfFurniture;
-import com.eteks.sweethome3d.model.FurnitureCatalog;
-import com.eteks.sweethome3d.model.FurnitureCategory;
-import com.eteks.sweethome3d.swing.FurnitureCatalogTree;
+import com.eteks.sweethome3d.model.Category;
+import com.eteks.sweethome3d.swing.CatalogTree;
 
 /**
  * Tests furniture catalog tree component.
@@ -49,11 +48,11 @@ public class CatalogTreeTest extends TestCase {
   public void testCatalogTreeCreation() {
     // 1. Create a furniture catalog read from English locale resources
     Locale.setDefault(Locale.US);
-    FurnitureCatalog catalog = new DefaultFurnitureCatalog();
+    Catalog catalog = new DefaultCatalog();
 
     // Get the name of the first category 
-    List<FurnitureCategory> categories = catalog.getCategories();
-    FurnitureCategory firstCategory = categories.get(0);
+    List<Category> categories = catalog.getCategories();
+    Category firstCategory = categories.get(0);
     String firstCategoryEnglishName = firstCategory.getName(); 
     // Get the name of the first piece of furniture
     List<CatalogPieceOfFurniture> categoryFurniture = firstCategory.getFurniture();
@@ -62,7 +61,7 @@ public class CatalogTreeTest extends TestCase {
     
     // 2. Read the furniture catalog from French locale resources
     Locale.setDefault(Locale.FRENCH);
-    catalog = new DefaultFurnitureCatalog();
+    catalog = new DefaultCatalog();
     // Get the french names of the first category and its first piece of furniture
     firstCategory = catalog.getCategories().get(0);
     String firstCategoryFrenchName = firstCategory.getName();
@@ -75,7 +74,7 @@ public class CatalogTreeTest extends TestCase {
         firstPieceEnglishName.equals(firstPieceFrenchName)); 
 
     // 3. Create a tree from default catalog
-    JTree tree = new FurnitureCatalogTree(catalog);
+    JTree tree = new CatalogTree(catalog);
 
     // Check root isn't visible and root handles are showed
     assertFalse("Root is visible", tree.isRootVisible());
@@ -123,12 +122,12 @@ public class CatalogTreeTest extends TestCase {
     Component childLabel = renderer.
         getTreeCellRendererComponent(tree, node, 
            false, true, false, 0, false);
-    return ((JLabel)((JComponent)childLabel).getComponent(0)).getText();
+    return ((JLabel)childLabel).getText();
   }
   
   public static void main(String [] args) {
     // Create a furniture tree from the default locale catalog
-    FurnitureCatalogTree tree = new FurnitureCatalogTree(new DefaultFurnitureCatalog());
+    CatalogTree tree = new CatalogTree(new DefaultCatalog());
     JFrame frame = new JFrame("Catalog Tree Test");
     frame.add(new JScrollPane(tree));
     frame.pack();

@@ -1,7 +1,7 @@
 /*
  * HomePDFPrinter.java 7 sept. 07
  *
- * Sweet Home 3D, Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2007 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,18 +19,14 @@
  */
 package com.eteks.sweethome3d.swing;
 
-import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.print.PageFormat;
 import java.awt.print.PrinterException;
 import java.io.IOException;
-import java.io.InterruptedIOException;
 import java.io.OutputStream;
 
+import com.eteks.sweethome3d.model.ContentManager;
 import com.eteks.sweethome3d.model.Home;
-import com.eteks.sweethome3d.model.UserPreferences;
-import com.eteks.sweethome3d.viewcontroller.ContentManager;
-import com.eteks.sweethome3d.viewcontroller.HomeController;
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.Rectangle;
@@ -43,60 +39,43 @@ import com.lowagie.text.pdf.PdfWriter;
  * @author Emmanuel Puybaret
  */
 public class HomePDFPrinter {
-  private final Home            home;
-  private final UserPreferences preferences;
-  private final HomeController  controller;
-  private final Font            defaultFont;
+  private Home           home;
+  private ContentManager contentManager;
+  private HomeController controller;
 
-  /**
-   * Creates a PDF printer able to write to an output stream. 
-   */
-  public HomePDFPrinter(Home home, 
-                        UserPreferences preferences, 
-                        HomeController controller, 
-                        Font defaultFont) {
+  public HomePDFPrinter(Home home, ContentManager contentManager, HomeController controller) {
     this.home = home;
-    this.preferences = preferences;
+    this.contentManager = contentManager;
     this.controller = controller;
-    this.defaultFont = defaultFont;
   }
 
   /**
    * Writes to <code>outputStream</code> the print of a home in PDF format.
    */
   public void write(OutputStream outputStream) throws IOException {
-    PageFormat pageFormat = HomePrintableComponent.getPageFormat(this.home.getPrint());
+    PageFormat pageFormat = PageSetupPanel.getPageFormat(this.home.getPrint());
     Document pdfDocument = new Document(new Rectangle((float)pageFormat.getWidth(), (float)pageFormat.getHeight()));
+    // Set PDF document description
+    pdfDocument.addAuthor(System.getProperty("user.name", ""));
+    pdfDocument.addCreator("Sweet Home 3D");
+    pdfDocument.addCreationDate();
+    String homeName = this.home.getName();
+    if (homeName != null) {
+      pdfDocument.addTitle(this.contentManager.getPresentationName(
+          homeName, ContentManager.ContentType.PDF));
+    }
     try {
       // Get a PDF writer that will write to the given PDF output stream
       PdfWriter pdfWriter = PdfWriter.getInstance(pdfDocument, outputStream);
       pdfDocument.open();
-      
-      // Set PDF document description
-      pdfDocument.addAuthor(System.getProperty("user.name", ""));
-      String pdfDocumentCreator = this.preferences.getLocalizedString(
-          HomePDFPrinter.class, "pdfDocument.creator");    
-      pdfDocument.addCreator(pdfDocumentCreator);
-      pdfDocument.addCreationDate();
-      String homeName = this.home.getName();
-      if (homeName != null) {
-        pdfDocument.addTitle(this.controller.getContentManager().getPresentationName(
-            homeName, ContentManager.ContentType.PDF));
-      }
-      
       PdfContentByte pdfContent = pdfWriter.getDirectContent();
-      HomePrintableComponent printableComponent = 
-          new HomePrintableComponent(this.home, this.controller, this.defaultFont);
+      HomePrintableComponent printableComponent = new HomePrintableComponent(this.home, this.controller);
       // Print each page
       for (int page = 0, pageCount = printableComponent.getPageCount(); page < pageCount; page++) {
-        // Check current thread isn't interrupted
-        if (Thread.interrupted()) {
-          throw new InterruptedIOException();
-        }
         PdfTemplate pdfTemplate = pdfContent.createTemplate((float)pageFormat.getWidth(), 
             (float)pageFormat.getHeight());
-        Graphics g = pdfTemplate.createGraphicsShapes((float)pageFormat.getWidth(), 
-            (float)pageFormat.getHeight());        
+        Graphics g = pdfTemplate.createGraphics((float)pageFormat.getWidth(), 
+            (float)pageFormat.getHeight());
         
         printableComponent.print(g, pageFormat, page);
         
@@ -112,8 +91,6 @@ public class HomePDFPrinter {
       IOException exception = new IOException("Couldn't print to PDF");
       exception.initCause(ex);
       throw exception;
-    } catch (InterruptedPrinterException ex) {
-      throw new InterruptedIOException("Print to PDF interrupted");
     } catch (PrinterException ex) {
       IOException exception = new IOException("Couldn't print to PDF");
       exception.initCause(ex);

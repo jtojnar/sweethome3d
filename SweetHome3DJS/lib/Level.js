@@ -19,7 +19,6 @@
  */
 
 // Requires core.js
-//          HomeObject.js
 
 /**
  * Creates a home level from an existing level.
@@ -41,8 +40,6 @@ function Level(name, elevation, floorThickness, height) {
   this.elevationIndex = -1;
   this.propertyChangeSupport = new PropertyChangeSupport(this);
 }
-Level.prototype = Object.create(HomeObject.prototype);
-Level.prototype.constructor = Level;
 
 /**
  * Adds the property change <code>listener</code> in parameter to this level.
@@ -240,7 +237,6 @@ Level.prototype.setElevationIndex = function(elevationIndex) {
  */
 Level.prototype.clone = function() {
   var clone = new Level(this.name, this.elevation, this.floorThickness, this.height);
-  this.duplicateAttributes(clone);
   clone.backgroundImage = this.backgroundImage;
   clone.visible = this.visible;
   clone.viewable = this.viewable;

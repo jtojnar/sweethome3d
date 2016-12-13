@@ -41,11 +41,11 @@ function ModelPreviewComponent(canvasId, pitchAndScaleChangeSupported) {
     var MIN_VIEW_PITCH = -Math.PI / 2;
     var previewComponent = this;
     var userActionsListener = {
-        buttonPressed : -1,
-        pointerTouches : {},
+        buttonPressed : -1, 
+        gesture : false,
         
         rotationUpdater : function(x, y, altKey) {
-          if (userActionsListener.buttonPressed === 0) {
+          if (!userActionsListener.gesture && userActionsListener.buttonPressed === 0) {
             if (altKey) {
               userActionsListener.zoomUpdater(userActionsListener.yLastMove - y);
             } else {
@@ -81,78 +81,20 @@ function ModelPreviewComponent(canvasId, pitchAndScaleChangeSupported) {
             delete userActionsListener.mousePressedInCanvas;
           }
         },
-        pointerPressed : function(ev) {
-          if (ev.pointerType == "mouse") {
-            userActionsListener.mousePressed(ev);
-          } else {
-            // Multi touch support for IE and Edge
-            userActionsListener.copyPointerToTargetTouches(ev);
-            userActionsListener.touchStarted(ev);
-          }
-        },
-        pointerMousePressed : function(ev) {
-          ev.stopPropagation();
-        },
-        windowPointerMoved : function(ev) {
-          if (ev.pointerType == "mouse") {
-            userActionsListener.windowMouseMoved(ev);
-          } else {
-            // Multi touch support for IE and Edge
-            userActionsListener.copyPointerToTargetTouches(ev);
-            userActionsListener.touchMoved(ev);
-          }
-        },
-        windowPointerReleased : function(ev) {
-          if (ev.pointerType == "mouse") {
-            userActionsListener.windowMouseReleased(ev);
-          } else {
-            delete userActionsListener.pointerTouches [ev.pointerId];
-            userActionsListener.touchEnded(ev);
-          }
-        },
         touchStarted : function(ev) {
           ev.preventDefault();
-          if (ev.targetTouches.length == 1) {
-            userActionsListener.buttonPressed = 0;
-            userActionsListener.xLastMove = ev.targetTouches [0].pageX;
-            userActionsListener.yLastMove = ev.targetTouches [0].pageY;
-          } else if (ev.targetTouches.length == 2) {
-            userActionsListener.distanceLastPinch = userActionsListener.distance(
-                ev.targetTouches [0], ev.targetTouches [1]);
-          }
+          userActionsListener.buttonPressed = 0;
+          userActionsListener.xLastMove = ev.targetTouches [ev.targetTouches.length - 1].pageX;
+          userActionsListener.yLastMove = ev.targetTouches [ev.targetTouches.length - 1].pageY;
           previewComponent.stopRotationAnimation();
         },
         touchMoved : function(ev) {
           ev.preventDefault();
-          if (ev.targetTouches.length == 1) {
-            var x = ev.targetTouches [0].pageX;
-            var y = ev.targetTouches [0].pageY;
-            userActionsListener.rotationUpdater(x, y, false);
-            userActionsListener.xLastMove = x;
-            userActionsListener.yLastMove = y;
-          } else if (ev.targetTouches.length == 2) {
-            var newDistance = userActionsListener.distance(ev.targetTouches [0], ev.targetTouches [1]);
-            var scale = userActionsListener.distanceLastPinch / newDistance;
-            previewComponent.viewScale = Math.max(0.5, Math.min(1.3, previewComponent.viewScale * scale));
-            previewComponent.updateViewPlatformTransform();
-            userActionsListener.distanceLastPinch = newDistance;
-          }
-        },
-        touchEnded : function(ev) {
-          userActionsListener.buttonPressed = -1;
-        },
-        copyPointerToTargetTouches : function (ev) {
-          // Copy the IE and Edge pointer location to ev.targetTouches
-          userActionsListener.pointerTouches [ev.pointerId] = {pageX: ev.clientX, pageY: ev.clientY};
-          ev.targetTouches = [];
-          for (var attribute in userActionsListener.pointerTouches) {
-            if (userActionsListener.pointerTouches.hasOwnProperty(attribute)) {
-              ev.targetTouches.push(userActionsListener.pointerTouches [attribute]);
-            }
-          }
-        },
-        distance : function(p1, p2) {
-          return Math.sqrt(Math.pow(p2.pageX - p1.pageX, 2) + Math.pow(p2.pageY - p1.pageY, 2));
+          var x = ev.targetTouches [ev.targetTouches.length - 1].pageX;
+          var y = ev.targetTouches [ev.targetTouches.length - 1].pageY;
+          userActionsListener.rotationUpdater(x, y, false);
+          userActionsListener.xLastMove = x;
+          userActionsListener.yLastMove = y;
         },
         mouseScrolled : function(ev) {
           ev.preventDefault();
@@ -162,6 +104,19 @@ function ModelPreviewComponent(canvasId, pitchAndScaleChangeSupported) {
           ev.preventDefault();
           userActionsListener.zoomUpdater(ev.deltaY !== undefined ? ev.deltaY / 2 : -ev.wheelDelta / 3);
         },
+        gestureStarted : function(ev) {
+          userActionsListener.gesture = true;
+          userActionsListener.scale = previewComponent.viewScale;
+        },
+        gestureChanged : function(ev) {
+          ev.preventDefault();
+          previewComponent.viewScale = Math.max(0.5, Math.min(1.3, userActionsListener.scale / ev.scale));
+          previewComponent.stopRotationAnimation();
+          previewComponent.updateViewPlatformTransform();
+        },
+        gestureEnded : function(ev) {
+          userActionsListener.gesture = false;
+        },
         visibilityChanged : function(ev) {
           if (document.visibilityState == "hidden") {
             previewComponent.stopRotationAnimation();
@@ -169,24 +124,19 @@ function ModelPreviewComponent(canvasId, pitchAndScaleChangeSupported) {
         }
       };
       
-    if (window.PointerEvent) {
-      // Multi touch support for IE and Edge
-      this.canvas3D.getCanvas().addEventListener("pointerdown", userActionsListener.pointerPressed);
-      this.canvas3D.getCanvas().addEventListener("mousedown", userActionsListener.pointerMousePressed);
-      // Add pointermove and pointerup event listeners to window to capture pointer events out of the canvas 
-      window.addEventListener("pointermove", userActionsListener.windowPointerMoved);
-      window.addEventListener("pointerup", userActionsListener.windowPointerReleased);
-    } else {
-      this.canvas3D.getCanvas().addEventListener("touchstart", userActionsListener.touchStarted);
-      this.canvas3D.getCanvas().addEventListener("touchmove", userActionsListener.touchMoved);
-      this.canvas3D.getCanvas().addEventListener("touchend", userActionsListener.touchEnded);
-      this.canvas3D.getCanvas().addEventListener("mousedown", userActionsListener.mousePressed);
-      // Add mousemove and mouseup event listeners to window to capture mouse events out of the canvas 
-      window.addEventListener("mousemove", userActionsListener.windowMouseMoved);
-      window.addEventListener("mouseup", userActionsListener.windowMouseReleased);
-    }
+    // Add mousemove and mouseup event listeners to window to capture mouse events out of the canvas 
+    window.addEventListener("mousemove", userActionsListener.windowMouseMoved);
+    window.addEventListener("mouseup", userActionsListener.windowMouseReleased);
+    // Add other listeners on canvas
+    this.canvas3D.getCanvas().addEventListener("mousedown", userActionsListener.mousePressed);
+    this.canvas3D.getCanvas().addEventListener("touchstart", userActionsListener.touchStarted);
+    this.canvas3D.getCanvas().addEventListener("touchmove", userActionsListener.touchMoved);
+    this.canvas3D.getCanvas().addEventListener("touchend", userActionsListener.mouseupListener);
     this.canvas3D.getCanvas().addEventListener("DOMMouseScroll", userActionsListener.mouseScrolled);
     this.canvas3D.getCanvas().addEventListener("mousewheel", userActionsListener.mouseWheelMoved);
+    this.canvas3D.getCanvas().addEventListener("gesturestart",  userActionsListener.gestureStarted);
+    this.canvas3D.getCanvas().addEventListener("gesturechange", userActionsListener.gestureChanged);
+    this.canvas3D.getCanvas().addEventListener("gestureend", userActionsListener.gestureEnded);
     document.addEventListener("visibilitychange", userActionsListener.visibilityChanged);
     this.userActionsListener = userActionsListener;
   }
@@ -293,13 +243,8 @@ ModelPreviewComponent.prototype.clear = function() {
  * This method should be called to free resources in the browser when this component is not needed anymore.
  */
 ModelPreviewComponent.prototype.dispose = function() {
-  if (window.PointerEvent) {
-    window.removeEventListener("pointermove", this.userActionsListener.windowPointerMoved);
-    window.removeEventListener("pointerup", this.userActionsListener.windowPointerReleased);
-  } else {
-    window.removeEventListener("mousemove", this.userActionsListener.windowMouseMoved);
-    window.removeEventListener("mouseup", this.userActionsListener.windowMouseReleased);
-  }
+  window.removeEventListener("mousemove", this.userActionsListener.windowMouseMoved);
+  window.removeEventListener("mouseup", this.userActionsListener.windowMouseReleased);
   document.removeEventListener("visibilitychange", this.userActionsListener.visibilityChanged);
   this.clear();
 }
