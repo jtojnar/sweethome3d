@@ -24,71 +24,54 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.Arrays;
-
-import com.eteks.sweethome3d.io.DefaultFurnitureCatalog;
-import com.eteks.sweethome3d.io.DefaultUserPreferences;
-import com.eteks.sweethome3d.io.HomeFileRecorder;
-import com.eteks.sweethome3d.model.Content;
-import com.eteks.sweethome3d.model.DamagedHomeRecorderException;
-import com.eteks.sweethome3d.model.FurnitureCatalog;
-import com.eteks.sweethome3d.model.Home;
-import com.eteks.sweethome3d.model.HomeFurnitureGroup;
-import com.eteks.sweethome3d.model.HomePieceOfFurniture;
-import com.eteks.sweethome3d.model.HomeRecorder;
-import com.eteks.sweethome3d.model.Level;
-import com.eteks.sweethome3d.model.RecorderException;
-import com.eteks.sweethome3d.model.TextStyle;
-import com.eteks.sweethome3d.model.Wall;
-import com.eteks.sweethome3d.tools.URLContent;
 
 import junit.framework.TestCase;
 
+import com.eteks.sweethome3d.io.DefaultFurnitureCatalog;
+import com.eteks.sweethome3d.io.HomeFileRecorder;
+import com.eteks.sweethome3d.model.FurnitureCatalog;
+import com.eteks.sweethome3d.model.Content;
+import com.eteks.sweethome3d.model.Home;
+import com.eteks.sweethome3d.model.HomePieceOfFurniture;
+import com.eteks.sweethome3d.model.HomeRecorder;
+import com.eteks.sweethome3d.model.RecorderException;
+import com.eteks.sweethome3d.model.Wall;
+
 /**
- * Tests {@link HomeFileRecorder} class.
+ * Tests FileHome class.
  * @author Emmanuel Puybaret
  */
 public class HomeFileRecorderTest extends TestCase {
   public void testWriteReadHome() throws RecorderException {
-    // Create an empty home with a wall and a piece of furniture
+    // 1. Create an empty home
     Home home1 = new Home();
-    Wall wall = new Wall(0, 10, 100, 80, 10, home1.getWallHeight());
-    wall.setProperty("id", "wall1");
+    // Add to home a wall and a piece of furniture
+    Wall wall = new Wall(0, 10, 100, 80, 10);
     home1.addWall(wall);
     FurnitureCatalog catalog = new DefaultFurnitureCatalog();
     HomePieceOfFurniture piece = new HomePieceOfFurniture(
         catalog.getCategories().get(0).getFurniture().get(0));
-    piece.setProperty("id", "piece1");
-    piece.setProperty("name", "value");
     home1.addPieceOfFurniture(piece);
     
-    // Test if home is correctly saved
-    checkSavedHome(home1, new HomeFileRecorder());
-    // Test if home with XML entry is correctly saved
-    checkSavedHome(home1, new HomeFileRecorder(9, false, null, false, true));
-  }
-  
-  private void checkSavedHome(Home home, HomeRecorder recorder) throws RecorderException {
-    // 1. Record home in a file named test.sh3d in current directory
+    // 2. Record home in a file named test.sh3d in current directory
+    HomeRecorder recorder = new HomeFileRecorder();
     String testFile = new File("test.sh3d").getAbsolutePath();
-    recorder.writeHome(home, testFile); 
+    recorder.writeHome(home1, testFile); 
     // Check test.sh3d file exists
     assertTrue("File test.sh3d doesn't exist", recorder.exists(testFile));
     
-    // 2. Read test.sh3d file in a new home
-    Home readHome = recorder.readHome(testFile);
+    // 3. Read test.sh3d file in a new home
+    Home home2 = recorder.readHome(testFile);
     // Compare home content
-    assertNotSame("Home not loaded", home, readHome);
+    assertNotSame("Home not loaded", home1, home2);
     assertEquals("Home wall height", 
-        home.getWallHeight(), readHome.getWallHeight());
+        home1.getWallHeight(), home2.getWallHeight());
     assertEquals("Home walls wrong count", 
-        home.getWalls().size(), readHome.getWalls().size());
-    assertEquals(home.getWalls().iterator().next(), readHome.getWalls().iterator().next());
+        home1.getWalls().size(), home2.getWalls().size());
+    assertEquals(wall, home2.getWalls().iterator().next());
     assertEquals("Home furniture wrong count", 
-        home.getFurniture().size(), readHome.getFurniture().size());
-    assertEquals(home.getFurniture().iterator().next(), readHome.getFurniture().get(0));
+        home1.getFurniture().size(), home2.getFurniture().size());
+    assertEquals(piece, home2.getFurniture().get(0));
 
     // Delete file
     if (!new File(testFile).delete()) {
@@ -96,90 +79,6 @@ public class HomeFileRecorderTest extends TestCase {
     }
   }
   
-  public void testXMLEntryConsistency() throws URISyntaxException, RecorderException, IOException {
-    checkXMLEntryConsistency(new File(HomeControllerTest.class.getResource("resources/home1.sh3d").toURI()));
-    
-    // Create a home with properties and text style set on group items
-    Home home = new Home();
-    Level level0 = new Level("Level0", 0, 0.1f, 250f);
-    home.addLevel(level0);
-    Level level1 = new Level("Level1", 252f, 2f, 250f);
-    level1.setViewable(false);
-    home.addLevel(level1);
-    home.setSelectedLevel(level0);
-    home.addWall(new Wall(0, 10, 100, 80, 10, Float.NaN)); // Use NaN to check how it will be written then read
-    FurnitureCatalog catalog = new DefaultFurnitureCatalog();
-    HomePieceOfFurniture piece1 = new HomePieceOfFurniture(catalog.getCategories().get(0).getFurniture().get(0));
-    piece1.setProperty("id", "piece1");
-    HomePieceOfFurniture piece2 = new HomePieceOfFurniture(catalog.getCategories().get(0).getFurniture().get(1));
-    piece2.setProperty("id", "piece2");
-    piece2.setNameStyle(new TextStyle(12, false, false));
-    HomeFurnitureGroup group = new HomeFurnitureGroup(Arrays.asList(piece1, piece2), "Group");
-    group.setProperty("test", "value");
-    home.addPieceOfFurniture(group);
-    // Save home with Home serialized entry
-    File savedFileWithHomeEntry = File.createTempFile("test", ".sh3d");
-    new HomeFileRecorder(0, false, null, false, false).writeHome(home, savedFileWithHomeEntry.getAbsolutePath());
-    checkXMLEntryConsistency(savedFileWithHomeEntry);
-    savedFileWithHomeEntry.delete();
-  }
-  
-  public void checkXMLEntryConsistency(File homeFile) throws RecorderException, IOException {
-    HomeRecorder homeEntryRecorder = new HomeFileRecorder(0, false, null, false, false);
-    Home home = homeEntryRecorder.readHome(homeFile.getAbsolutePath());
-    assertTrue("Tested home has no walls", home.getWalls().size() > 0);
-    assertTrue("Tested home has no furniture", home.getFurniture().size() > 0);
-    // Save home with an XML entry
-    HomeRecorder homeXmlEntryRecorder = new HomeFileRecorder(0, false, null, false, true);
-    File savedFileWithXmlEntry = File.createTempFile("homeXML", ".sh3d");
-    homeXmlEntryRecorder.writeHome(home, savedFileWithXmlEntry.getAbsolutePath());
-    // Read home again using XML entry and save it in an other file
-    home = homeXmlEntryRecorder.readHome(savedFileWithXmlEntry.getAbsolutePath());
-    File savedFileWithXmlEntry2 = File.createTempFile("homeXML", ".sh3d");
-    homeXmlEntryRecorder.writeHome(home, savedFileWithXmlEntry2.getAbsolutePath());
-    // Compare the XML entries of the two files
-    assertContentEquals("Home.xml entries different", 
-        new URLContent(new URL("jar:" + savedFileWithXmlEntry.toURI().toURL() + "!/Home.xml")), 
-        new URLContent(new URL("jar:" + savedFileWithXmlEntry2.toURI().toURL() + "!/Home.xml")));
-    savedFileWithXmlEntry.delete();
-    savedFileWithXmlEntry2.delete();
-  }
-  
-  /**
-   * Test repaired home file management.
-   */
-  public void testRepairedFile() throws URISyntaxException, RecorderException, IOException {
-    // Test repair on corrupted file 
-    checkDamagedFileIsRepaired(new File(
-        HomeControllerTest.class.getResource("resources/damagedHomeWithContentDigests.sh3d").toURI()).getAbsolutePath(), 7);
-    // Test repair on valid zip file but with missing entries 
-    checkDamagedFileIsRepaired(new File(
-        HomeControllerTest.class.getResource("resources/damagedHomeInValidZipWithContentDigestsAndNoContent.sh3d").toURI()).getAbsolutePath(), 9);
-  }
-
-  private void checkDamagedFileIsRepaired(String testFile, int damagedContentCount) throws RecorderException, IOException {
-    try {
-      // Check if opened home isn't repaired if preferences content isn't provided
-      HomeRecorder recorder = new HomeFileRecorder(0, false, null, false);
-      recorder.readHome(testFile);
-      fail("Home shouldn't be readable");
-    } catch (DamagedHomeRecorderException ex) {
-      assertEquals("Missing damaged content", damagedContentCount, ex.getInvalidContent().size());
-    }
-    try {
-      // Check if opened home will be fully repaired with preferences content
-      HomeRecorder recorder = new HomeFileRecorder(0, false, new DefaultUserPreferences(), false);
-      Home home = recorder.readHome(testFile);
-      assertTrue("Home is not flagged as repaired", home.isRepaired());
-      // Check repaired home can be saved
-      File savedFile = File.createTempFile("repaired", ".sh3d");
-      recorder.writeHome(home, savedFile.getAbsolutePath());
-      savedFile.delete();
-    } catch (DamagedHomeRecorderException ex) {
-      fail("Home should be repaired with default catalogs");
-    }
-  }
-
   /**
    * Asserts <code>wall1</code> and <code>wall2</code> are different walls 
    * containing the same data. 
@@ -203,7 +102,6 @@ public class HomeFileRecorderTest extends TestCase {
       assertFalse("Different wall at end", wall2.getWallAtEnd() == null);
       assertNotSame("Wall at end not loaded", wall1.getWallAtStart(), wall2.getWallAtEnd());
     }
-    assertEquals("Different property id", wall1.getProperty("id"), wall2.getProperty("id"));     
   }
 
   /**
@@ -223,12 +121,10 @@ public class HomeFileRecorderTest extends TestCase {
     assertContentEquals("Different icon content", piece1.getIcon(), piece2.getIcon());     
     assertNotSame("Piece model not loaded", piece1.getModel(), piece2.getModel());
     assertContentEquals("Different model content", piece1.getModel(), piece2.getModel());     
-    assertEquals("Different property id", piece1.getProperty("id"), piece2.getProperty("id"));     
-    assertEquals("Different property name", piece1.getProperty("name"), piece2.getProperty("name"));     
   }
 
   /**
-   * Asserts <code>content1</code> and <code>content2</code> are equal.
+   * Asserts <code>content1</code> and <code>content2</code> are equals.
    */
   private void assertContentEquals(String message, Content content1, Content content2) {
     InputStream stream1 = null;

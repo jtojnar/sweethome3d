@@ -19,19 +19,16 @@
  */
 package com.eteks.sweethome3d.junit;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import com.eteks.sweethome3d.model.CollectionEvent;
-import com.eteks.sweethome3d.model.CollectionListener;
-import com.eteks.sweethome3d.model.Home;
-import com.eteks.sweethome3d.model.HomeObject;
-import com.eteks.sweethome3d.model.Wall;
-
 import junit.framework.TestCase;
+
+import com.eteks.sweethome3d.model.Home;
+import com.eteks.sweethome3d.model.Wall;
+import com.eteks.sweethome3d.model.WallEvent;
+import com.eteks.sweethome3d.model.WallListener;
 
 /**
  * Tests {@link com.eteks.sweethome3d.model.Home Home} class.
@@ -44,29 +41,25 @@ public class HomeTest extends TestCase {
     final List<Wall> addedWalls = new ArrayList<Wall>();
     final List<Wall> deletedWalls = new ArrayList<Wall>();
     final List<Wall> updatedWalls = new ArrayList<Wall>();
-    final PropertyChangeListener wallChangeListener = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent ev) {
-          updatedWalls.add((Wall)ev.getSource());
-        }
-      };
-    home.addWallsListener(new CollectionListener<Wall> () {
-      public void collectionChanged(CollectionEvent<Wall> ev) {
+    home.addWallListener(new WallListener () {
+      public void wallChanged(WallEvent ev) {
         switch (ev.getType()) {
           case ADD :
-            addedWalls.add(ev.getItem());
-            ev.getItem().addPropertyChangeListener(wallChangeListener);
+            addedWalls.add(ev.getWall());
             break;
           case DELETE :
-            deletedWalls.add(ev.getItem());
-            ev.getItem().removePropertyChangeListener(wallChangeListener);
+            deletedWalls.add(ev.getWall());
+            break;
+          case UPDATE :
+            updatedWalls.add(ev.getWall());
             break;
         }
       }
     });
     
     // Create 2 walls
-    Wall wall1 = new Wall(0, 0, 100, 0, 0, home.getWallHeight());
-    Wall wall2 = new Wall(100, 0, 100, 100, 0, home.getWallHeight());
+    Wall wall1 = new Wall(0, 0, 100, 0, 0);
+    Wall wall2 = new Wall(100, 0, 100, 100, 0);
     // Add them to home
     home.addWall(wall1);
     home.addWall(wall2);
@@ -75,22 +68,21 @@ public class HomeTest extends TestCase {
     assertWallCollectionContains(addedWalls, wall1, wall2);
     
     // Join end point of first wall to start point of second wall
-    wall1.setWallAtEnd(wall2);
+    home.setWallAtEnd(wall1, wall2);
     // Check wall1 end wall is wall2 and that wall listener received 1 notification
     assertSame("Wall not joined", wall2, wall1.getWallAtEnd());
     assertWallCollectionContains(updatedWalls, wall1);
 
     // Join start point of second wall to end point of first wall
     updatedWalls.clear();
-    wall2.setWallAtStart(wall1);
+    home.setWallAtStart(wall2, wall1);
     // Check wall2 start wall is wall1 and that wall listener received 1 notification
     assertSame("Wall not joined", wall1, wall2.getWallAtStart());
     assertWallCollectionContains(updatedWalls, wall2);
     
     // Move end point of second wall
     updatedWalls.clear();
-    wall2.setXEnd(60);
-    wall2.setYEnd(100);
+    home.moveWallEndPointTo(wall2, 60, 100);
     // Check wall2 end position and that wall listener received 1 notifications
     assertEquals("Incorrect abscissa", 60f, wall2.getXEnd());
     assertEquals("Incorrect ordinate", 100f, wall2.getYEnd());
@@ -98,8 +90,7 @@ public class HomeTest extends TestCase {
 
     // Move point shared by the two walls
     updatedWalls.clear();
-    wall2.setXStart(60);
-    wall2.setYStart(0);
+    home.moveWallStartPointTo(wall2, 60, 0);
     // Check wall2 start point position
     assertEquals("Incorrect abscissa", 60f, wall2.getXStart());
     assertEquals("Incorrect ordinate", 0f, wall2.getYStart());
@@ -107,8 +98,7 @@ public class HomeTest extends TestCase {
     assertWallCollectionContains(updatedWalls, wall2);
 
     updatedWalls.clear();
-    wall1.setXEnd(60);
-    wall1.setYEnd(0);
+    home.moveWallEndPointTo(wall1, 60, 0);
     // Check wall1 end point position
     assertEquals("Incorrect abscissa", 60f, wall1.getXEnd());
     assertEquals("Incorrect ordinate", 0f, wall1.getYEnd());
@@ -117,7 +107,7 @@ public class HomeTest extends TestCase {
     
     // Detach second wall from first wall
     updatedWalls.clear();
-    wall2.setWallAtStart(null);
+    home.setWallAtStart(wall2, null);
     // Check wall2 and wall1 are not joined and that wall listener received 2 notifications
     assertSame("Wall joined", null, wall1.getWallAtEnd());
     assertSame("Wall joined", null, wall2.getWallAtStart());
@@ -128,26 +118,6 @@ public class HomeTest extends TestCase {
     // Check it was removed and that wall listener received a notification 
     assertWallCollectionContains(home.getWalls(), wall1);
     assertWallCollectionContains(deletedWalls, wall2);
-  }
-  
-  public void testProperties() {
-    // Test properties management on a subclass of HomeObject
-    HomeObject object = new HomeObject() { };
-    object.setProperty("id", "Object1");
-    assertEquals("Wrong count of properties", 1, object.getPropertyNames().size());
-    assertEquals("Wrong property name", "id", object.getPropertyNames().iterator().next());
-    assertEquals("Wrong property value", "Object1", object.getProperty("id"));
-    assertEquals("Wrong property value on clone", "Object1", object.clone().getProperty("id"));
-    // Set a second property that should change internally the way properties are stored
-    object.setProperty("name", "My object");
-    assertEquals("Wrong count of properties", 2, object.getPropertyNames().size());
-    assertEquals("Wrong property value", "Object1", object.getProperty("id"));
-    assertEquals("Wrong property value", "My object", object.getProperty("name"));
-    assertEquals("Wrong properties count on clone", 2, object.clone().getPropertyNames().size());
-    object.setProperty("name", null);
-    object.setProperty("id", null);
-    assertEquals("Wrong count of properties", 0, object.getPropertyNames().size());
-    assertEquals("Wrong properties count on clone", 0, object.clone().getPropertyNames().size());
   }
 
   private void assertWallCollectionContains(Collection<Wall> wallCollection, Wall ... walls) {

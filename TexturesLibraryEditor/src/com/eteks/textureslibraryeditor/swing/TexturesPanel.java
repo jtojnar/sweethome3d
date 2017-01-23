@@ -57,6 +57,7 @@ import javax.swing.event.DocumentListener;
 import com.eteks.sweethome3d.model.Content;
 import com.eteks.sweethome3d.model.TexturesCategory;
 import com.eteks.sweethome3d.model.UserPreferences;
+import com.eteks.sweethome3d.swing.AutoCommitSpinner;
 import com.eteks.sweethome3d.swing.NullableSpinner;
 import com.eteks.sweethome3d.swing.ScaledImageComponent;
 import com.eteks.sweethome3d.swing.SwingTools;
@@ -196,31 +197,24 @@ public class TexturesPanel extends JPanel implements DialogView {
           public Object getItem() {
             String name = (String)defaultEditor.getItem();
             name = name.trim();
-            // If category is empty, replace it by the last selected item when the combo box isn't nullable
+            // If category is empty, replace it by the last selected item
             if (name.length() == 0) {
-              if (nullableComboBox) {
-                controller.setCategory(null);
-                return null;
-              } else {
-                Object selectedItem = categoryComboBox.getSelectedItem();
-                setItem(selectedItem);
-                return selectedItem;
-              }
-            } else {
-              TexturesCategory category = new TexturesCategory(name);
-              // Search an existing category
-              int categoryIndex = Collections.binarySearch(categories, category);
-              if (categoryIndex >= 0) {
-                return categories.get(categoryIndex);
-              }
-              // If no existing category was found, return a new one          
-              return category;
+              setItem(nullableComboBox ? null : categoryComboBox.getSelectedItem());
+            } 
+            TexturesCategory category = new TexturesCategory(name);
+            // Search an existing category
+            int categoryIndex = Collections.binarySearch(categories, category);
+            if (categoryIndex >= 0) {
+              return categories.get(categoryIndex);
             }
+            // If no existing category was found, return a new one          
+            return category;
           }
         
           public void setItem(Object value) {
             if (value != null) {
-              defaultEditor.setItem(((TexturesCategory)value).getName());
+              TexturesCategory category = (TexturesCategory)value;
+              defaultEditor.setItem(category.getName());
             }
           }
   
@@ -280,14 +274,14 @@ public class TexturesPanel extends JPanel implements DialogView {
           TexturesPanel.class, "widthLabel.text", unitName));
       final NullableSpinner.NullableSpinnerLengthModel widthSpinnerModel = 
           new NullableSpinner.NullableSpinnerLengthModel(preferences, minimumLength, maximumLength);
-      this.widthSpinner = new NullableSpinner(widthSpinnerModel);
+      this.widthSpinner = new AutoCommitSpinner(widthSpinnerModel);
       final PropertyChangeListener widthChangeListener = new PropertyChangeListener() {
           public void propertyChange(PropertyChangeEvent ev) {
             Float width = controller.getWidth();
             widthSpinnerModel.setNullable(width == null);
             widthSpinnerModel.setLength(width);
             if (width != null) {
-              widthSpinnerModel.setMinimumLength(Math.min(width, minimumLength));
+              widthSpinnerModel.setMinimum(Math.min(width, minimumLength));
             }
           }
         };
@@ -315,7 +309,7 @@ public class TexturesPanel extends JPanel implements DialogView {
             heightSpinnerModel.setNullable(height == null);
             heightSpinnerModel.setLength(height);
             if (height != null) {
-              heightSpinnerModel.setMinimumLength(Math.min(height, minimumLength));
+              heightSpinnerModel.setMinimum(Math.min(height, minimumLength));
             }
           }
         };

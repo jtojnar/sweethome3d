@@ -1,6 +1,6 @@
-# Blender3D MTL File: ext_chairs_and_table_sweethome3d.blend
+# Blender3D MTL File: <memory>
 # Material Count: 1
-newmtl tipical.jpg
+newmtl wood
 Ns 96.078431
 Ka 0.000000 0.000000 0.000000
 Kd 0.676069 0.557764 0.247251
