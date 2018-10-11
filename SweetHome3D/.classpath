@@ -17,7 +17,7 @@
 	<classpathentry kind="lib" path="libtest/jdepend-2.9.jar"/>
 	<classpathentry kind="lib" path="libtest/AppleJavaExtensions.jar"/>
 	<classpathentry kind="lib" path="libtest/jnlp.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
+	<classpathentry kind="lib" path="/Applications/Developer/jre1.5.0_22/lib/rt.jar" sourcepath="/Applications/Developer/Java Source/jdk-1.6_37/src.zip"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
