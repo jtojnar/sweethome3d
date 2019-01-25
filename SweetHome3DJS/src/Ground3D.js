@@ -175,6 +175,9 @@ Ground3D.prototype.updateGround = function(waitTextureLoadingEnd, backgroundImag
   }
   
   var areaRemovedFromGround = new java.awt.geom.Area();
+  if (backgroundImageRectangle !== null) {
+    areaRemovedFromGround.add(new java.awt.geom.Area(backgroundImageRectangle));
+  }
   var undergroundLevelAreas = [];
   var rooms = home.getRooms();
   for (var i = 0; i < rooms.length; i++) {
@@ -295,9 +298,7 @@ Ground3D.prototype.updateGround = function(waitTextureLoadingEnd, backgroundImag
     this.addAreaGeometry(groundShape, groundTexture, outsideGroundArea, 0);
   }
   groundArea.subtract(areaRemovedFromGround);
-  if (backgroundImageRectangle !== null) {
-    groundArea.subtract(new java.awt.geom.Area(backgroundImageRectangle));
-  }
+
   undergroundAreas.splice(0, 0, new Ground3D.LevelAreas(new Level("Ground", 0, 0, 0), groundArea));
   var previousLevelElevation = 0;
   for (var i = 0; i < undergroundAreas.length; i++) {
