@@ -40,7 +40,6 @@ import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -52,7 +51,6 @@ import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -83,23 +81,23 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
   private static final String [] IGNORED_EXTENSIONS = {".max", ".lwo", ".dxf"};
   private static final Locale DEFAULT_LOCALE = new Locale("");
   private static final NumberFormat DECIMAL_FORMAT = new DecimalFormat("0.#####", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
-  
-  private static final String ID          = "id"; 
-  private static final String NAME        = "name"; 
-  private static final String DESCRIPTION = "description"; 
-  private static final String VERSION     = "version"; 
-  private static final String LICENSE     = "license"; 
+
+  private static final String ID          = "id";
+  private static final String NAME        = "name";
+  private static final String DESCRIPTION = "description";
+  private static final String VERSION     = "version";
+  private static final String LICENSE     = "license";
   private static final String PROVIDER    = "provider";
-  
+
   /**
    * Reads a furniture library from the given file, after clearing the given library.
    */
-  public void readFurnitureLibrary(final FurnitureLibrary furnitureLibrary, 
+  public void readFurnitureLibrary(final FurnitureLibrary furnitureLibrary,
                                    String furnitureLibraryLocation,
                                    FurnitureLibraryUserPreferences preferences) throws RecorderException {
     readFurnitureLibrary(furnitureLibrary, furnitureLibraryLocation, preferences, false);
   }
-  
+
   /**
    * Merges a furniture library with one in the given file.
    */
@@ -112,12 +110,12 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
   /**
    * Reads a furniture library from the given file.
    */
-  private void readFurnitureLibrary(final FurnitureLibrary furnitureLibrary, 
-                                    String furnitureLibraryLocation, 
-                                    FurnitureLibraryUserPreferences preferences, 
+  private void readFurnitureLibrary(final FurnitureLibrary furnitureLibrary,
+                                    String furnitureLibraryLocation,
+                                    FurnitureLibraryUserPreferences preferences,
                                     final boolean mergeLibrary) throws RecorderException {
     try {
-      // Retrieve furniture library with default reader and locale 
+      // Retrieve furniture library with default reader and locale
       Locale defaultLocale = Locale.getDefault();
       Locale.setDefault(DEFAULT_LOCALE);
       File furnitureLibraryFile = File.createTempFile("furniture", ".sh3f");
@@ -152,7 +150,7 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
             }
             return piece;
           }
-          
+
           private String getOptionalString(ResourceBundle resource, String propertyKey) {
             try {
               return resource.getString(propertyKey);
@@ -161,10 +159,10 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
             }
           }
         };
-      
+
       // Search which locales are supported
       List<ZipEntry> zipEntries = getZipEntries(furnitureLibraryUrl);
-      Set<Locale>    supportedLocales = new HashSet<Locale>(); 
+      Set<Locale>    supportedLocales = new HashSet<Locale>();
       for (ZipEntry zipEntry : zipEntries) {
         String entryName = zipEntry.getName();
         if (entryName.startsWith(DefaultFurnitureCatalog.PLUGIN_FURNITURE_CATALOG_FAMILY)
@@ -185,7 +183,7 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
 
       // Get furniture name, description, information, tags and category name in each supported locale
       for (Locale locale : supportedLocales) {
-        if (!FurnitureLibrary.DEFAULT_LANGUAGE.equals(locale.toString())) {          
+        if (!FurnitureLibrary.DEFAULT_LANGUAGE.equals(locale.toString())) {
           Locale.setDefault(locale);
           final String language = locale.toString();
           new DefaultFurnitureCatalog(new URL [] {furnitureLibraryUrl}, furnitureResourcesUrlBase) {
@@ -198,15 +196,15 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
                 if (piece != null) {
                   FurnitureCategory category = super.readFurnitureCategory(resource, index);
                   CatalogPieceOfFurniture furnitureLibraryPiece = furniture.get(index - 1);
-                  furnitureLibrary.setPieceOfFurnitureLocalizedData(furnitureLibraryPiece, language, 
+                  furnitureLibrary.setPieceOfFurnitureLocalizedData(furnitureLibraryPiece, language,
                       FurnitureLibrary.FURNITURE_NAME_PROPERTY, piece.getName());
-                  furnitureLibrary.setPieceOfFurnitureLocalizedData(furnitureLibraryPiece, language, 
+                  furnitureLibrary.setPieceOfFurnitureLocalizedData(furnitureLibraryPiece, language,
                       FurnitureLibrary.FURNITURE_DESCRIPTION_PROPERTY, piece.getDescription());
-                  furnitureLibrary.setPieceOfFurnitureLocalizedData(furnitureLibraryPiece, language, 
+                  furnitureLibrary.setPieceOfFurnitureLocalizedData(furnitureLibraryPiece, language,
                       FurnitureLibrary.FURNITURE_INFORMATION_PROPERTY, piece.getInformation());
-                  furnitureLibrary.setPieceOfFurnitureLocalizedData(furnitureLibraryPiece, language, 
+                  furnitureLibrary.setPieceOfFurnitureLocalizedData(furnitureLibraryPiece, language,
                       FurnitureLibrary.FURNITURE_TAGS_PROPERTY, piece.getTags());
-                  furnitureLibrary.setPieceOfFurnitureLocalizedData(furnitureLibraryPiece, language, 
+                  furnitureLibrary.setPieceOfFurnitureLocalizedData(furnitureLibraryPiece, language,
                       FurnitureLibrary.FURNITURE_CATEGORY_PROPERTY, category.getName());
                 }
                 return piece;
@@ -214,7 +212,7 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
             };
         }
       }
-      
+
       Locale.setDefault(defaultLocale);
     } catch (IOException ex) {
       throw new RecorderException("Invalid furniture library file " + furnitureLibraryLocation, ex);
@@ -235,32 +233,32 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
       return new Locale(localeString.substring(1, 3), localeString.substring(4));
     } else {
       return DEFAULT_LOCALE;
-    }  
+    }
   }
-  
+
   /**
-   * Writes furniture library in the <code>furnitureLibraryName</code> file.  
+   * Writes furniture library in the <code>furnitureLibraryName</code> file.
    */
   public void writeFurnitureLibrary(FurnitureLibrary furnitureLibrary,
                                     String furnitureLibraryName,
                                     FurnitureLibraryUserPreferences userPreferences) throws RecorderException {
-    writeFurnitureLibrary(furnitureLibrary, furnitureLibraryName, 
-        userPreferences.isFurnitureLibraryOffline(), 
+    writeFurnitureLibrary(furnitureLibrary, furnitureLibraryName,
+        userPreferences.isFurnitureLibraryOffline(),
         userPreferences.isContentMatchingFurnitureName(),
-        userPreferences.getFurnitureResourcesLocalDirectory(), 
+        userPreferences.getFurnitureResourcesLocalDirectory(),
         userPreferences.getFurnitureResourcesRemoteURLBase());
   }
 
   /**
-   * Writes furniture library .properties files in the <code>furnitureLibraryName</code> file. 
-   * @param offlineFurnitureLibrary if <code>offlineFurnitureLibrary</code> is <code>true</code> content 
+   * Writes furniture library .properties files in the <code>furnitureLibraryName</code> file.
+   * @param offlineFurnitureLibrary if <code>offlineFurnitureLibrary</code> is <code>true</code> content
    *                       referenced by furniture is always embedded in the file
-   * @param contentMatchingFurnitureName <code>true</code> if the furniture content saved with the library 
-   *                       should be named from the furniture name in the default language                      
+   * @param contentMatchingFurnitureName <code>true</code> if the furniture content saved with the library
+   *                       should be named from the furniture name in the default language
    * @param furnitureResourcesLocalDirectory  directory where content referenced by furniture will be saved
    *                       if it isn't <code>null</code>
-   * @param furnitureResourcesRemoteUrlBase   URL base used for content referenced by furniture in .properties file 
-   *                       if <code>furnitureResourcesLocalDirectory</code> isn't <code>null</code>              
+   * @param furnitureResourcesRemoteUrlBase   URL base used for content referenced by furniture in .properties file
+   *                       if <code>furnitureResourcesLocalDirectory</code> isn't <code>null</code>
    */
   private void writeFurnitureLibrary(FurnitureLibrary furnitureLibrary,
                                      String furnitureLibraryLocation,
@@ -270,7 +268,7 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
                                      String  furnitureResourcesRemoteUrlBase) throws RecorderException {
     URL furnitureResourcesRemoteAbsoluteUrlBase = null;
     String furnitureResourcesRemoteRelativeUrlBase = null;
-    if (!offlineFurnitureLibrary 
+    if (!offlineFurnitureLibrary
         && furnitureResourcesLocalDirectory != null
         && furnitureResourcesRemoteUrlBase != null) {
       try {
@@ -286,22 +284,22 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
         }
       }
     }
-    
+
     ZipOutputStream zipOut = null;
     Map<Content, String> contentEntries = new HashMap<Content, String>();
     File furnitureLibraryFile = new File(furnitureLibraryLocation);
     File tmpFile = null;
     try {
-      tmpFile = File.createTempFile("temp", ".sh3f"); 
+      tmpFile = File.createTempFile("temp", ".sh3f");
       OutputStream out = new FileOutputStream(tmpFile);
       if (out != null) {
-        // Create a zip output on file  
+        // Create a zip output on file
         zipOut = new ZipOutputStream(out);
-        // Write furniture description file in first entry 
+        // Write furniture description file in first entry
         zipOut.putNextEntry(new ZipEntry(DefaultFurnitureCatalog.PLUGIN_FURNITURE_CATALOG_FAMILY + ".properties"));
-        writeFurnitureLibraryProperties(zipOut, furnitureLibrary, furnitureLibraryFile, 
+        writeFurnitureLibraryProperties(zipOut, furnitureLibrary, furnitureLibraryFile,
             offlineFurnitureLibrary, contentMatchingFurnitureName,
-            furnitureResourcesRemoteAbsoluteUrlBase, furnitureResourcesRemoteRelativeUrlBase, 
+            furnitureResourcesRemoteAbsoluteUrlBase, furnitureResourcesRemoteRelativeUrlBase,
             contentEntries);
         zipOut.closeEntry();
         // Write supported languages description files
@@ -311,7 +309,7 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
             writeFurnitureLibraryLocalizedProperties(zipOut, furnitureLibrary, language);
             zipOut.closeEntry();
           }
-        }        
+        }
         // Write Content objects in files
         writeContents(zipOut, offlineFurnitureLibrary, furnitureResourcesLocalDirectory, contentEntries);
         // Finish zip writing
@@ -337,25 +335,25 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
 
   /**
    * Writes in <code>output</code> the given furniture library
-   * with properties as defined as in <code>DefaultFurnitureCatalog</code>. 
+   * with properties as defined as in <code>DefaultFurnitureCatalog</code>.
    */
   private void writeFurnitureLibraryProperties(OutputStream output,
                                                FurnitureLibrary furnitureLibrary,
                                                File furnitureLibraryFile,
-                                               boolean offlineFurnitureLibrary, 
+                                               boolean offlineFurnitureLibrary,
                                                boolean contentMatchingFurnitureName,
                                                URL furnitureResourcesRemoteAbsoluteUrlBase,
-                                               String furnitureResourcesRemoteRelativeUrlBase, 
+                                               String furnitureResourcesRemoteRelativeUrlBase,
                                                Map<Content, String> contentEntries) throws IOException {
     boolean keepURLContentUnchanged = !offlineFurnitureLibrary
-        && furnitureResourcesRemoteAbsoluteUrlBase == null 
+        && furnitureResourcesRemoteAbsoluteUrlBase == null
         && furnitureResourcesRemoteRelativeUrlBase == null;
     DateFormat creationDateFormat = new SimpleDateFormat("yyyy-MM-dd");
     // Store existing entries in lower case to be able to compare their names ignoring case
     Set<String> existingEntryNamesLowerCase = new HashSet<String>();
     BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(output, "ISO-8859-1"));
-    final String CATALOG_FILE_HEADER = "#\n# " 
-        + DefaultFurnitureCatalog.PLUGIN_FURNITURE_CATALOG_FAMILY + ".properties %tc\n" 
+    final String CATALOG_FILE_HEADER = "#\n# "
+        + DefaultFurnitureCatalog.PLUGIN_FURNITURE_CATALOG_FAMILY + ".properties %tc\n"
         + "# Generated by Furniture Library Editor\n#\n";
     writer.write(String.format(CATALOG_FILE_HEADER, new Date()));
     writer.newLine();
@@ -365,7 +363,7 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
     writeProperty(writer, VERSION, furnitureLibrary.getVersion());
     writeProperty(writer, LICENSE, furnitureLibrary.getLicense());
     writeProperty(writer, PROVIDER, furnitureLibrary.getProvider());
-    
+
     int i = 1;
     for (CatalogPieceOfFurniture piece : furnitureLibrary.getFurniture()) {
       writer.newLine();
@@ -380,7 +378,7 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
       }
       Long creationDate = piece.getCreationDate();
       if (creationDate != null) {
-        writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.CREATION_DATE, i, 
+        writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.CREATION_DATE, i,
             creationDateFormat.format(new Date(piece.getCreationDate())));
       }
       if (piece.getGrade() != null) {
@@ -407,29 +405,29 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
       contentBaseName = contentBaseName.replace('%', '_').replace('#', '_');
       Content pieceIcon = piece.getIcon();
       String iconContentEntryName = contentEntries.get(pieceIcon);
-      // If piece icon content not referenced yet among saved content 
+      // If piece icon content not referenced yet among saved content
       if (iconContentEntryName == null) {
-        iconContentEntryName = getContentEntry(pieceIcon, contentBaseName + ".png", 
+        iconContentEntryName = getContentEntry(pieceIcon, contentBaseName + ".png",
             keepURLContentUnchanged, existingEntryNamesLowerCase);
         if (iconContentEntryName != null) {
           contentEntries.put(pieceIcon, iconContentEntryName);
         }
       }
-      writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.ICON, i, 
-          getContentProperty(pieceIcon, iconContentEntryName, offlineFurnitureLibrary, 
+      writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.ICON, i,
+          getContentProperty(pieceIcon, iconContentEntryName, offlineFurnitureLibrary,
               furnitureResourcesRemoteAbsoluteUrlBase, furnitureResourcesRemoteRelativeUrlBase));
       Content piecePlanIcon = piece.getPlanIcon();
       if (piecePlanIcon != null) {
         String planIconContentEntryName = contentEntries.get(piecePlanIcon);
         // If plan icon content not referenced yet among saved content
         if (planIconContentEntryName == null) {
-          planIconContentEntryName = getContentEntry(piecePlanIcon, contentBaseName + "PlanIcon.png", 
+          planIconContentEntryName = getContentEntry(piecePlanIcon, contentBaseName + "PlanIcon.png",
               keepURLContentUnchanged, existingEntryNamesLowerCase);
           if (planIconContentEntryName != null) {
             contentEntries.put(piecePlanIcon, planIconContentEntryName);
           }
         }
-        writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.PLAN_ICON, i, 
+        writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.PLAN_ICON, i,
             getContentProperty(piecePlanIcon, planIconContentEntryName, offlineFurnitureLibrary,
                 furnitureResourcesRemoteAbsoluteUrlBase, furnitureResourcesRemoteRelativeUrlBase));
       }
@@ -445,19 +443,19 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
           String jarEntryName = ((URLContent)pieceModel).getJAREntryName();
           modelContentEntryName = getContentEntry(pieceModel,
               pieceModel instanceof TemporaryURLContent
-                  ? contentBaseName + "/" + jarEntryName 
-                  : contentBaseName + "/" + jarEntryName.substring(jarEntryName.lastIndexOf('/') + 1),  
+                  ? contentBaseName + "/" + jarEntryName
+                  : contentBaseName + "/" + jarEntryName.substring(jarEntryName.lastIndexOf('/') + 1),
               keepURLContentUnchanged, existingEntryNamesLowerCase);
         } else {
-          modelContentEntryName = getContentEntry(pieceModel, 
+          modelContentEntryName = getContentEntry(pieceModel,
               contentBaseName + ".obj", keepURLContentUnchanged, existingEntryNamesLowerCase);
         }
         if (modelContentEntryName != null) {
           contentEntries.put(pieceModel, modelContentEntryName);
         }
       }
-      writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.MODEL, i, 
-          getContentProperty(pieceModel, modelContentEntryName, offlineFurnitureLibrary, 
+      writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.MODEL, i,
+          getContentProperty(pieceModel, modelContentEntryName, offlineFurnitureLibrary,
               furnitureResourcesRemoteAbsoluteUrlBase, furnitureResourcesRemoteRelativeUrlBase));
       if (multipart) {
         writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.MULTI_PART_MODEL, i, "true");
@@ -466,7 +464,7 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
       writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.DEPTH, i, piece.getDepth());
       writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.HEIGHT, i, piece.getHeight());
       if (Math.abs(piece.getDropOnTopElevation() - 1f) > 1E-6f) {
-        writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.DROP_ON_TOP_ELEVATION, i, 
+        writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.DROP_ON_TOP_ELEVATION, i,
             piece.getDropOnTopElevation() * piece.getHeight());
       }
       writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.MOVABLE, i, piece.isMovable());
@@ -475,23 +473,23 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
         // Write properties specific to doors and windows
         DoorOrWindow doorOrWindow = (DoorOrWindow)piece;
         if (doorOrWindow.getCutOutShape() != null) {
-          writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.DOOR_OR_WINDOW_CUT_OUT_SHAPE, i, 
+          writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.DOOR_OR_WINDOW_CUT_OUT_SHAPE, i,
               doorOrWindow.getCutOutShape());
         }
         if (doorOrWindow.getWallThickness() != 1) {
-          writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.DOOR_OR_WINDOW_WALL_THICKNESS, i, 
+          writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.DOOR_OR_WINDOW_WALL_THICKNESS, i,
               doorOrWindow.getWallThickness() * doorOrWindow.getDepth());
         }
         if (doorOrWindow.getWallDistance() != 0) {
-          writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.DOOR_OR_WINDOW_WALL_DISTANCE, i, 
+          writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.DOOR_OR_WINDOW_WALL_DISTANCE, i,
               doorOrWindow.getWallDistance() * doorOrWindow.getDepth());
         }
         if (!doorOrWindow.isWallCutOutOnBothSides()) {
-          writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.DOOR_OR_WINDOW_WALL_CUT_OUT_ON_BOTH_SIDES, i, 
+          writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.DOOR_OR_WINDOW_WALL_CUT_OUT_ON_BOTH_SIDES, i,
               doorOrWindow.isWallCutOutOnBothSides());
         }
         if (!doorOrWindow.isWidthDepthDeformable()) {
-          writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.DOOR_OR_WINDOW_WIDTH_DEPTH_DEFORMABLE, i, 
+          writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.DOOR_OR_WINDOW_WIDTH_DEPTH_DEFORMABLE, i,
               doorOrWindow.isWidthDepthDeformable());
         }
         Sash [] sashes = doorOrWindow.getSashes();
@@ -514,7 +512,7 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
             sashWidth += DECIMAL_FORMAT.format(sashes [sashIndex].getWidth() * doorOrWindow.getWidth());
             sashStartAngle += Math.round(Math.toDegrees(sashes [sashIndex].getStartAngle()) * 100) / 100;
             sashEndAngle += Math.round(Math.toDegrees(sashes [sashIndex].getEndAngle()) * 100) / 100;
-          }          
+          }
           writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.DOOR_OR_WINDOW_SASH_X_AXIS, i, sashXAxis);
           writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.DOOR_OR_WINDOW_SASH_Y_AXIS, i, sashYAxis);
           writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.DOOR_OR_WINDOW_SASH_WIDTH, i, sashWidth);
@@ -552,7 +550,7 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
               }
               lightSourceDiameter += DECIMAL_FORMAT.format(lightSources [lightIndex].getDiameter() * light.getWidth());
             }
-          }          
+          }
           writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.LIGHT_SOURCE_X, i, lightSourceX);
           writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.LIGHT_SOURCE_Y, i, lightSourceY);
           writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.LIGHT_SOURCE_Z, i, lightSourceZ);
@@ -564,7 +562,7 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
         writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.ELEVATION, i, piece.getElevation());
       }
       float [][] modelRotation = piece.getModelRotation();
-      String modelRotationString = 
+      String modelRotationString =
           floatToString(modelRotation[0][0]) + " " + floatToString(modelRotation[0][1]) + " " + floatToString(modelRotation[0][2]) + " "
         + floatToString(modelRotation[1][0]) + " " + floatToString(modelRotation[1][1]) + " " + floatToString(modelRotation[1][2]) + " "
         + floatToString(modelRotation[2][0]) + " " + floatToString(modelRotation[2][1]) + " " + floatToString(modelRotation[2][2]);
@@ -602,7 +600,7 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
     }
     writer.flush();
   }
-  
+
   /**
    * Returns the string value of the given float, except for -1.0, 1.0 or 0.0 where -1, 1 and 0 is returned.
    */
@@ -617,28 +615,28 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
       return String.valueOf(f);
     }
   }
-    
+
   /**
    * Writes in <code>output</code> the given furniture library
-   * with properties as defined as in <code>DefaultFurnitureCatalog</code>. 
+   * with properties as defined as in <code>DefaultFurnitureCatalog</code>.
    */
   private void writeFurnitureLibraryLocalizedProperties(OutputStream output,
                                                         FurnitureLibrary furnitureLibrary,
                                                         String language) throws IOException {
     BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(output, "ISO-8859-1"));
-    final String CATALOG_FILE_HEADER = "#\n# " 
-        + DefaultFurnitureCatalog.PLUGIN_FURNITURE_CATALOG_FAMILY + "_" + language + ".properties %tc\n" 
+    final String CATALOG_FILE_HEADER = "#\n# "
+        + DefaultFurnitureCatalog.PLUGIN_FURNITURE_CATALOG_FAMILY + "_" + language + ".properties %tc\n"
         + "# Generated by Furniture Library Editor\n#\n";
     writer.write(String.format(CATALOG_FILE_HEADER, new Date()));
-    
+
     Map<String, DefaultFurnitureCatalog.PropertyKey> localizedProperties = new LinkedHashMap<String, DefaultFurnitureCatalog.PropertyKey>();
     localizedProperties.put(FurnitureLibrary.FURNITURE_NAME_PROPERTY, DefaultFurnitureCatalog.PropertyKey.NAME);
     localizedProperties.put(FurnitureLibrary.FURNITURE_DESCRIPTION_PROPERTY, DefaultFurnitureCatalog.PropertyKey.DESCRIPTION);
     localizedProperties.put(FurnitureLibrary.FURNITURE_INFORMATION_PROPERTY, DefaultFurnitureCatalog.PropertyKey.INFORMATION);
     localizedProperties.put(FurnitureLibrary.FURNITURE_TAGS_PROPERTY, DefaultFurnitureCatalog.PropertyKey.TAGS);
     localizedProperties.put(FurnitureLibrary.FURNITURE_CATEGORY_PROPERTY, DefaultFurnitureCatalog.PropertyKey.CATEGORY);
-    
-    int i = 1;    
+
+    int i = 1;
     for (CatalogPieceOfFurniture piece : furnitureLibrary.getFurniture()) {
       writer.newLine();
       for (Map.Entry<String, DefaultFurnitureCatalog.PropertyKey> localizedPropertyEntry : localizedProperties.entrySet()) {
@@ -652,17 +650,17 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
     }
     writer.flush();
   }
-    
+
   /**
    * Returns the entry name of a <code>content</code>.
    */
   private String getContentEntry(Content content,
                                  String entryName,
-                                 boolean keepURLContentUnchanged, 
+                                 boolean keepURLContentUnchanged,
                                  Set<String> existingEntryNamesLowerCase) throws IOException {
     if (content instanceof TemporaryURLContent
         || content instanceof ResourceURLContent) {
-      int slashIndex = entryName.indexOf('/'); 
+      int slashIndex = entryName.indexOf('/');
       if (slashIndex == -1) {
         if (existingEntryNamesLowerCase.contains(entryName.toLowerCase())) {
           // Search an unexisting entry name
@@ -670,8 +668,8 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
           String defaultEntryName = entryName;
           do {
             int dotIndex = defaultEntryName.lastIndexOf('.');
-            entryName = defaultEntryName.substring(0, dotIndex) 
-                + i++ + defaultEntryName.substring(dotIndex);  
+            entryName = defaultEntryName.substring(0, dotIndex)
+                + i++ + defaultEntryName.substring(dotIndex);
           } while (existingEntryNamesLowerCase.contains(entryName.toLowerCase()));
         }
       } else {
@@ -690,7 +688,7 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
           }
           if (entryDirectoryExists) {
             entryDirectory = entryName.substring(0, slashIndex) + i++ + "/";
-          } else {            
+          } else {
             entryName = entryDirectory + entryName.substring(slashIndex + 1);
             break;
           }
@@ -730,8 +728,8 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
    * Returns the property value saved for a resource <code>content</code>.
    */
   private String getContentProperty(Content content,
-                                    String  entryName, 
-                                    boolean offlineFurnitureLibrary, 
+                                    String  entryName,
+                                    boolean offlineFurnitureLibrary,
                                     URL furnitureResourcesRemoteAbsoluteUrlBase,
                                     String furnitureResourcesRemoteRelativeUrlBase) throws IOException {
     if (offlineFurnitureLibrary
@@ -752,10 +750,10 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
       } else {
         String encodedEntry = URLEncoder.encode(entryName.substring(slashIndex + 1), "UTF-8").replace("+", "%20").replace("%2F", "/");
         if (furnitureResourcesRemoteAbsoluteUrlBase != null) {
-          return "jar:" + new URL(furnitureResourcesRemoteAbsoluteUrlBase, entryName.substring(0, slashIndex) + ".zip") 
+          return "jar:" + new URL(furnitureResourcesRemoteAbsoluteUrlBase, entryName.substring(0, slashIndex) + ".zip")
               + "!/" + encodedEntry;
         } else {
-          return furnitureResourcesRemoteRelativeUrlBase + entryName.substring(0, slashIndex) + ".zip" 
+          return furnitureResourcesRemoteRelativeUrlBase + entryName.substring(0, slashIndex) + ".zip"
               + "!/" + encodedEntry;
         }
       }
@@ -763,13 +761,13 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
       return ((URLContent)content).getURL().toString();
     }
   }
-  
+
   /**
    * Writes the (<code>key</code>, <code>value</code>) of a property
    * in <code>writer</code>.
    */
-  private void writeProperty(BufferedWriter writer, 
-                             DefaultFurnitureCatalog.PropertyKey key, 
+  private void writeProperty(BufferedWriter writer,
+                             DefaultFurnitureCatalog.PropertyKey key,
                              int index, Object value) throws IOException {
     writeProperty(writer, key.getKey(index), value);
   }
@@ -778,12 +776,12 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
    * Writes the (<code>key</code>, <code>value</code>) of a property
    * in <code>writer</code>, if the <code>value</code> isn't <code>null</code>.
    */
-  private void writeProperty(BufferedWriter writer, 
-                             String key, 
+  private void writeProperty(BufferedWriter writer,
+                             String key,
                              Object value) throws IOException {
     if (value != null) {
       writer.write(key);
-      writer.write("=");    
+      writer.write("=");
       String s;
       if (value.getClass().isArray()) {
         s = Arrays.toString((Object [])value);
@@ -795,7 +793,7 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
       }
       CharsetEncoder encoder = Charset.forName("ISO-8859-1").newEncoder();
       for (int i = 0; i < s.length(); i++) {
-        char c = s.charAt(i);      
+        char c = s.charAt(i);
         switch (c) {
           case '\\':
             writer.write('\\');
@@ -826,8 +824,8 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
    * Writes in <code>zipOut</code> stream the given contents.
    */
   private void writeContents(ZipOutputStream zipOut,
-                             boolean offlineFurnitureLibrary, 
-                             String  furnitureResourcesLocalDirectory, 
+                             boolean offlineFurnitureLibrary,
+                             String  furnitureResourcesLocalDirectory,
                              Map<Content, String> contentEntries) throws IOException, InterruptedRecorderException {
     if (!offlineFurnitureLibrary && furnitureResourcesLocalDirectory != null) {
       // Check local directory
@@ -840,15 +838,15 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
         throw new IOException(directory + " isn't a directory");
       }
     }
-    
+
     Map<String, List<ZipEntry>> zipUrlsEntries = new HashMap<String, List<ZipEntry>>();
     for (Map.Entry<Content, String> contentEntry : contentEntries.entrySet()) {
       Content content = contentEntry.getKey();
       if (content instanceof URLContent) {
         URLContent urlContent = (URLContent)content;
         String entryName = contentEntry.getValue();
-        if (entryName.indexOf('/') != -1) { 
-          writeZipEntries(zipOut, offlineFurnitureLibrary, furnitureResourcesLocalDirectory, 
+        if (entryName.indexOf('/') != -1) {
+          writeZipEntries(zipOut, offlineFurnitureLibrary, furnitureResourcesLocalDirectory,
               urlContent, entryName, zipUrlsEntries);
         } else if (offlineFurnitureLibrary || furnitureResourcesLocalDirectory == null) {
           writeZipEntry(zipOut, urlContent, entryName);
@@ -862,20 +860,20 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
       if (Thread.interrupted()) {
         throw new InterruptedRecorderException();
       }
-    }  
+    }
   }
-  
+
   /**
-   * Writes in <code>zipOut</code> stream all the sibling files of the zipped 
+   * Writes in <code>zipOut</code> stream all the sibling files of the zipped
    * <code>content</code>.
    */
   private void writeZipEntries(ZipOutputStream zipOut,
                                boolean offlineFurnitureLibrary,
-                               String furnitureResourcesLocalDirectory, 
-                               URLContent content, 
-                               String mainEntryName, 
+                               String furnitureResourcesLocalDirectory,
+                               URLContent content,
+                               String mainEntryName,
                                Map<String, List<ZipEntry>> zipUrlsEntries) throws IOException {
-    String mainEntryDirectory = mainEntryName.substring(0, mainEntryName.indexOf('/')); 
+    String mainEntryDirectory = mainEntryName.substring(0, mainEntryName.indexOf('/'));
     if (!offlineFurnitureLibrary && furnitureResourcesLocalDirectory != null) {
       // Write content entries in a separate zipped file, if the file doesn't exist
       File file = new File(furnitureResourcesLocalDirectory, mainEntryDirectory + ".zip");
@@ -887,25 +885,25 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
     } else {
       mainEntryDirectory += "/";
     }
-    
+
     String contentDirectory = "";
     if (content instanceof ResourceURLContent) {
       contentDirectory = URLDecoder.decode(content.getJAREntryName().replace("+", "%2B"), "UTF-8");
-      int slashIndex = contentDirectory.lastIndexOf('/'); 
+      int slashIndex = contentDirectory.lastIndexOf('/');
       if (slashIndex != -1) {
         contentDirectory = contentDirectory.substring(0, slashIndex + 1);
       }
     }
-    
+
     URL zipUrl = content.getJAREntryURL();
-    // Keep in cache the entries of the read zip files to speed up save process 
+    // Keep in cache the entries of the read zip files to speed up save process
     List<ZipEntry> entries = zipUrlsEntries.get(zipUrl.toString());
     if (entries == null) {
       zipUrlsEntries.put(zipUrl.toString(), entries = getZipEntries(zipUrl));
     }
     for (ZipEntry entry : entries) {
       String zipEntryName = entry.getName();
-      URLContent siblingContent = new URLContent(new URL("jar:" + zipUrl + "!/" + 
+      URLContent siblingContent = new URLContent(new URL("jar:" + zipUrl + "!/" +
           URLEncoder.encode(zipEntryName, "UTF-8").replace("+", "%20")));
       if (contentDirectory.length() == 0) {
         boolean saveEntry = true;
@@ -916,11 +914,11 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
           }
         }
         if (saveEntry) {
-          // Write each zipped stream entry that is stored in content except useless content  
+          // Write each zipped stream entry that is stored in content except useless content
           writeZipEntry(zipOut, siblingContent, mainEntryDirectory + zipEntryName);
         }
       } else if (zipEntryName.startsWith(contentDirectory)) {
-        // Write each zipped stream entry that is stored in the same directory as content  
+        // Write each zipped stream entry that is stored in the same directory as content
         writeZipEntry(zipOut, siblingContent, mainEntryDirectory + zipEntryName.substring(contentDirectory.length()));
       }
     }
@@ -952,24 +950,24 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
   }
 
   /**
-   * Writes in <code>zipOut</code> stream a new entry named <code>entryName</code> that 
+   * Writes in <code>zipOut</code> stream a new entry named <code>entryName</code> that
    * contains a given <code>content</code>.
    */
-  private void writeZipEntry(ZipOutputStream zipOut, 
-                             URLContent content, 
+  private void writeZipEntry(ZipOutputStream zipOut,
+                             URLContent content,
                              String entryName) throws IOException {
     byte [] buffer = new byte [8096];
     InputStream contentIn = null;
     try {
       zipOut.putNextEntry(new ZipEntry(entryName));
-      contentIn = content.openStream();          
-      int size; 
+      contentIn = content.openStream();
+      int size;
       while ((size = contentIn.read(buffer)) != -1) {
         zipOut.write(buffer, 0, size);
       }
-      zipOut.closeEntry();  
+      zipOut.closeEntry();
     } finally {
-      if (contentIn != null) {          
+      if (contentIn != null) {
         contentIn.close();
       }
     }
@@ -983,11 +981,11 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
     try {
       in = content.openStream();
       copyContentToFile(in, file);
-    } catch (IOException ex) { 
+    } catch (IOException ex) {
       throw new IOException("Can't copy content " + content + " to " + file);
     } finally {
       try {
-        if (in != null) {          
+        if (in != null) {
           in.close();
         }
       } catch (IOException ex) {
@@ -1004,11 +1002,11 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
     try {
       in = new FileInputStream(file1);
       copyContentToFile(in, file2);
-    } catch (IOException ex) { 
+    } catch (IOException ex) {
       throw new IOException("Can't copy file " + file1 + " to " + file2);
     } finally {
       try {
-        if (in != null) {          
+        if (in != null) {
           in.close();
         }
       } catch (IOException ex) {
@@ -1016,7 +1014,7 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
       }
     }
   }
-  
+
   /**
    * Copy the content of <code>in</code> stream to <code>file</code>.
    */
@@ -1025,13 +1023,13 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
     OutputStream out = null;
     try {
       out = new FileOutputStream(file);
-      int size; 
+      int size;
       while ((size = in.read(buffer)) != -1) {
         out.write(buffer, 0, size);
       }
     } finally {
       try {
-        if (out != null) {          
+        if (out != null) {
           out.close();
         }
       } catch (IOException ex) {
