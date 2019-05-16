@@ -1,0 +1,13 @@
+# Blender MTL File: 'billet50euros.blend'
+# Material Count: 1
+
+newmtl texture50euros
+Ns 9.803922
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.008130 0.008130 0.008130
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd texture-50-euros.jpg

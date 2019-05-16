@@ -1,0 +1,23 @@
+# Blender MTL File: 'short-shadows.blend'
+# Material Count: 2
+
+newmtl color
+Ns 1
+Ka 0.5 0.5 0.5
+Kd 0.18 0.22 0.341
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+
+newmtl textured
+Ns 1
+Ka 0.1 0.1 0.1
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+map_Kd short-texture-shadows.png

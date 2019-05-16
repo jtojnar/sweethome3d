@@ -1,0 +1,13 @@
+# Blender MTL File: 'jupe.blend'
+# Material Count: 1
+
+newmtl textured
+Ns 1.960784
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.359413 0.359413
+Ks 0.044828 0.044828 0.044828
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd jupe.jpg

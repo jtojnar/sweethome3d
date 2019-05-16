@@ -1,0 +1,12 @@
+# Blender MTL File: 'cendrier.blend'
+# Material Count: 1
+
+newmtl grey
+Ns 21.568627
+Ka 1.000000 1.000000 1.000000
+Kd 0.129624 0.150257 0.158455
+Ks 0.074468 0.074468 0.074468
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2

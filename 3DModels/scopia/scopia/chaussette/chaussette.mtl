@@ -1,0 +1,35 @@
+# Blender MTL File: 'chaussettes.blend'
+# Material Count: 3
+
+newmtl body
+Ns 5.882353
+Ka 1.000000 1.000000 1.000000
+Kd 0.096304 0.227785 0.640000
+Ks 0.052846 0.052846 0.052846
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd texture-chaussettes.jpg
+
+newmtl heelAndTip
+Ns 5.882353
+Ka 1.000000 1.000000 1.000000
+Kd 0.013789 0.016712 0.161519
+Ks 0.052846 0.052846 0.052846
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd texture-chaussettes.jpg
+
+newmtl top
+Ns 5.882353
+Ka 1.000000 1.000000 1.000000
+Kd 0.008630 0.010304 0.088550
+Ks 0.052846 0.052846 0.052846
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd texture-chaussettes.jpg
