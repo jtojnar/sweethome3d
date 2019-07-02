@@ -1,0 +1,32 @@
+# tendaDoccia.mtl
+# 
+# Created by Alex
+# Export to OBJ and mesh simplification by Emmanuel Puybaret / eTeks
+# https://sourceforge.net/p/sweethome3d/d-models/469/ 
+#
+# This file is distributed under Free Art License, see http://artlibre.org/licence/lal/en for more informations
+#
+
+newmtl Curtain
+Ns 10
+Ka 0.000000 0.000000 0.000000
+Kd 0.498039 0.498039 1.000000
+Ks 0.1 0.1 0.1
+d 0.750000
+illum 2
+
+newmtl Ring
+Ns 62.745098
+Ka 0.000000 0.000000 0.000000
+Kd 0.980392 0.980392 0.980392
+Ks 1.000000 1.000000 1.000000
+d 1.000000
+illum 2
+
+newmtl Rod
+Ns 50
+Ka 0.000000 0.000000 0.000000
+Kd 0.901961 0.901961 0.901961
+Ks 0.5 0.5 0.5
+d 1.000000
+illum 2

@@ -1,0 +1,45 @@
+# Blender MTL File: 'Детская площадка.blend'
+# Material Count: 5
+
+newmtl darkGrey
+Ns 5
+Ka 0.3 0.3 0.3
+Kd 0.3 0.3 0.3
+Ks 0.1 0.1 0.1
+d 1.000000
+illum 2
+
+newmtl grey
+Ns 1
+Ka 0.36 0.34 0.3
+Kd 0.36 0.34 0.3
+Ks 0 0 0
+d 1.000000
+illum 2
+
+newmtl grey2
+Ns 1
+Ka 0.3 0.3 0.31
+Kd 0.3 0.3 0.31
+Ks 0 0 0
+d 1.000000
+illum 2
+
+newmtl red
+Ns 10
+Ka 0.69 0.2 0.19
+Kd 0.69 0.2 0.19
+Ks 0.2 0.2 0.2
+d 1.000000
+illum 2
+
+
+newmtl wood2
+Ns 2
+Ka 0.75 0.72 0.65
+Kd 0.75 0.72 0.65
+Ks 0.1 0.1 0.1
+d 1.000000
+illum 2
+map_Kd image2.jpg
+

@@ -1,0 +1,47 @@
+# Blender MTL File: 'untitled.blend'
+# Material Count: 5
+
+newmtl LED
+Ns 20
+Ka 0.84 0.24 0.19
+Kd 0.84 0.24 0.19
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+
+newmtl base
+Ns 30
+Ka 0.67 0.67 0.67
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+
+newmtl baseMuro
+Ns 10
+Ka 0.52 0.52 0.52 
+Kd 0.52 0.52 0.52
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+
+newmtl camera
+Ns 3
+Ka 0.13 0.13 0.13
+Kd 0.13 0.13 0.13
+Ks 0 0 0 
+Ni 1.000000
+d 1.000000
+illum 2
+
+newmtl interno
+Ns 96.078431
+Ka 0.13 0.13 0.13
+Kd 0.13 0.13 0.13
+Ks 0.800000 0.800000 0.800000
+Ni 1.000000
+d 1.000000
+illum 2

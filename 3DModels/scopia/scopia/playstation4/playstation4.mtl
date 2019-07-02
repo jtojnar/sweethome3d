@@ -1,0 +1,24 @@
+# Blender MTL File: 'playstation4.blend'
+# Material Count: 2
+
+newmtl refraction
+Ns 149.019608
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.710084 0.710084 0.710084
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd textureps4.jpg
+
+newmtl texturebase
+Ns 7.843137
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.088235 0.088235 0.088235
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd textureps4.jpg

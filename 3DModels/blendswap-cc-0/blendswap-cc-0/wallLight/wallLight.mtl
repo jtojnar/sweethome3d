@@ -1,0 +1,18 @@
+# Blender MTL File: 'Restroom.blend'
+# Material Count: 2
+
+newmtl chrome
+Ns 100
+Ka 0.7 0.7 0.71
+Kd 0.7 0.7 0.71
+Ks 0.658099 0.658099 0.700689
+d 1.000000
+illum 5
+
+newmtl lamp
+Ns 2
+Ka 0.8 0.8 0.8
+Kd 0.95 0.95 0.95
+Ks 0.1 0.1 0.1
+d 1.000000
+illum 2

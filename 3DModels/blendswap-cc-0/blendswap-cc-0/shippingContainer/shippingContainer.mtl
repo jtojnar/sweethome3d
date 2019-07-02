@@ -1,0 +1,23 @@
+# Blender MTL File: 'shipping-container.blend'
+# Material Count: 3
+
+newmtl Color
+Ns 20
+Ka 0.184899 0.220711 0.439074
+Kd 0.184899 0.220711 0.439074
+Ks 0.2 0.2 0.2
+illum 3
+
+newmtl Hinges
+Ns 40
+Ka 0.3 0.3 0.37
+Kd 0.3 0.3 0.37
+Ks 0.5 0.5 0.5
+illum 2
+
+newmtl Locks
+Ns 90
+Ka 0.7 0.7 0.7
+Kd 0.7 0.7 0.7
+Ks 0.8 0.8 0.8
+illum 2

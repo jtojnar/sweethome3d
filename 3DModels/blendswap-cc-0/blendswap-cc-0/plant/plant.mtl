@@ -1,0 +1,26 @@
+# Blender MTL File: 'Restroom.blend'
+# Material Count: 3
+
+newmtl grass_shader_1
+Ns 10
+Ka 0.13 0.35 0.
+Kd 0.13 0.35 0.
+Ks 0.1 0.1 0.1
+d 1.000000
+illum 2
+
+newmtl ground
+Ns 1
+Ka 0.2 0.18 0.14
+Kd 0.2 0.18 0.14
+Ks 0 0 0
+d 1.000000
+illum 2
+
+newmtl pot
+Ns 1
+Ka 0.41 0.15 0.16
+Kd 0.41 0.15 0.16
+Ks 0 0 0 
+d 1.000000
+illum 2

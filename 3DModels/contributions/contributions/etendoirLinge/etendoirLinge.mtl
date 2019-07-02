@@ -1,0 +1,25 @@
+# etendoirLinge.mtl
+# 
+# Created by Julie Fabre
+# Mesh aligned and materials added by Emmanuel Puybaret / eTeks
+# https://sourceforge.net/p/sweethome3d/d-models/474/ 
+#
+# This file is distributed under Free Art License, see http://artlibre.org/licence/lal/en for more informations
+#
+
+newmtl Pole
+Ns 10
+Ka 0.8 0.8 0.8
+Kd 0.8 0.8 0.8
+Ks 0.1 0.1 0.1
+d 1.0
+illum 2
+map_Kd oak3.jpg
+
+newmtl String
+Ns 20
+Ka 0.96 0.75 0.5
+Kd 0.96 0.75 0.5
+Ks 0.2 0.2 0.2
+d 1.0
+illum 2

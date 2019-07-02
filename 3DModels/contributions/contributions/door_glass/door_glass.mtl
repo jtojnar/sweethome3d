@@ -1,0 +1,79 @@
+# door_glass.mtl
+# 
+# Created by Dorin Vatavu
+# Vertices simplification by Emmanuel Puybaret / eTeks
+# https://sourceforge.net/p/sweethome3d/d-models/444/ 
+#
+# This file is distributed under Free Art License, see http://artlibre.org/licence/lal/en for more informations
+#
+newmtl Cylinder
+Ns 58.823529
+Ka 0.000000 0.000000 0.000000
+Kd 0.627450 0.443140 0.000000
+Ks 0.468750 0.468750 0.468750
+d 1.000000
+illum 2
+
+newmtl Door
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.803060 0.624650 0.507690
+Ks 0.000000 0.000000 0.000000
+d 1.000000
+illum 2
+
+newmtl Frame
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.946990 0.905970 0.846040
+Ks 0.000000 0.000000 0.000000
+d 1.000000
+illum 2
+
+newmtl Glass
+Ns 0.000000
+Ka 0.200000 0.200000 0.200000
+Kd 0.750000 0.780000 0.800000
+Ks 0.000000 0.000000 0.000000
+d 0.600000
+illum 2
+
+newmtl Handle
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+d 1.000000
+illum 2
+
+newmtl InnerCasing
+Ns 1
+Ka 0.2 0.2 0.2
+Kd 1 1 1
+Ks 0 0 0
+d 1.000000
+illum 2
+
+newmtl OuterCasing
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.948380 0.909470 0.850770
+Ks 0.000000 0.000000 0.000000
+d 1.000000
+illum 2
+
+newmtl Screw
+Ns 0.000000
+Ka 0.000000 0.000000 0.000000
+Kd 0.670590 0.690200 0.800000
+Ks 0.650000 0.396500 0.396500
+d 1.000000
+illum 2
+
+newmtl Shield
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.776470 0.776470 0.776470
+Ks 0.000000 0.000000 0.000000
+d 1.000000
+illum 2

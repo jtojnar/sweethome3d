@@ -1,0 +1,51 @@
+# Blender MTL File: 'fork lift - low poly basic.blend'
+# Material Count: 7
+
+newmtl body
+Ns 10
+Ka 0.16 0.17 0.19
+Kd 0.16 0.17 0.19
+Ks 0.2 0.2 0.2
+illum 2
+
+newmtl bumper
+Ns 5
+Ka 0.22 0.22 0.22
+Kd 0.22 0.22 0.22
+Ks 0.1 0.1 0.1
+illum 2
+
+newmtl frame	
+Ns 15
+Ka 0.04 0.07 0.11
+Kd 0.04 0.07 0.11
+Ks 0.3 0.3 0.3
+illum 2
+
+newmtl frame2
+Ns 20
+Ka 0.09 0.09 0.12
+Kd 0.09 0.09 0.12
+Ks 0.500000 0.500000 0.500000
+illum 2
+
+newmtl seat
+Ns 5
+Ka 0.22 0.22 0.22
+Kd 0.22 0.22 0.22
+Ks 0.1 0.1 0.1
+illum 2
+
+newmtl tire
+Ns 1
+Ka 0 0 0
+Kd 0 0 0
+Ks 0 0 0
+illum 2
+
+newmtl yellow
+Ns 15
+Ka 0.79 0.66 0.01
+Kd 0.79 0.66 0.01
+Ks 0.3 0.3 0.3
+illum 2

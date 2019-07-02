@@ -1,0 +1,37 @@
+# wall_lamp.mtl
+# 
+# Created by alaX
+# https://sourceforge.net/p/sweethome3d/d-models/505/ 
+#
+# This file is distributed under Free Art License, see http://artlibre.org/licence/lal/en for more informations
+#
+
+newmtl wood
+illum 1
+Ka 0.2 0.2 0.2
+Kd 0.9 0.75 0.54
+Ks 0.0 0.0 0.0
+Ns 1.0
+
+newmtl hinge
+illum 1
+Ka 0.2 0.2 0.2
+Kd 0.75 0.75 0.75
+Ks 0.0 0.0 0.0
+Ns 1.0
+
+newmtl transparent
+illum 1
+Ka 0.2 0.2 0.2
+Kd 1.0 1.0 1.0
+Ks 0.0 0.0 0.0
+Ns 1.0
+d 1.0
+map_Kd wall_lamp_transparent.png
+
+newmtl metal
+illum 1
+Ka 0.2 0.2 0.2
+Kd 0.0 0.0 0.3
+Ks 0.0 0.0 0.0
+Ns 1.0

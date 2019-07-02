@@ -1,0 +1,33 @@
+# longcase_clock.mtl
+#
+# Created by Ola-Kristian HOFF
+# https://sourceforge.net/p/sweethome3d/d-models/384/
+#
+# This file is distributed under Free Art License, see http://artlibre.org/licence/lal/en for more informations
+# and under CC-BY Creative Commons Attribution 3.0 Unported license, see http://creativecommons.org/licenses/by/3.0/
+# at your choice
+#
+newmtl Clock
+illum 1
+Ka 0.2 0.2 0.2
+Kd 1.0 1.0 1.0
+Ks 0.1171875 0.1171875 0.1171875
+Ns 16.0
+map_Kd wood_dark.jpg
+
+newmtl Face
+illum 2
+Ka 0.2 0.2 0.2
+Kd 1.0 1.0 1.0
+Ks 0.4921875 0.4921875 0.4921875
+Ns 64.0
+map_Kd clockface2.jpg
+
+newmtl Glass
+illum 2
+Ka 0.2 0.2 0.2
+Kd 0.9333333 0.9411765 0.9411765
+Ks 0.5 0.5 0.5
+Ns 64.0
+Ni 1.0
+d 0.2

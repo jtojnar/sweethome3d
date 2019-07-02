@@ -1,0 +1,35 @@
+# Blender MTL File: 'captains-bed.blend'
+# Material Count: 3
+
+newmtl mattress
+Ns 49.019608
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.061951 0.061951 0.061951
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd sheetTexture.jpg
+
+newmtl wood
+Ns 49.019608
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.139965 0.139965 0.139965
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd woodtexture.jpg
+
+newmtl woodLowPlanks
+Ns 49.019608
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.139965 0.139965 0.139965
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd woodtexture.jpg

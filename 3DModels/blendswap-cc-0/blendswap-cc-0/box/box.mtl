@@ -1,0 +1,10 @@
+# Blender MTL File: 'box.blend'
+# Material Count: 1
+
+newmtl Plastic
+Ns 20
+Ka 0.29 0.47 0.91
+Kd 0.29 0.47 0.91
+Ks 0.2 0.2 0.2
+d 1.000000
+illum 2

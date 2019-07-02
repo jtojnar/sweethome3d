@@ -1,0 +1,13 @@
+# Blender MTL File: 'jupe-doeskin.blend'
+# Material Count: 1
+
+newmtl doeskintexture
+Ns 3.921569
+Ka 1.000000 1.000000 1.000000
+Kd 0.620658 0.347323 0.175621
+Ks 0.010112 0.010112 0.010112
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd jupedoeskin.jpg

@@ -1,0 +1,23 @@
+# Blender MTL File: 'RADIATOR.blend'
+# Material Count: 3
+
+newmtl Color
+Ns 15
+Ka 0.8 0.8 0.79
+Kd 0.8 0.8 0.79
+Ks 0.15 0.15 0.15
+illum 2
+
+newmtl Pipe
+Ns 15
+Ka 0.8 0.8 0.79
+Kd 0.8 0.8 0.79
+Ks 0.15 0.15 0.15
+illum 2
+
+newmtl Regulator
+Ns 5
+Ka 0.25 0.21 0.16
+Kd 0.25 0.21 0.16
+Ks 0.0500000 0.05 0.05
+illum 2

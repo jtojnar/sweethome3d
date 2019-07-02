@@ -1,0 +1,20 @@
+# Blender MTL File: 'Chair.blend'
+# Material Count: 2
+
+newmtl Chair
+Ns 10
+Ka 0.5 0.5 0.5
+Kd 0.640000 0.640000 0.640000
+Ks 0.1 0.1 0.1
+d 1.000000
+illum 2
+map_Kd Wood_plancks_003_COLOR.jpg
+
+newmtl Chair_Structure
+Ns 10
+Ka 0.5 0.5 0.5
+Kd 0.640000 0.640000 0.640000
+Ks 0.1 0.1 0.1
+d 1.000000
+illum 2
+map_Kd Wood_plancks_003_COLOR.jpg

@@ -1,0 +1,29 @@
+# curvedTVForTable.mtl
+# 
+# Created by Jabberwalky
+# Screen and materials by Emmanuel Puybaret / eTeks
+# https://sourceforge.net/p/sweethome3d/d-models/432/ 
+#
+# This file is distributed under Free Art License, see http://artlibre.org/licence/lal/en for more informations
+#
+
+newmtl Frame
+Ns 80
+Ka 0.008870 0.008870 0.008870
+Kd 0.008870 0.008870 0.008870
+Ks 0.500000 0.500000 0.500000
+illum 2
+
+newmtl Screen
+Ns 20
+Ka 0.1 0.1 0.1
+Kd 0.1 0.1 0.1
+Ks 0.2 0.2 0.2
+illum 2
+
+newmtl Stand
+Ns 80
+Ka 0.008870 0.008870 0.008870
+Kd 0.008870 0.008870 0.008870
+Ks 0.500000 0.500000 0.500000
+illum 2

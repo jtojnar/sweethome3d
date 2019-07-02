@@ -1,0 +1,35 @@
+# Blender MTL File: 'table-on-trestles.blend'
+# Material Count: 3
+
+newmtl WoodTop
+Ns 25.490196
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.187943 0.187943 0.187943
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd texture-bois.jpg
+
+newmtl woodLegsLeft
+Ns 25.490196
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.187943 0.187943 0.187943
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd texture-bois.jpg
+
+newmtl woodLegsRight
+Ns 25.490196
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.187943 0.187943 0.187943
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd texture-bois.jpg
