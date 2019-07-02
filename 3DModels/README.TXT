@@ -1,5 +1,5 @@
-LIBRARY OF 3D MODELS FOR SWEET HOME 3D v 1.6.4
-----------------------------------------------
+LIBRARY OF 3D MODELS FOR SWEET HOME 3D v 1.7
+--------------------------------------------
 
 This archive contains a SH3F file that describes a set of additional 3D models for Sweet Home 3D, 
 localized in the following languages:
@@ -9,11 +9,11 @@ localized in the following languages:
 + Czech
 + Dutch
 + English
-- Finnish
++ Finnish
 + French
 + German
 + Greek
-- Hungarian
++ Hungarian
 + Italian
 + Japanese
 + Polish
@@ -60,4 +60,4 @@ For your information, a SH3F file is a ZIP file containing some 3D models files 
 Read LICENSE.TXT file for more details about licenses applicable to the 3D models contained in the SH3F file.
 
     
-(C) 2006-2018 Emmanuel Puybaret / eTeks and others
+(C) 2006-2019 Emmanuel Puybaret / eTeks and others

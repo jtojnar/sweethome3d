@@ -1,24 +1,23 @@
 <?xml version="1.0"?>
 <!-- build.xml
 
-     Copyright (c) 2008-2018 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
+     Copyright (c) 2008-2019 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
      
      Ant build file. Available targets :
      - 3DModels : Builds *.sh3f files and include each of them in a .zip file for distribution
 -->
 <project basedir="." default="3DModels" name="SweetHome3D models">
   <!-- The current version of a SH3F file -->
-  <property name="version" value="1.6.4"/>
+  <property name="version" value="1.7"/>
 	
   <target name="3DModels">
   	<mkdir dir="install"/>
-
   	<zip destfile="install/Contributions.sh3f" basedir="contributions"/>
-    <zip destfile="install/3DModels-Contributions-${version}.zip" basedir="install" includes="Contributions.sh3f"/>
+  	<zip destfile="install/3DModels-Contributions-${version}.zip" basedir="install" includes="Contributions.sh3f"/>
     <zip destfile="install/3DModels-Contributions-${version}.zip" update="true" basedir="." includes="README.TXT"/>
     <zip destfile="install/3DModels-Contributions-${version}.zip" update="true" basedir="contributions" includes="LICENSE.TXT"/>
     <delete file="install/Contributions.sh3f"/>
-    
+  	
     <zip destfile="install/Trees.sh3f" basedir="trees"/>
     <zip destfile="install/3DModels-Trees-${version}.zip" basedir="install" includes="Trees.sh3f"/>
     <zip destfile="install/3DModels-Trees-${version}.zip" update="true" basedir="." includes="README.TXT"/>
@@ -26,7 +25,7 @@
     <delete file="install/Trees.sh3f"/>
     
     <zip destfile="install/Scopia.sh3f" basedir="scopia"/>
-    <zip destfile="install/3DModels-Scopia-${version}.zip" basedir="install" includes="Scopia.sh3f"/>
+  	<zip destfile="install/3DModels-Scopia-${version}.zip" basedir="install" includes="Scopia.sh3f"/>
     <zip destfile="install/3DModels-Scopia-${version}.zip" update="true" basedir="." includes="README.TXT"/>
     <zip destfile="install/3DModels-Scopia-${version}.zip" update="true" basedir="scopia" includes="LICENSE.TXT"/>
     <delete file="install/Scopia.sh3f"/>
@@ -61,6 +60,6 @@
     <zip destfile="install/3DModels-BlendSwap-CC-BY-${version}.zip" update="true" basedir="blendswap-cc-by" includes="LICENSE.TXT"/>
     <delete file="install/BlendSwap-CC-BY.sh3f"/>
 
-    <echo message="SH3F files generated in install folder"/>
+  	<echo message="SH3F files generated in install folder"/>
   </target>
 </project>
