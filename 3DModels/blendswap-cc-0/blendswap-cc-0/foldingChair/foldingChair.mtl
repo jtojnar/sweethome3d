@@ -1,0 +1,16 @@
+# Blender MTL File: 'chaise_repliable.blend'
+# Material Count: 2
+
+newmtl Fabric
+Ns 1
+Ka 0.23 0.28 0.21
+Kd 0.23 0.28 0.21
+Ks 0 0 0
+illum 2
+
+newmtl Metal
+Ns 90
+Ka 0.1 0.1 0.1
+Kd 0.1 0.1 0.1
+Ks 0.8 0.8 0.8
+illum 2

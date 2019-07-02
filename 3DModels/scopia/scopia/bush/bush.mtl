@@ -1,0 +1,25 @@
+# Blender MTL File: 'bush.blend'
+# Material Count: 2
+
+newmtl leaves
+Ns 37.254902
+Ka 1.000000 1.000000 1.000000
+Kd 0.068931 0.236553 0.023682
+Ks 0.247967 0.247967 0.247967
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd leaf.png
+map_d leaf.png
+
+newmtl trunk
+Ns 13.725490
+Ka 1.000000 1.000000 1.000000
+Kd 0.186412 0.143363 0.093186
+Ks 0.069106 0.069106 0.069106
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd bark.jpg

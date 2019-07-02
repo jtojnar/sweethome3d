@@ -1,0 +1,37 @@
+# Blender MTL File: 'Sofa.blend'
+# Material Count: 5
+
+newmtl Back
+Ns 20
+Ka 0.38 0.15 0.1
+Kd 0.38 0.15 0.1
+Ks 0.2 0.2 0.2
+illum 2
+
+newmtl Buttons
+Ns 20
+Ka 0.38 0.15 0.1
+Kd 0.38 0.15 0.1
+Ks 0.2 0.2 0.2
+illum 2
+
+newmtl Feet
+Ns 2
+Ka 0.2 0.1 0.05
+Kd 0.2 0.1 0.05
+Ks 0.1 0.1 0.1
+illum 2
+
+newmtl Sit
+Ns 20
+Ka 0.38 0.15 0.1
+Kd 0.38 0.15 0.1
+Ks 0.2 0.2 0.2
+illum 2
+
+newmtl Surround
+Ns 20
+Ka 0.38 0.15 0.1
+Kd 0.38 0.15 0.1
+Ks 0.2 0.2 0.2
+illum 2

@@ -1,0 +1,26 @@
+# pine.mtl
+# 
+# Simplified pine okh nodecimals
+# Needles color updated by Emmanuel Puybaret / eTeks
+# From pinex_3.zip at https://sourceforge.net/p/sweethome3d/d-models/261/ 
+# 
+#
+# This file is distributed under Free Art License, see http://artlibre.org/licence/lal/en for more informations
+# and under CC-BY Creative Commons Attribution 3.0 Unported license, see http://creativecommons.org/licenses/by/3.0/
+# at your choice
+#
+newmtl Trunk
+illum 1
+Ka 0.2 0.2 0.2
+Kd 0.35 0.20 0.05
+Ks 0.0 0.0 0.0
+Ns 1.0
+
+newmtl Needles
+illum 2
+Ka 0.2 0.2 0.2
+Kd 0.18 0.29 0.1
+Ks 0.36 0.36 0.36
+Ns 32.0
+Ni 1.0
+d 1

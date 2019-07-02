@@ -1,0 +1,11 @@
+# Blender MTL File: 'Osaka_475x525x770mm_V1.blend'
+# Material Count: 1
+
+newmtl Osaka_Mat
+Ns 5
+Ka 0.5 0.5 0.5
+Kd 0.5 0.5 0.5
+Ks 0.2 0.2 0.2
+illum 2
+# Texture image derived from https://3dtextures.me/2019/02/22/wood-013/
+map_Kd Wood_013_COLOR.jpg

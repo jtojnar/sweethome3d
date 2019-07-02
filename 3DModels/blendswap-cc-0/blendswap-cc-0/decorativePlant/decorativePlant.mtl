@@ -1,0 +1,42 @@
+# Blender MTL File: 'Plant.blend'
+# Material Count: 5
+
+newmtl Branches
+Ns 2
+Ka 0.36 0.35 0.25
+Kd 0.36 0.35 0.25
+Ks 0.1 0.1 0.1
+d 1.000000
+illum 2
+
+newmtl GroundMat
+Ns 2
+Ka 0.25 0.23 0.22
+Kd 0.25 0.23 0.22
+Ks 0.05 0.05 0.05
+d 1.000000
+illum 2
+
+newmtl Leaves
+Ns 5
+Ka 0.35 0.45 0.26
+Kd 0.35 0.45 0.26
+Ks 0.2 0.2 0.2
+d 1.000000
+illum 2
+
+newmtl PotMat
+Ns 20
+Ka 0.51 0.51 0.54
+Kd 0.51 0.51 0.54
+Ks 0.3 0.3 0.3
+d 1.000000
+illum 2
+
+newmtl Wood
+Ns 1
+Ka 0.3 0.25 0.22
+Kd 0.3 0.25 0.22
+Ks 0 0 0
+d 1.000000
+illum 2

@@ -1,0 +1,31 @@
+# street_light_modern.mtl
+#
+# Created by Ola-Kristian HOFF
+# https://sourceforge.net/p/sweethome3d/d-models/286/
+#
+# This file is distributed under Free Art License, see http://artlibre.org/licence/lal/en for more informations
+# and under CC-BY Creative Commons Attribution 3.0 Unported license, see http://creativecommons.org/licenses/by/3.0/
+# at your choice
+#
+newmtl Pylon
+illum 1
+Ka 0.2 0.2 0.2
+Kd 0.6862745 0.6901961 0.69803923
+Ks 0.5 0.5 0.5
+Ns 64.0
+
+newmtl Lamp
+illum 1
+Ka 0.2 0.2 0.2
+Kd 0.6627451 0.6627451 0.6627451
+Ks 1.0 1.0 1.0
+Ns 128.0
+
+newmtl Glass
+illum 3
+Ka 0.2 0.2 0.2
+Kd 1.0 0.84313726 0.101960786
+Ks 1.0 1.0 1.0
+Ns 128.0
+Ni 1.0
+d 0.50

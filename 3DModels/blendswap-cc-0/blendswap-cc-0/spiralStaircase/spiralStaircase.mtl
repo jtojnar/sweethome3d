@@ -1,0 +1,26 @@
+# Blender MTL File: 'spiral_stair.blend'
+# Material Count: 3
+
+newmtl Baluster
+Ns 50
+Ka 0.64 0.64 0.64
+Kd 0.64 0.64 0.64
+Ks 0.3 0.3 0.3
+d 1.00
+illum 2
+
+newmtl Handrail
+Ns 20
+Ka 0.35 0.28 0.22
+Kd 0.35 0.28 0.22
+Ks 0.2 0.2 0.2
+d 1.00
+illum 2
+
+newmtl Tread
+Ns 10
+Ka 0.25 0.25 0.25
+Kd 0.25 0.25 0.25
+Ks 0.1 0.1 0.1
+d 1.00
+illum 2

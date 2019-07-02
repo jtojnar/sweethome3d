@@ -1,0 +1,46 @@
+# flag_hinged_pole.mtl
+#
+# Created by Ola-Kristian HOFF
+# https://sourceforge.net/p/sweethome3d/d-models/506/
+#
+# This file is distributed under Free Art License, see http://artlibre.org/licence/lal/en for more informations
+# and under CC-BY Creative Commons Attribution 3.0 Unported license, see http://creativecommons.org/licenses/by/3.0/
+# at your choice
+#
+
+newmtl Flagpole
+illum 2
+Ka 0.2 0.2 0.2
+Kd 0.9 0.9 0.9
+Ks 0.5 0.5 0.5
+Ns 16.0
+
+newmtl Truck
+illum 2
+Ka 0.2 0.2 0.2
+Kd 0.6 0.6 0.7
+Ks 0.5 0.5 0.5
+Ns 64.0
+
+newmtl Support
+illum 2
+Ka 0.2 0.2 0.2
+Kd 0.9 0.9 0.9
+Ks 0.5 0.5 0.5
+Ns 16.0
+
+newmtl Foundation
+illum 1
+Ka 0.2 0.2 0.2
+Kd 1.0 1.0 1.0
+Ks 0.0 0.0 0.0
+Ns 1.0
+map_Kd concrete.png
+
+newmtl Flag
+illum 1
+Ka 0.2 0.2 0.2
+Kd 1.0 1.0 1.0
+Ks 0.0078125 0.0078125 0.0078125
+Ns 1.0
+map_Kd flag.png

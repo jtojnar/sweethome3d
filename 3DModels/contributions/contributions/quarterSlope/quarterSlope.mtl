@@ -1,0 +1,58 @@
+# quarterSlope.mtl Produced by Blender
+#
+# Sweet Home 3D, Copyright (c) 2019 Emmanuel PUYBARET / eTeks <info@eteks.com>
+#
+# This file is distributed at your choice, under the CC-BY Creative Commons Attribution 3.0 Unported license 
+# available at http://creativecommons.org/licenses/by/3.0/ or under the terms of the GNU General Public License 
+# as published by the Free Software Foundation and available at http://www.gnu.org/copyleft/gpl.txt
+#
+
+newmtl exteriorBorder
+Ns 1
+Ka 1.000000 1.000000 1.000000
+Kd 0.020428 0.104019 0.008970
+Ks 0.097087 0.097087 0.097087
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+
+newmtl exteriorPath
+Ns 1
+Ka 1.000000 1.000000 1.000000
+Kd 0.147718 0.147718 0.147718
+Ks 0.029126 0.029126 0.029126
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+
+newmtl interiorBorder
+Ns 1
+Ka 1.000000 1.000000 1.000000
+Kd 0.020428 0.104019 0.008970
+Ks 0.097087 0.097087 0.097087
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+
+newmtl interiorPath
+Ns 1
+Ka 1.000000 1.000000 1.000000
+Kd 0.147718 0.147718 0.147718
+Ks 0.029126 0.029126 0.029126
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+
+newmtl middlePath
+Ns 1
+Ka 1.000000 1.000000 1.000000
+Kd 0.025017 0.015952 0.007346
+Ks 0.009709 0.009709 0.009709
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2

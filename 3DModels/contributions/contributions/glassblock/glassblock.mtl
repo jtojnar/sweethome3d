@@ -1,0 +1,25 @@
+# Blender MTL File: 'Glassblock.blend'
+# Material Count: 2
+# 
+# Created by Ronnie Tantriady
+# https://sourceforge.net/p/sweethome3d/d-models/485/ 
+#
+# This file is distributed under Free Art License, see http://artlibre.org/licence/lal/en for more informations
+#
+
+newmtl Glass
+Ns 96.078431
+Ka 0.640000 0.640000 0.640000
+Kd 0.624028 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 0.617188
+illum 2
+
+newmtl Frame
+Ns 10
+Ka 0.640000 0.640000 0.640000
+Kd 0.640000 0.640000 0.640000
+Ks 0.1 0.1 0.1
+d 1.000000
+illum 2

@@ -1,0 +1,73 @@
+# traffic_light_ped.mtl
+#
+# Created by Ola-Kristian HOFF
+# Materials for pedestrian light added by Emmanuel Puybaret / eTeks
+# https://sourceforge.net/p/sweethome3d/d-models/286/
+#
+# This file is distributed under Free Art License, see http://artlibre.org/licence/lal/en for more informations
+# and under CC-BY Creative Commons Attribution 3.0 Unported license, see http://creativecommons.org/licenses/by/3.0/
+# at your choice
+#
+
+newmtl Orange_off
+illum 1
+Ka 0.2 0.2 0.2
+Kd 0.20784314 0.13333334 0.0
+Ks 0.0 0.0 0.0
+Ns 1.0
+
+newmtl Casing
+illum 3
+Ka 0.2 0.2 0.2
+Kd 0.007843138 0.07450981 0.2
+Ks 0.2 0.2 0.2
+Ns 20
+
+newmtl Pedestrian_casing
+illum 3
+Ka 0.2 0.2 0.2
+Kd 0.007843138 0.07450981 0.2
+Ks 0.2 0.2 0.2
+Ns 20
+
+newmtl Red_on
+illum 1
+Ka 0.2 0.2 0.2
+Kd 1.0 0.1254902 0.07450981
+Ks 0.0 0.0 0.0
+Ns 1.0
+
+newmtl Green_off
+illum 1
+Ka 0.2 0.2 0.2
+Kd 0.0 0.14901961 0.0
+Ks 0.0 0.0 0.0
+Ns 1.0
+
+newmtl Pedestrian_green_off
+illum 1
+Ka 0.2 0.2 0.2
+Kd 0.0 0.14901961 0.0
+Ks 0.0 0.0 0.0
+Ns 1.0
+
+newmtl Pedestrian_red_off
+illum 1
+Ka 0.2 0.2 0.2
+Kd 0.20784314 0.003921569 0.007843138
+Ks 0.0 0.0 0.0
+Ns 1.0
+
+newmtl Pedestrian_green_on
+illum 1
+Ka 0.2 0.2 0.2
+Kd 0.0 1.0 0.0
+Ks 0.0 0.0 0.0
+Ns 1.0
+
+newmtl Post
+illum 1
+Ka 0.2 0.2 0.2
+Kd 0.46666667 0.5882353 0.49803922
+Ks 0.2 0.2 0.2
+Ns 20

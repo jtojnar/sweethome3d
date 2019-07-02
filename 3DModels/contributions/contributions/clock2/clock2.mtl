@@ -1,0 +1,51 @@
+# clock2.mtl
+# 
+# Created by alaX
+# https://sourceforge.net/p/sweethome3d/d-models/503/ 
+#
+# This file is distributed under Free Art License, see http://artlibre.org/licence/lal/en for more informations
+#
+
+newmtl second
+illum 1
+Ka 0.2 0.2 0.2
+Kd 1.0 0.0 0.0
+Ks 0.0 0.0 0.0
+Ns 1.0
+
+newmtl minute
+illum 1
+Ka 0.2 0.2 0.2
+Kd 0.0 0.0 0.0
+Ks 0.0 0.0 0.0
+Ns 1.0
+
+newmtl hour
+illum 1
+Ka 0.2 0.2 0.2
+Kd 0.0 0.0 0.0
+Ks 0.0 0.0 0.0
+Ns 1.0
+
+newmtl face
+illum 1
+Ka 0.2 0.2 0.2
+Kd 1.0 1.0 1.0
+Ks 0.0 0.0 0.0
+Ns 1.0
+map_Kd clock_face.jpeg
+
+newmtl frame
+illum 1
+Ka 0.2 0.2 0.2
+Kd 1.0 0.0 0.0
+Ks 0.0 0.0 0.0
+Ns 1.0
+
+
+newmtl back
+illum 1
+Ka 0.2 0.2 0.2
+Kd 1.0 0.0 0.0
+Ks 0.0 0.0 0.0
+Ns 1.0

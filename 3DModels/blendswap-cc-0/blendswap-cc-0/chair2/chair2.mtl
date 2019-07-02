@@ -1,0 +1,17 @@
+# Blender MTL File: 'Convention_TABLE.blend'
+# Material Count: 3
+
+newmtl Metallo_sedia
+Ns 120
+Ka 0.53 0.45 0.32
+Kd 0.53 0.45 0.32
+Ks 0.87 0.76 0.62
+illum 2
+
+newmtl Schienale_rosso
+Ns 2
+Ka 0.6 0.6 0.6
+Kd 0.6 0.6 0.6
+Ks 0 0 0
+illum 1
+map_Kd NY_Chaise_Red.jpg

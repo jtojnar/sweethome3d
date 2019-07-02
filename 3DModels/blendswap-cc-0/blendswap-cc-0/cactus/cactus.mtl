@@ -1,0 +1,38 @@
+# Blender MTL File: 'cactus.blend'
+# Material Count: 4
+
+newmtl cactus_green
+Ns 96.078431
+Ka 0.1 0.1 0.1
+Kd 0.153 0.45 0.076
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+
+newmtl cactus_pot
+Ns 20
+Ka 0.1 0.1 0.1
+Kd 0.094595 0.094780 0.097144
+Ks 0.2 0.2 0.2
+Ni 1.000000
+d 1.000000
+illum 2
+
+newmtl cactus_thorns
+Ns 96.078431
+Ka 0.1 0.1 0.1
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+
+newmtl forest-floor-458775_1280
+Ns 10
+Ka 0.000000 0.000000 0.000000
+Kd 0.22 0.16 0.11
+Ks 0.05 0.05 0.05
+Ni 1.000000
+d 1.000000
+illum 2

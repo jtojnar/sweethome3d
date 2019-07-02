@@ -24,14 +24,18 @@ Under the following terms:
 
 (C) Copyrights 2014-2019 Emmanuel PUYBARET / eTeks <info@eteks.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) 
 
-for the icons and the 154 following models:
+for the icons and the 223 following models:
 - air-mattress
+- antenna-whites
 - aquarium
 - baby_high_chair
 - bague
+- barnum
 - basic_camera
+- basin
 - basketball_net_and_board
 - bicycle
+- big-football-goal
 - billet-10-euros
 - billet-20-euros
 - billet-50-euros
@@ -40,11 +44,14 @@ for the icons and the 154 following models:
 - bonsai-tree
 - broom
 - bus
+- bush
 - candelabre
+- captains-bed
 - cardboard-box
 - casque
 - casquette
 - cat
+- CCTV
 - ceiling-lamp
 - cendrier
 - changing-table
@@ -53,30 +60,41 @@ for the icons and the 154 following models:
 - chest-freezer
 - chevrolet
 - child_swing
+- chimney
 - christmas_tree
 - clothes-basket
 - clothes-horse
+- clothes-rack
 - clothes_washing_machine
 - coffee-table2
 - cone
+- convertible-sofa-BZ-closed
+- convertible-sofa-BZ-opened
 - curtain
 - dart_game
+- dimmer-whites
 - diving-board
 - dog
 - dog-house
 - doll
 - doll-house
 - door
+- doormat
 - double_door
 - double_door_2
 - double_door_with_little_part
+- double-switch-whites
+- dressing-table
 - dryer_machine
 - electric_water_heater
 - electric_water_heater_big
 - ensemble-assiette-couteau-fourchette-cuillere-verre
+- entry-bell-ring
+- entry-bell-speech-unit
 - external-unity-air-conditioning
 - elevator
 - elevator-door
+- escalator
 - ficus
 - fireplace1
 - fireplace2
@@ -85,10 +103,17 @@ for the icons and the 154 following models:
 - fleche-tout-droit
 - flipper
 - folded_clothes
+- football-goal
 - furnace
 - gant-textured
 - garage-door
+- garage-door2
+- garden-hut
 - gaz_water_heater
+- glass_door
+- hedge
+- hedgeTextured
+- high-hedge
 - hospital-bed
 - indoor-bike
 - induction-cooker-2-zones
@@ -104,9 +129,13 @@ for the icons and the 154 following models:
 - japanese_style_screen
 - jupe
 - jupe-doeskin
+- keys
 - letters_box
+- mannequinBrunette
+- mannequinMale
 - marteau
 - meuleuse-electrique
+- mezzanine-bed
 - mocassin
 - montre
 - montre-with-pose
@@ -120,6 +149,14 @@ for the icons and the 154 following models:
 - pelle
 - perceuse-electrique
 - peugeot-308
+- pince-coupante
+- playstation4
+- plug-TypeA-whites
+- plug-TypeB-whites
+- plug-TypeC-Flat-whites
+- plug-TypeE-whites
+- plug-TypeG-whites
+- ps4-joystick
 - punching-ball
 - puff
 - rabbit
@@ -127,11 +164,24 @@ for the icons and the 154 following models:
 - rectangle-swimming-pool
 - reflex_camera
 - renault-scenic
+- RJ-45-whites
 - roasted-chicken
 - robe
 - rouleau-de-ruban-adhesif
 - round-carpet
+- round-chimney
 - round-swimming-pool
+- round-table
+- rounded-RJ-45
+- rounded-antenna
+- rounded-dimmer
+- rounded-double-switch
+- rounded-plug-TypeA
+- rounded-plug-TypeB
+- rounded-plug-TypeC-Flat
+- rounded-plug-TypeE
+- rounded-plug-TypeG
+- rounded-switch
 - sandpit
 - scie-egoine
 - scooter
@@ -139,8 +189,22 @@ for the icons and the 154 following models:
 - shopping-basket
 - short-shadows
 - shovel
+- skateboard
+- small-oven
+- small-urinal
 - smart-car
+- smoke-detector
 - sneakers
+- square-RJ-45
+- square-antenna
+- square-dimmer
+- square-double-switch
+- square-plug-TypeA
+- square-plug-TypeB
+- square-plug-TypeC-Flat
+- square-plug-TypeE
+- square-plug-TypeG
+- square-switch
 - stationnement-creneau
 - stationnement-en-bataille
 - stationnement-epi-45
@@ -152,12 +216,17 @@ for the icons and the 154 following models:
 - stroller
 - suv
 - swimming-pool
+- switch-whites
+- table-on-trestles
+- table-with-leaning-feet
 - tablet
+- tatami
 - tournevis
 - trampoline
 - tricycle
 - truck
 - turn-window
+- tv-remote-control
 - van
 - video-projector
 - wall-flat-tv
@@ -179,7 +248,7 @@ for the icons and the 154 following models:
 - woman_shoes
 - wood_logs
 - yamaha-yzr-r6			
-						
+
 
 (C) Copyrights 2006-2019 Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) 
 

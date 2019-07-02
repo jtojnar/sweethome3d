@@ -1,0 +1,31 @@
+# boiteALettre.mtl
+# 
+# Created by Venceslas
+# Materials renamed by Emmanuel Puybaret / eTeks
+# https://sourceforge.net/p/sweethome3d/d-models/381/ 
+#
+# This file is distributed under Free Art License, see http://artlibre.org/licence/lal/en for more informations
+#
+newmtl Box
+Ns 30
+Ka 0.027 0.15 0.01
+Kd 0.027 0.15 0.01
+Ks 0.500000 0.500000 0.500000
+d 1.000000
+illum 2
+
+newmtl Key
+Ns 100
+Ka 0.2 0.2 0.2
+Kd 0.2 0.2 0.2
+Ks 0.500000 0.500000 0.500000
+d 1.000000
+illum 2
+
+newmtl LetterHole
+Ns 40
+Ka 0.640000 0.623007 0.395992
+Kd 0.640000 0.623007 0.395992
+Ks 0.500000 0.500000 0.500000
+d 1.000000
+illum 2

@@ -1,0 +1,57 @@
+# glass_door_framless.mtl
+#
+# Created by Ola-Kristian HOFF
+# https://sourceforge.net/p/sweethome3d/d-models/508/
+#
+# This file is distributed under Free Art License, see http://artlibre.org/licence/lal/en for more informations
+# and under CC-BY Creative Commons Attribution 3.0 Unported license, see http://creativecommons.org/licenses/by/3.0/
+# at your choice
+#
+newmtl Hinge
+illum 1
+Ka 0.2 0.2 0.2
+Kd 0.0 0.0 0.0
+Ks 0.0 0.0 0.0
+Ns 1.0
+Ni 1.0
+d 0.0
+
+newmtl xout
+illum 1
+Ka 0.2 0.2 0.2
+Kd 1.0 1.0 1.0
+Ks 0.0 0.0 0.0
+Ns 1.0
+Ni 1.0
+d 0.0
+
+newmtl Glass_door
+illum 2
+Ka 0.2 0.2 0.2
+Kd 1.0 1.0 1.0
+Ks 0.4 0.4 0.4
+Ns 58.0
+Ni 1.5
+d 0.7
+map_Kd glass_door.png
+
+newmtl Hingeclamps
+illum 2
+Ka 0.2 0.2 0.2
+Kd 0.6 0.6 0.6
+Ks 0.5 0.5 0.5
+Ns 32.0
+
+newmtl Handle
+illum 2
+Ka 0.2 0.2 0.2
+Kd 0.6 0.6 0.6
+Ks 0.5 0.5 0.5
+Ns 32.0
+
+newmtl Frame
+illum 2
+Ka 0.2 0.2 0.2
+Kd 0.6 0.6 0.6
+Ks 0.5 0.5 0.5
+Ns 32.0

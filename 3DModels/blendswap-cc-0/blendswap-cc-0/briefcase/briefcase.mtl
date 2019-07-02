@@ -1,0 +1,16 @@
+# Blender MTL File: 'Блендсвап1.blend'
+# Material Count: 2
+
+newmtl Case
+Ns 20
+Ka 0.22 0.22 0.22
+Kd 0.22 0.22 0.22
+Ks 0.5 0.5 0.5
+illum 2
+
+newmtl Lock
+Ns 100
+Ka 0.49 0.41 0.26
+Kd 0.49 0.41 0.26
+Ks 1 1 0.76
+illum 2

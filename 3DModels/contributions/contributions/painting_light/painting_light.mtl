@@ -1,0 +1,23 @@
+# painting_light.mtl
+# 
+# Created by Ronnie Tantriady
+# Materials updated by Emmanuel Puybaret / eTeks
+# https://sourceforge.net/p/sweethome3d/d-models/497/ 
+#
+# This file is distributed under Free Art License, see http://artlibre.org/licence/lal/en for more informations
+#
+newmtl Support
+Ns 80
+Ka 0.1 0.1 0.1
+Kd 0.8 0.8 0.8
+Ks 0.8 0.8 0.8
+d 1.000000
+illum 3
+
+newmtl Light
+Ns 80
+Ka 0.1 0.1 0.1
+Kd 0.85 0.85 0.85
+Ks 0.8 0.8 0.8
+d 1
+illum 2

@@ -1,0 +1,38 @@
+# Blender MTL File: 'Wheelbarrow.blend'
+# Material Count: 4
+
+newmtl Plug_rubber
+Ns 5
+Ka 0.11 0.11 0.11
+Kd 0.11 0.11 0.11
+Ks 0.1 0.1 0.1
+Ni 1.000000
+d 1.000000
+illum 2
+
+newmtl Plug_rusty
+Ns 10
+Ka 0.21 0.16 0.14
+Kd 0.21 0.16 0.14
+Ks 0.2 0.2 0.2
+Ni 1.000000
+d 1.000000
+illum 2
+
+newmtl Barrow
+Ns 50
+Ka 0.39 0.39 0.39
+Kd 0.39 0.39 0.39
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+
+newmtl Rubber_Handles
+Ns 5
+Ka 0.11 0.11 0.11
+Kd 0.11 0.11 0.11
+Ks 0.1 0.1 0.1
+Ni 1.000000
+d 1.000000
+illum 2

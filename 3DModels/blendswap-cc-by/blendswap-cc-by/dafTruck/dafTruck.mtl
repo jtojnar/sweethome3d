@@ -1,0 +1,42 @@
+# Blender MTL File: 'DAF XF 105_BlendSwap.blend'
+# Material Count: 5
+
+newmtl Cabin
+Ns 60
+Ka 0.9 0.9 0.9
+Kd 0.9 0.9 0.9
+Ks 0.4 0.4 0.4
+illum 1
+map_Kd DAF_XF.jpg
+
+newmtl Glass
+Ns 80
+Ka 0.9 0.9 0.9
+Kd 0.9 0.9 0.9
+Ks 0.6 0.6 0.6
+illum 1
+map_Kd DAF_XF.jpg
+
+newmtl Payload
+Ns 20
+Ka 0.9 0.9 0.9
+Kd 0.9 0.9 0.9
+Ks 0.2 0.2 0.2
+illum 1
+map_Kd DAF_XF.jpg
+
+newmtl Trailer
+Ns 2
+Ka 0.9 0.9 0.9
+Kd 0.9 0.9 0.9
+Ks 0 0 0
+illum 1
+map_Kd DAF_XF.jpg
+
+newmtl Truck
+Ns 2
+Ka 0.9 0.9 0.9
+Kd 0.9 0.9 0.9
+Ks 0 0 0
+illum 1
+map_Kd DAF_XF.jpg

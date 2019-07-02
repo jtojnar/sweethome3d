@@ -1,0 +1,78 @@
+# revdoor.mtl
+#
+# Created by Ola-Kristian HOFF
+# https://sourceforge.net/p/sweethome3d/d-models/502/
+#
+# This file is distributed under Free Art License, see http://artlibre.org/licence/lal/en for more informations
+# and under CC-BY Creative Commons Attribution 3.0 Unported license, see http://creativecommons.org/licenses/by/3.0/
+# at your choice
+#
+
+newmtl Door_hinge
+illum 1
+Ka 0.2 0.2 0.2
+Kd 0.0 0.0 0.0
+Ks 0.0 0.0 0.0
+Ns 1.0
+
+newmtl Door_glass
+illum 2
+Ka 0.2 0.2 0.2
+Kd 0.8 0.8 0.8
+Ks 0.0 0.0 0.0
+Ns 32.0
+Ni 1.0
+d 0.4
+
+newmtl Door_bar
+illum 2
+Ka 0.2 0.2 0.2
+Kd 0.8 0.8 0.8
+Ks 0.5 0.5 0.5
+Ns 32.0
+
+newmtl Door
+illum 2
+Ka 0.2 0.2 0.2
+Kd 0.8 0.8 0.8
+Ks 0.5 0.5 0.5
+Ns 32.0
+
+newmtl Roof
+illum 2
+Ka 0.2 0.2 0.2
+Kd 0.8 0.8 0.8
+Ks 0.5 0.5 0.5
+Ns 32.0
+
+newmtl Wall_round_glass
+illum 2
+Ka 0.2 0.2 0.2
+Kd 0.8 0.8 0.8
+Ks 0.0 0.0 0.0
+Ns 32.0
+Ni 1.0
+d 0.8
+
+newmtl Wall_round
+illum 2
+Ka 0.2 0.2 0.2
+Kd 0.8 0.8 0.8
+Ks 0.5 0.5 0.5
+Ns 32.0
+
+newmtl Wall_sides_glass
+illum 2
+Ka 0.2 0.2 0.2
+Kd 0.8 0.8 0.8
+Ks 0.0 0.0 0.0
+Ns 32.0
+Ni 1.0
+d 0.8
+
+newmtl Wall_sides
+illum 2
+Ka 0.2 0.2 0.2
+Kd 0.8 0.8 0.8
+Ks 0.5 0.5 0.5
+Ns 32.0

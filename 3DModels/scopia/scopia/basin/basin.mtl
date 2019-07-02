@@ -1,0 +1,12 @@
+# Blender MTL File: 'basin.blend'
+# Material Count: 1
+
+newmtl RedBasin
+Ns 78.431373
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.002101 0.000000
+Ks 0.223577 0.223577 0.223577
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
