@@ -273,14 +273,7 @@ HomeComponent3D.prototype.removeHomeListeners = function() {
   this.home.removeFurnitureListener(this.furnitureListener);
   var furniture = this.home.getFurniture();
   for (var i = 0; i < furniture.length; i++) {
-    var piece = furniture [i];
-    piece.removePropertyChangeListener(this.furnitureChangeListener);
-    if (piece instanceof HomeFurnitureGroup) {
-      var groupFurniture = piece.getAllFurniture();
-      for (var j = 0; j < groupFurniture.length; j++) {
-        groupFurniture [j].removePropertyChangeListener(this.furnitureChangeListener);
-      }
-    }
+    this.removePropertyChangeListener(furniture [i], this.furnitureChangeListener);
   }
   this.home.removeRoomsListener(this.roomListener);
   var rooms = this.home.getRooms();
@@ -350,14 +343,18 @@ HomeComponent3D.prototype.addCameraListeners = function() {
   var component3D = this;
   var home = this.home;
   this.cameraChangeListener = function(ev) {
-      // Update view transform later to let finish camera changes  
-      setTimeout(
-          function() {
+      if (!this.updater) {
+        // Update view transform later to let finish camera changes  
+        var context = this;
+        this.updater = function() {
             if (component3D.canvas3D) {
               component3D.updateView(home.getCamera());
               component3D.updateViewPlatformTransform(home.getCamera(), true);
             }
-          }, 0);
+            delete context.updater;
+          };
+        setTimeout(this.updater, 0);
+      }
     };
   home.getCamera().addPropertyChangeListener(this.cameraChangeListener);
   this.homeCameraListener = function(ev) {
@@ -638,7 +635,7 @@ HomeComponent3D.prototype.updateViewPlatformTransform = function(camera, updateW
   if (updateWithAnimation) {
     this.moveCameraWithAnimation(camera);
   } else {
-    delete this.cameraInterpolator;
+    delete this.cameraInterpolator; // Stop camera animation if any
     var viewPlatformTransform = mat4.create();
     this.computeViewPlatformTransform(viewPlatformTransform, camera.getX(), camera.getY(), 
         camera.getZ(), camera.getYaw(), camera.getPitch());
@@ -1629,47 +1626,6 @@ HomeComponent3D.prototype.addLevelListener = function(group) {
 }
 
 /**
- * Returns <code>true</code> if the given <code>piece</code> is or contains a door or window.
- * @param {HomePieceOfFurniture} piece
- * @return {boolean}
- * @private
- */
-HomeComponent3D.prototype.containsDoorsAndWindows = function(piece) {
-  if (piece instanceof HomeFurnitureGroup) {
-    var furniture = piece.getFurniture();
-    for (var i = 0; i < furniture.length; i++) {
-      if (this.containsDoorsAndWindows(furniture[i])) {
-        return true;
-      }
-    }
-    return false;
-  } else {
-    return piece.isDoorOrWindow();
-  }
-}
-
-/**
- * Returns <code>true</code> if the given <code>piece</code> is or contains a staircase
- * with a top cut out shape.
- * @param {HomePieceOfFurniture} piece
- * @return {boolean}
- * @private
- */
-HomeComponent3D.prototype.containsStaircases = function(piece) {
-  if (piece instanceof HomeFurnitureGroup) {
-    var furniture = piece.getFurniture();
-    for (var i = 0; i < furniture.length; i++) {
-      if (this.containsStaircases(furniture[i])) {
-        return true;
-      }
-    }
-    return false;
-  } else {
-    return piece.getStaircaseCutOutShape() !== null;
-  }
-}
-
-/**
  * Adds a wall listener to home walls that updates the children of the given
  * <code>group</code>, each time a wall is added, updated or deleted.
  * @param {Group3D} group
@@ -1782,48 +1738,18 @@ HomeComponent3D.prototype.addFurnitureListener = function(group) {
 
   var furniture = this.home.getFurniture();
   for (var i = 0; i < furniture.length; i++) { 
-    var piece = furniture [i];
-    if (piece instanceof HomeFurnitureGroup) {
-      var groupFurniture = piece.getAllFurniture();
-      for (var j = 0; j < groupFurniture.length; j++) {
-        groupFurniture [j].addPropertyChangeListener(this.furnitureChangeListener);
-      }
-    } else {
-      piece.addPropertyChangeListener(this.furnitureChangeListener);
-    }
+    this.addPropertyChangeListener(furniture [i], this.furnitureChangeListener);
   }      
   this.furnitureListener = function(ev) {
       var piece = ev.getItem();
       switch (ev.getType()) {
         case CollectionEvent.Type.ADD :
-          if (piece instanceof HomeFurnitureGroup) {
-            var groupFurniture = piece.getAllFurniture();
-            for (var j = 0; j < groupFurniture.length; j++) {
-              var childPiece = groupFurniture [j];
-              if (!(childPiece instanceof HomeFurnitureGroup)) {
-                component3D.addObject(group, childPiece, true, false);
-                childPiece.addPropertyChangeListener(component3D.furnitureChangeListener);
-              }
-            }
-          } else {
-            component3D.addObject(group, piece, true, false);
-            piece.addPropertyChangeListener(component3D.furnitureChangeListener);
-          }
+          component3D.addPieceOfFurniture(group, piece, true, false);
+          component3D.addPropertyChangeListener(piece, component3D.furnitureChangeListener);
           break;
         case CollectionEvent.Type.DELETE : 
-          if (piece instanceof HomeFurnitureGroup) {
-            var groupFurniture = piece.getAllFurniture();
-            for (var j = 0; j < groupFurniture.length; j++) {
-              var childPiece = groupFurniture [j];
-              if (!(childPiece instanceof HomeFurnitureGroup)) {
-                component3D.deleteObject(childPiece);
-                childPiece.removePropertyChangeListener(component3D.furnitureChangeListener);
-              }
-            }
-          } else {
-            component3D.deleteObject(piece);
-            piece.removePropertyChangeListener(component3D.furnitureChangeListener);
-          }
+          component3D.deletePieceOfFurniture(piece);
+          component3D.removePropertyChangeListener(piece, component3D.furnitureChangeListener);
           break;
       }
       // If piece is or contains a door or a window, update walls that intersect with piece
@@ -1837,6 +1763,81 @@ HomeComponent3D.prototype.addFurnitureListener = function(group) {
       component3D.groundChangeListener(null);
     };
   this.home.addFurnitureListener(this.furnitureListener);
+}
+
+/**
+ * Adds the given <code>listener</code> to <code>piece</code> and its children.
+ * @param {HomePieceOfFurniture} piece
+ * @param {PropertyChangeListener} listener
+ * @private
+ */
+HomeComponent3D.prototype.addPropertyChangeListener = function(piece, listener) {
+  if (piece instanceof HomeFurnitureGroup) {
+    var furniture = piece.getFurniture();
+    for (var i = 0; i < furniture.length; i++) {
+      this.addPropertyChangeListener(furniture [i], listener);
+    }
+  } else {
+    piece.addPropertyChangeListener(listener);
+  }
+}
+
+/**
+ * Removes the given <code>listener</code> from <code>piece</code> and its children.
+ * @param {HomePieceOfFurniture} piece
+ * @param {PropertyChangeListener} listener
+ * @private
+ */
+HomeComponent3D.prototype.removePropertyChangeListener = function(piece, listener) {
+  if (piece instanceof HomeFurnitureGroup) {
+    var furniture = piece.getFurniture();
+    for (var i = 0; i < furniture.length; i++) {
+      this.removePropertyChangeListener(furniture [i], listener);
+    }
+  } else {
+    piece.removePropertyChangeListener(listener);
+  }
+}
+
+/**
+ * Returns <code>true</code> if the given <code>piece</code> is or contains a door or window.
+ * @param {HomePieceOfFurniture} piece
+ * @return {boolean}
+ * @private
+ */
+HomeComponent3D.prototype.containsDoorsAndWindows = function(piece) {
+  if (piece instanceof HomeFurnitureGroup) {
+    var furniture = piece.getFurniture();
+    for (var i = 0; i < furniture.length; i++) {
+      if (this.containsDoorsAndWindows(furniture[i])) {
+        return true;
+      }
+    }
+    return false;
+  } else {
+    return piece.isDoorOrWindow();
+  }
+}
+
+/**
+ * Returns <code>true</code> if the given <code>piece</code> is or contains a staircase
+ * with a top cut out shape.
+ * @param {HomePieceOfFurniture} piece
+ * @return {boolean}
+ * @private
+ */
+HomeComponent3D.prototype.containsStaircases = function(piece) {
+  if (piece instanceof HomeFurnitureGroup) {
+    var furniture = piece.getFurniture();
+    for (var i = 0; i < furniture.length; i++) {
+      if (this.containsStaircases(furniture[i])) {
+        return true;
+      }
+    }
+    return false;
+  } else {
+    return piece.getStaircaseCutOutShape() !== null;
+  }
 }
 
 /**
@@ -2044,6 +2045,24 @@ HomeComponent3D.prototype.addObject = function(group, homeObject, index,
 }
 
 /**
+ * Adds to <code>group</code> a branch matching <code>homeObject</code> or its children if the piece is a group of furniture.
+ * @param {Group3D} group
+ * @param {HomePieceOfFurniture} piece
+ * @param {boolean} listenToHomeUpdates
+ * @param {boolean} waitForLoading
+ */
+HomeComponent3D.prototype.addPieceOfFurniture = function(group, piece, listenToHomeUpdates, waitForLoading) {
+  if (piece instanceof HomeFurnitureGroup) {
+    var furniture = piece.getFurniture();
+    for (var i = 0; i < furniture.length; i++) {
+      this.addPieceOfFurniture(group, furniture [i], listenToHomeUpdates, waitForLoading);
+    }
+  } else {
+    this.addObject(group, piece, listenToHomeUpdates, waitForLoading);
+  }
+}
+
+/**
  * Detaches from the scene the branch matching <code>homeObject</code>.
  * @param {Object}  homeObject
  * @private
@@ -2053,6 +2072,21 @@ HomeComponent3D.prototype.deleteObject = function(homeObject) {
     homeObject.object3D.detach();
     delete homeObject.object3D;
     this.homeObjects.splice(this.homeObjects.indexOf(homeObject), 1);
+  }
+}
+
+/**
+ * Detaches from the scene the branches matching <code>piece</code> or its children if it's a group.
+ * @param {HomePieceOfFurniture} piece
+ */
+HomeComponent3D.prototype.deletePieceOfFurniture = function(piece) {
+  if (piece instanceof HomeFurnitureGroup) {
+    var furniture = piece.getFurniture();
+    for (var i = 0; i < furniture.length; i++) {
+      this.deletePieceOfFurniture(furniture [i]);
+    }
+  } else {
+    this.deleteObject(piece);
   }
 }
 

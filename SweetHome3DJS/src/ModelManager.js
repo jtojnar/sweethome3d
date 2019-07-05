@@ -380,15 +380,18 @@ ModelManager.prototype.getPieceOfFurnitureNormalizedModelTransformation = functi
   var height;
   if (piece.isHorizontallyRotated() && normalizedModelNode !== undefined && normalizedModelNode !== null) {
     var horizontalRotationAndScale = mat4.create();
-    // Change its angle around horizontal axis
-    if (piece.getPitch() !== 0) {
+    // Change its angle around horizontal axes
+    if (piece.getPitch() != 0) {
       mat4.fromXRotation(horizontalRotationAndScale, -piece.getPitch());
-    } else {
-      mat4.fromZRotation(horizontalRotationAndScale, -piece.getRoll());
+    } 
+    if (piece.getRoll() != 0) {
+      var rollRotation = mat4.create();
+      mat4.fromZRotation(rollRotation, -piece.getRoll());
+      mat4.mul(horizontalRotationAndScale, rollRotation, horizontalRotationAndScale); 
     }
     mat4.mul(horizontalRotationAndScale, horizontalRotationAndScale, scale);
-    
-    // Compute center location when the piece is rotated around horizontal axis
+        
+    // Compute center location when the piece is rotated around horizontal axes
     var rotatedModelBounds = this.getBounds(normalizedModelNode, horizontalRotationAndScale);
     var lower = vec3.create();
     rotatedModelBounds.getLower(lower);
