@@ -1,7 +1,7 @@
 <!--
    testHome.html 
    
-   Sweet Home 3D, Copyright (c) 2016 Emmanuel PUYBARET / eTeks <info@eteks.com>
+   Sweet Home 3D, Copyright (c) 2016-2019 Emmanuel PUYBARET / eTeks <info@eteks.com>
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -293,6 +293,26 @@ function testHome(geomAvailable) {
 	      home.addRoom(room);
 	      home.addLabel(label);
 	      home.addPolyline(polyline);
+	      
+	      // Create a group with smaller objects placed on top of piece
+	      var piece3 = piece.clone();
+	      piece3.setColor(0xFFFF0000);
+	      var piece4 = piece.clone();
+	      piece4.setColor(0xFF0000FF);
+	      piece4.setElevation(piece3.getHeight());
+	      piece4.setWidth(piece3.getWidth() / 2);
+	      piece4.setDepth(piece3.getDepth() / 2);
+	      piece4.setHeight(piece3.getHeight() / 2);
+	      var group = new HomeFurnitureGroup([piece3, piece4], 0, false, "Group");
+	      group.setElevation(piece.getHeight());
+	      group.setWidth(group.getWidth() / 2);
+	      group.setDepth(group.getDepth() / 2);
+	      group.setHeight(group.getHeight() / 2);
+	      group.setAngle(Math.PI / 4);
+	      piece4.setPitch(Math.PI / 6);
+	      piece4.setRoll(Math.PI / 6);
+	      home.addPieceOfFurniture(group);
+	      
 	      var thicknessDelta = 0.5;
 	      var lengthDelta = -5;
 	      var elevationDelta = -5;
